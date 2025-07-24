@@ -1,50 +1,61 @@
-#\uD504\uB85C\uC81D\uD2B8 \uC774\uB984 \uC124\uC815 \uC608\uC2DC
-#spring.application.name=basic
-
-#\uC11C\uBC84 \uD3EC\uD2B8 \uAE30\uBCF8\uAC12\uC740 8080\uC785\uB2C8\uB2E4
-#server.port=8080
-
-
-server:
-  port: 8080
-
-spring:
-  config:
-    activate:
-      on-profile: local
-  # \uC544\uB798\uB294 jdbc\uC758 \uAE30\uBCF8 db \uAD00\uB828 \uC124\uC815\uC778\uB370, jdbc \uBFD0\uB9CC \uC544\uB2C8\uB77C mybatis / jpa \uB4F1 spring\uC758 \uB300\uBD80\uBD84\uC758 DB \uAE30\uC220\uC5D0 \uB3D9\uC77C\uD558\uAC8C \uC0AC\uC6A9
-  datasource:
-    driver-class-name: org.mariadb.jdbc.Driver
-    url: jdbc:mariadb://localhost:3306/board
-    username: root
-    password: 1234
-  jpa:
-    database: mysql
-    # innoDB\uB97C \uC4F0\uACA0\uB2E4 \uB77C\uB294 \uC124\uC815
-    database-platform: org.hibernate.dialect.MariaDBDialect
-    # ddl \uBB38 \uC790\uB3D9\uC0DD\uC131 \uC5EC\uBD80 true. \uD14C\uC774\uBE14\uC740 \uC790\uB3D9\uC0DD\uC131(\uBC18\uC601)\uD574\uC8FC\uB098, \uC2A4\uD0A4\uB9C8\uB294 \uBC18\uB4DC\uC2DC \uC0AC\uC804\uC5D0 \uC0DD\uC131 \uD544\uC694
-    generate-ddl: true
-    # jpa(\uC778\uD130\uD398\uC774\uC2A4)\uC758 \uC2E4\uC9C8\uC801\uC778 \uAD6C\uD604\uCCB4\uB294 hibernate \uC774\uB2E4.
-    hibernate:
-      # create : \uB9E4\uBC88 table\uC744 drop\uD6C4 \uC7AC \uC0DD\uC131
-      # update : entity \uBCC0\uACBD\uC0AC\uD56D\uB9CC alter\uB97C \uC801\uC6A9\uD558\uACE0 \uAE30\uC874 \uB370\uC774\uD130 \uC720\uC9C0
-      # validate : \uC2E4\uC81C DB\uC640\uC758 \uCC28\uC774\uC810\uC744 check\uB9CC \uD558\uACE0 ddl \uBB38 \uC2E4\uD589 x, \uCF58\uC194\uB85C\uB9CC \uBCC0\uACBD\uC0AC\uD56D \uCD9C\uB825.
-      ddl-auto: update
-    # \uCF58\uC194\uCC3D\uC5D0 ddl, dml \uB4F1\uC758 \uCFFC\uB9AC\uB97C \uCD9C\uB825\uD558\uC5EC \uBCF4\uC5EC\uC8FC\uB294 \uC635\uC158
-    show_sql: true
-
-jwt:
-  expirationAt: 1000 # 1000\uBD84
-  # \uC778\uCF54\uB529\uB41C \uBB38\uC790 32\uC790 \uC774\uC0C1 \uD544\uC694. (\uD2B9\uC218\uBB38\uC790 X)
-  # beyondaccesstokensecretkeybeyondaccesstokensecretkeybeyondaccesstokensecretkey
-  secretKeyAt: YmV5b25kYWNjZXNzdG9rZW5zZWNyZXRrZXliZXlvbmRhY2Nlc3N0b2tlbnNlY3JldGtleWJleW9uZGFjY2Vzc3Rva2Vuc2VjcmV0a2V5
-
-logging:
-  level:
-    # debug, info, error \uB85C\uADF8 \uCD9C\uB825
-#    root: debug
-    root: info # default
-
-# mapper\uD30C\uC77C (mybatis\uC758 \uCFFC\uB9AC\uD30C\uC77C)\uC758 \uC704\uCE58\uB97C \uBA85\uC2DC\uD558\uACE0 scanning\uD55C\uB2E4. \uAE30\uBCF8\uC801\uC73C\uB85C resource\uD3F4\uB354\uB294 default.
-mybatis:
-  mapper-locations: classpath:/mapper/**/*.xml
+##프로젝트 이름 설정 예시
+##spring.application.name=basic
+#
+##서버 포트 기본값은 8080입니다
+##server.port=8080
+#
+#
+#server:
+#  port: 8080
+#
+#spring:
+#  config:
+#    activate:
+#      on-profile: prod
+#  # 아래는 jdbc의 기본 db 관련 설정인데, jdbc 뿐만 아니라 mybatis / jpa 등 spring의 대부분의 DB 기술에 동일하게 사용
+#  datasource:
+#    driver-class-name: org.mariadb.jdbc.Driver
+#    url: jdbc:mariadb://localhost:3306/board
+#    username: root
+#    password: 1234
+#  jpa:
+#    database: mysql
+#    # innoDB를 쓰겠다 라는 설정
+#    database-platform: org.hibernate.dialect.MariaDBDialect
+#    # ddl 문 자동생성 여부 true. 테이블은 자동생성(반영)해주나, 스키마는 반드시 사전에 생성 필요
+#    generate-ddl: true
+#    # jpa(인터페이스)의 실질적인 구현체는 hibernate 이다.
+#    hibernate:
+#      # create : 매번 table을 drop후 재 생성
+#      # update : entity 변경사항만 alter를 적용하고 기존 데이터 유지
+#      # validate : 실제 DB와의 차이점을 check만 하고 ddl 문 실행 x, 콘솔로만 변경사항 출력.
+#      ddl-auto: update
+#    # 콘솔창에 ddl, dml 등의 쿼리를 출력하여 보여주는 옵션
+#    show_sql: true
+#
+## aws s3 접근하기 위한 계정 세팅
+#cloud:
+#  aws:
+#    credentials:
+#      access-key:
+#      secret-key:
+#    region:
+#      static: ap-northeast-2
+#    s3:
+#      bucket: eunduk-board-bucket
+#
+#jwt:
+#  expirationAt: 1000 # 1000분
+#  # 인코딩된 문자 32자 이상 필요. (특수문자 X)
+#  # beyondaccesstokensecretkeybeyondaccesstokensecretkeybeyondaccesstokensecretkey
+#  secretKeyAt: YmV5b25kYWNjZXNzdG9rZW5zZWNyZXRrZXliZXlvbmRhY2Nlc3N0b2tlbnNlY3JldGtleWJleW9uZGFjY2Vzc3Rva2Vuc2VjcmV0a2V5
+#
+#logging:
+#  level:
+#    # debug, info, error 로그 출력
+#    #    root: debug
+#    root: info # default
+#
+## mapper파일 (mybatis의 쿼리파일)의 위치를 명시하고 scanning한다. 기본적으로 resource폴더는 default.
+#mybatis:
+#  mapper-locations: classpath:/mapper/**/*.xml
