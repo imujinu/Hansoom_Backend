@@ -28,9 +28,11 @@ public class User {
     private String phoneNumber;
     @Column(nullable = false)
     @Builder.Default
+    @Enumerated(value = EnumType.STRING)
     private UserType type = UserType.USER;
     @Column(nullable = false)
     @Builder.Default
+    @Enumerated(value = EnumType.STRING)
     private UserState state = UserState.NORMAL;
     private String profileImage;
     @CreationTimestamp // Todo - BaseClass로 빼기 (@MappedSuperClass)
