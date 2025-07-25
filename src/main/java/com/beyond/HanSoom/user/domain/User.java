@@ -32,9 +32,6 @@ public class User {
     @Column(nullable = false)
     @Builder.Default
     private UserState state = UserState.NORMAL;
-    @Column(nullable = false)
-    @Builder.Default
-    private int point = 0;
     private String profileImage;
     @CreationTimestamp // Todo - BaseClass로 빼기 (@MappedSuperClass)
     private LocalDateTime createdTime;
