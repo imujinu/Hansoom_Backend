@@ -4,11 +4,15 @@ import com.beyond.HanSoom.user.domain.User;
 import com.beyond.HanSoom.user.dto.UserCreateDto;
 import com.beyond.HanSoom.user.dto.UserDetailDto;
 import com.beyond.HanSoom.user.dto.UserLoginDto;
+import com.beyond.HanSoom.user.dto.UserMypageDto;
 import com.beyond.HanSoom.user.repository.UserRepository;
 import com.beyond.HanSoom.user.security.JwtTokenProvider;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -54,9 +58,22 @@ public class UserService {
     //
 
     // 회원상세 조회
-    public UserDetailDto findById(Long id) {
+    public UserDetailDto findByIdForManagement(Long id) {
         User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("없는 사용자입니다."));
+
+        log.info("[HANSOOM][INFO] - UserService/findByIdForManagement - 회원상세 조회 성공, email={}", user.getEmail());
+
         return UserDetailDto.fromEntity(user);
+    }
+
+    public UserMypageDto findByAuthenticationForSelf() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("없는 사용자입니다."));
+
+        log.info("[HANSOOM][INFO] - UserService/findByIdForSelf - 마이페이지 조회 성공, email={}", user.getEmail());
+
+        return UserMypageDto.fromEntity(user);
     }
 
 }

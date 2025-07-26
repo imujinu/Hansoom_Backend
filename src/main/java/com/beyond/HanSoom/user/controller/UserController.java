@@ -4,6 +4,7 @@ import com.beyond.HanSoom.common.CommonSuccessDto;
 import com.beyond.HanSoom.user.dto.UserCreateDto;
 import com.beyond.HanSoom.user.dto.UserDetailDto;
 import com.beyond.HanSoom.user.dto.UserLoginDto;
+import com.beyond.HanSoom.user.dto.UserMypageDto;
 import com.beyond.HanSoom.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -42,11 +43,16 @@ public class UserController {
     @GetMapping("/detail/{inputId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('HOST')")
     public ResponseEntity<?> getUserDetailForManagement(@PathVariable Long inputId) {
-        UserDetailDto dto = userService.findById(inputId);
+        UserDetailDto dto = userService.findByIdForManagement(inputId);
         return new ResponseEntity<>(new CommonSuccessDto(dto, HttpStatus.OK.value(), "사용자상세 조회 성공"), HttpStatus.OK);
     }
 
     // 사용자 상세 조회 (마이페이지)
+    @GetMapping("/mypage")
+    public ResponseEntity<?> getUserDetailForSelf() {
+        UserMypageDto dto = userService.findByAuthenticationForSelf();
+        return new ResponseEntity<>(new CommonSuccessDto(dto, HttpStatus.OK.value(), "마이페이지 조회 성공"), HttpStatus.OK);
+    }
 
     // 사용자 정보 수정 (마이페이지)
 
