@@ -2,6 +2,7 @@ package com.beyond.HanSoom.user.service;
 
 import com.beyond.HanSoom.user.domain.User;
 import com.beyond.HanSoom.user.dto.UserCreateDto;
+import com.beyond.HanSoom.user.dto.UserDetailDto;
 import com.beyond.HanSoom.user.dto.UserLoginDto;
 import com.beyond.HanSoom.user.repository.UserRepository;
 import com.beyond.HanSoom.user.security.JwtTokenProvider;
@@ -35,6 +36,7 @@ public class UserService {
         // Todo - 프로필 사진 저장 구현
     }
 
+    // 로그인
     public String login(UserLoginDto dto) {
         // 이메일, 비밀번호 검증
         User user = userRepository.findByEmail(dto.getEmail()).orElseThrow(() -> new EntityNotFoundException("없는 사용자입니다."));
@@ -47,6 +49,14 @@ public class UserService {
         log.info("[HANSOOM][INFO] - UserService/login - 로그인 성공, email={}", dto.getEmail());
 
         return token;
+    }
+
+    //
+
+    // 회원상세 조회
+    public UserDetailDto findById(Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("없는 사용자입니다."));
+        return UserDetailDto.fromEntity(user);
     }
 
 }
