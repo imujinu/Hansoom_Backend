@@ -29,7 +29,7 @@ public class User {
     @Column(nullable = false)
     @Builder.Default
     @Enumerated(value = EnumType.STRING)
-    private UserType type = UserType.USER;
+    private UserRole userRole = UserRole.USER;
     @Column(nullable = false)
     @Builder.Default
     @Enumerated(value = EnumType.STRING)

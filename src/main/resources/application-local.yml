@@ -45,6 +45,7 @@ spring:
 #      bucket: eunduk-board-bucket
 
 jwt:
+  # Todo - 만료시간 조정
   expirationAt: 1000 # 1000분
   # 인코딩된 문자 32자 이상 필요. (특수문자 X)
   # beyondaccesstokensecretkeybeyondaccesstokensecretkeybeyondaccesstokensecretkey

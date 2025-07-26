@@ -1,11 +1,8 @@
 package com.beyond.HanSoom.user.dto;
 
 import com.beyond.HanSoom.user.domain.User;
-import com.beyond.HanSoom.user.domain.UserState;
-import com.beyond.HanSoom.user.domain.UserType;
-import jakarta.persistence.Column;
+import com.beyond.HanSoom.user.domain.UserRole;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,7 +24,7 @@ public class UserCreateDto {
     private String password;
     @NotEmpty
     private String phoneNumber;
-    private UserType type;
+    private UserRole userRole = UserRole.USER; // null로 들어오면 null로 세팅돼서 not null 오류
 
     public User toEntity(String encodedPassword) {
         return User
@@ -37,7 +34,7 @@ public class UserCreateDto {
                 .nickName(this.nickName)
                 .password(encodedPassword)
                 .phoneNumber(this.phoneNumber)
-                .type(this.type) // Todo - this.type이 null일 때, default값 들어가는 지 확인
+                .userRole(this.userRole)
                 .build();
     }
 }
