@@ -14,13 +14,13 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 public class CommonExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<?> illegalArgumentException(IllegalArgumentException e) {
-        log.error("[HANSOOM][ERROR] - IllegalArgumentException - {}", e.getMessage());
+        log.error("[HANSOOM][ERROR] - CommonExceptionHandler/IllegalArgumentException - {}", e.getMessage());
         return new ResponseEntity<>(new CommonErrorDto(HttpStatus.BAD_REQUEST.value(), e.getMessage()), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<?> entityNotFoundException(EntityNotFoundException e) {
-        log.error("[HANSOOM][ERROR] - EntityNotFoundException - {}", e.getMessage());
+        log.error("[HANSOOM][ERROR] - CommonExceptionHandler/EntityNotFoundException - {}", e.getMessage());
         return new ResponseEntity<>(new CommonErrorDto(HttpStatus.NOT_FOUND.value(), e.getMessage()), HttpStatus.NOT_FOUND);
     }
 
@@ -29,7 +29,19 @@ public class CommonExceptionHandler {
         String errorMessage = e.getBindingResult()
                 .getFieldError()
                 .getDefaultMessage();
-        log.error("[HANSOOM][ERROR] - MethodArgumentNotValidException - {}", errorMessage);
+        log.error("[HANSOOM][ERROR] - CommonExceptionHandler/MethodArgumentNotValidException - {}", errorMessage);
         return new ResponseEntity<>(new CommonErrorDto(HttpStatus.BAD_REQUEST.value(), errorMessage), HttpStatus.BAD_REQUEST);
+    }
+
+//    @ExceptionHandler(AuthorizationDeniedException.class)
+//    public ResponseEntity<?> authorizationDeniedException(AuthorizationDeniedException e) {
+//        log.error("[HANSOOM][ERROR] - CommonExceptionHandler/AuthorizationDeniedException - {}", e.getMessage());
+//        return new ResponseEntity<>(new CommonErrorDto(HttpStatus.FORBIDDEN.value(),  e.getMessage()), HttpStatus.FORBIDDEN);
+//    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<?> handleAllException(Exception e) {
+        log.error("[HANSOOM][ERROR] - CommonExceptionHandler/Exception - {}", e.getMessage());
+        return new ResponseEntity<>(new CommonErrorDto(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
