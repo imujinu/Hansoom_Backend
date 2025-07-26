@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class UserMypageDto {
-    private Long id;
     private String email;
     private String name;
     private String nickName;
@@ -25,7 +24,6 @@ public class UserMypageDto {
 
     public static UserMypageDto fromEntity(User user) {
         return UserMypageDto.builder()
-                .id(user.getId())
                 .email(user.getEmail())
                 .name(user.getName())
                 .nickName(user.getNickName())

@@ -1,13 +1,15 @@
 package com.beyond.HanSoom.user.controller;
 
 import com.beyond.HanSoom.common.CommonSuccessDto;
-import com.beyond.HanSoom.user.dto.UserCreateDto;
-import com.beyond.HanSoom.user.dto.UserDetailDto;
-import com.beyond.HanSoom.user.dto.UserLoginDto;
-import com.beyond.HanSoom.user.dto.UserMypageDto;
+import com.beyond.HanSoom.user.domain.User;
+import com.beyond.HanSoom.user.dto.*;
 import com.beyond.HanSoom.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -38,6 +40,14 @@ public class UserController {
     // 로그아웃
 
     // 사용자 조회 (페이징, 검색 옵션) // Todo - 호텔 별 사용자 필터링
+    @GetMapping("/list")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('HOST')")
+    public ResponseEntity<?> getUserList(@PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC)Pageable pageable,
+                                         @ModelAttribute UserSearchDto dto) {
+        Page<UserListDto> userPage = userService.findAll(pageable, dto);
+
+        return new ResponseEntity<>(new CommonSuccessDto(userPage, HttpStatus.OK.value(), "사용자 리스트 조회 성공"), HttpStatus.OK);
+    }
 
     // 사용자 상세 조회 (호스트, 관리자 기준)
     @GetMapping("/detail/{inputId}")

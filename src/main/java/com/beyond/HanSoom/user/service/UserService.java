@@ -1,21 +1,28 @@
 package com.beyond.HanSoom.user.service;
 
 import com.beyond.HanSoom.user.domain.User;
-import com.beyond.HanSoom.user.dto.UserCreateDto;
-import com.beyond.HanSoom.user.dto.UserDetailDto;
-import com.beyond.HanSoom.user.dto.UserLoginDto;
-import com.beyond.HanSoom.user.dto.UserMypageDto;
+import com.beyond.HanSoom.user.dto.*;
 import com.beyond.HanSoom.user.repository.UserRepository;
 import com.beyond.HanSoom.user.security.JwtTokenProvider;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -55,9 +62,19 @@ public class UserService {
         return token;
     }
 
-    //
+    // 사용자 조회 (페이징, 검색 옵션) // Todo - 호텔 별 사용자 필터링
+    public Page<UserListDto> findAll(Pageable pageable, UserSearchDto dto) {
+        // 검색 조건
+        Specification specification = UserSpecification.search(dto);
 
-    // 회원상세 조회
+        Page<User> userPages = userRepository.findAll(specification ,pageable);
+
+        log.info("[HANSOOM][INFO] - UserService/findAll - 사용자 리스트 조회 성공");
+
+        return userPages.map(a -> UserListDto.fromEntity(a));
+    }
+
+    // 사용자 상세 조회 (호스트, 관리자 기준)
     public UserDetailDto findByIdForManagement(Long id) {
         User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("없는 사용자입니다."));
 
@@ -66,6 +83,7 @@ public class UserService {
         return UserDetailDto.fromEntity(user);
     }
 
+    // 사용자 상세 조회 (마이페이지)
     public UserMypageDto findByAuthenticationForSelf() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
@@ -75,5 +93,7 @@ public class UserService {
 
         return UserMypageDto.fromEntity(user);
     }
+
+
 
 }
