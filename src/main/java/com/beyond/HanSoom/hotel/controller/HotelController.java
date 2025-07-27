@@ -3,13 +3,14 @@ package com.beyond.HanSoom.hotel.controller;
 import com.beyond.HanSoom.common.CommonSuccessDto;
 import com.beyond.HanSoom.hotel.dto.HotelRegisterRequsetDto;
 import com.beyond.HanSoom.hotel.service.HotelService;
+import com.beyond.HanSoom.roomImage.domain.RoomImage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -19,8 +20,10 @@ public class HotelController {
     private final HotelService hotelService;
 
     @PostMapping("/create")
-    public ResponseEntity<?> registerHotel(@RequestBody HotelRegisterRequsetDto dto) {
-        hotelService.registerHotel(dto);
+    public ResponseEntity<?> registerHotel(@RequestPart(name = "hotelRegisterDto") HotelRegisterRequsetDto dto,
+                                           @RequestPart(name = "hotelImage") MultipartFile hotelImage,
+                                           @RequestPart(name = "roomImages") List<MultipartFile> roomImages) {
+        hotelService.registerHotel(dto, hotelImage, roomImages);
         return new ResponseEntity<>(new CommonSuccessDto("OK", HttpStatus.CREATED.value(), "hotel is created"), HttpStatus.CREATED);
     }
 

@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -24,7 +25,7 @@ public class HotelRegisterRequsetDto {
 
     private List<RoomRegisterRequestDto> rooms;
 
-    public Hotel toEntity() {
+    public Hotel toEntity(MultipartFile hotelImage) {
         return Hotel.builder()
                 .hotelName(this.hotelName)
                 .address(this.address)
@@ -32,6 +33,7 @@ public class HotelRegisterRequsetDto {
                 .describtion(this.describtion)
                 .type(this.type)
                 .state(HotelState.WAIT)
+                .image(hotelImage.getOriginalFilename())
                 .build();
     }
 }

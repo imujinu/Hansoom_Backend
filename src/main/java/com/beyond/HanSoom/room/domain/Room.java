@@ -2,6 +2,7 @@ package com.beyond.HanSoom.room.domain;
 
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.hotel.domain.HotelState;
+import com.beyond.HanSoom.roomImage.domain.RoomImage;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,6 +11,8 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -39,4 +42,8 @@ public class Room {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hotel_id")
     private Hotel hotel;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "room", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<RoomImage> roomImages = new ArrayList<>();
 }
