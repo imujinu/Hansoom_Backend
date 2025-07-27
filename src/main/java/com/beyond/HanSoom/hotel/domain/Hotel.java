@@ -1,5 +1,6 @@
 package com.beyond.HanSoom.hotel.domain;
 
+import com.beyond.HanSoom.room.domain.Room;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,6 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -28,4 +31,8 @@ public class Hotel {
     @Enumerated(EnumType.STRING)
     private HotelType type;
     private LocalDateTime answerTime;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Room> rooms = new ArrayList<>();
 }

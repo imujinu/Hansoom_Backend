@@ -1,10 +1,8 @@
 package com.beyond.HanSoom.room.domain;
 
+import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.hotel.domain.HotelState;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -34,5 +32,11 @@ public class Room {
     private int extraFee;
     private LocalTime checkIn;
     private LocalTime checkOut;
-    private HotelState state;
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    private HotelState state = HotelState.WAIT;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hotel_id")
+    private Hotel hotel;
 }
