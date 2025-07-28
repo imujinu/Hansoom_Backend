@@ -22,7 +22,7 @@ public class UserCreateDto {
     @NotEmpty(message = "비밀번호가 비어있습니다.")
     @Size(min = 8, message = "비밀번호가 8자리 미만입니다.")
     private String password;
-    @NotEmpty
+    @NotEmpty(message = "전화번호가 비어있습니다.")
     private String phoneNumber;
     private UserRole userRole = UserRole.USER; // null로 들어오면 null로 세팅돼서 not null 오류
 

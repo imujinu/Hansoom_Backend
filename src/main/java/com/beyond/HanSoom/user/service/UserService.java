@@ -95,6 +95,15 @@ public class UserService {
         return UserMypageDto.fromEntity(user);
     }
 
+    // 사용자 정보 수정 (마이페이지)
+    public Long updateUser(UserUpdateDto dto) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("없는 사용자입니다."));
+        user.updateUserInfo(dto.getName(), dto.getNickName(), dto.getPhoneNumber());
+        return user.getId();
+    }
+
     // 회원 탈퇴 (사용자 기준)
     public Long deleteUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

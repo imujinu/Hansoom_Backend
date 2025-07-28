@@ -42,4 +42,11 @@ public class User {
     private LocalDateTime updatedTime;
 
     // Todo - 필요한 경우 @OneToMany / @oneToOne 속성 등록
+
+    // 사용자 정보 수정 (마이페이지)
+    public void updateUserInfo(String name, String nickName, String phoneNumber) {
+        this.name = name;
+        this.nickName = nickName;
+        this.phoneNumber = phoneNumber;
+    }
 }

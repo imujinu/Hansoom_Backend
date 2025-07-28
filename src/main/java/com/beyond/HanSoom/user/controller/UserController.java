@@ -34,7 +34,7 @@ public class UserController {
 
     // 로그인
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody UserLoginDto dto) {
+    public ResponseEntity<?> login(@RequestBody @Valid UserLoginDto dto) {
         String token = userService.login(dto);
         return new ResponseEntity<>(new CommonSuccessDto(token, HttpStatus.OK.value(), "로그인 성공"), HttpStatus.OK);
     }
@@ -67,7 +67,12 @@ public class UserController {
     }
 
     // 사용자 정보 수정 (마이페이지)
-//    @PutMapping("/update")
+    @PutMapping("/update")
+    // Todo - 프로필 사진 수정
+    public ResponseEntity<?> updateUser(@RequestBody @Valid UserUpdateDto dto) {
+        Long userId = userService.updateUser(dto);
+        return new ResponseEntity<>(new CommonSuccessDto(userId, HttpStatus.OK.value(), "사용자 정보 수정 성공"), HttpStatus.OK);
+    }
 
     // 회원 탈퇴 (사용자 기준)
     @DeleteMapping("/delete")
