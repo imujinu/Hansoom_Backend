@@ -46,4 +46,8 @@ public class Room {
     @Builder.Default
     @OneToMany(mappedBy = "room", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<RoomImage> roomImages = new ArrayList<>();
+
+    public void updateState(HotelState state) {
+        this.state = state;
+    }
 }

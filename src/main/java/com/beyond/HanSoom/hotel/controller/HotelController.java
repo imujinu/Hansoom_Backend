@@ -2,6 +2,7 @@ package com.beyond.HanSoom.hotel.controller;
 
 import com.beyond.HanSoom.common.CommonSuccessDto;
 import com.beyond.HanSoom.hotel.dto.HotelRegisterRequsetDto;
+import com.beyond.HanSoom.hotel.dto.HotelStateUpdateDto;
 import com.beyond.HanSoom.hotel.service.HotelService;
 import com.beyond.HanSoom.roomImage.domain.RoomImage;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,19 @@ public class HotelController {
                                            @RequestPart(name = "roomImages") List<MultipartFile> roomImages) {
         hotelService.registerHotel(dto, hotelImage, roomImages);
         return new ResponseEntity<>(new CommonSuccessDto("OK", HttpStatus.CREATED.value(), "hotel is created"), HttpStatus.CREATED);
+    }
+
+    @PostMapping("/answerAdmin") // todo Admin만 가능하게 추후 수정
+    public ResponseEntity<?> answerAdmin(@RequestBody HotelStateUpdateDto dto) {
+        hotelService.answerAdmin(dto);
+        return new ResponseEntity<>(
+                CommonSuccessDto.builder()
+                        .result("OK")
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("호텔 등록 답변 완료")
+                        .build(),
+                HttpStatus.OK
+        );
     }
 
 }

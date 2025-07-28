@@ -3,9 +3,11 @@ package com.beyond.HanSoom.hotel.service;
 import com.beyond.HanSoom.common.S3Uploader;
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.hotel.dto.HotelRegisterRequsetDto;
+import com.beyond.HanSoom.hotel.dto.HotelStateUpdateDto;
 import com.beyond.HanSoom.hotel.repository.HotelRepository;
 import com.beyond.HanSoom.room.domain.Room;
 import com.beyond.HanSoom.roomImage.domain.RoomImage;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,6 +58,15 @@ public class HotelService {
             hotel.getRooms().add(room); // 호텔에 객실 추가
         }
         hotelRepository.save(hotel);
+    }
+
+    public void answerAdmin(HotelStateUpdateDto dto) {
+        Hotel hotel = hotelRepository.findById(dto.getHotelId()).orElseThrow(() -> new EntityNotFoundException("등록된 호텔이 없습니다."));
+        hotel.updateState(dto.getState());
+
+        for(Room r : hotel.getRooms()) {
+            r.updateState(dto.getState());
+        }
     }
 
     private int extractRoomIndex(String filename) {

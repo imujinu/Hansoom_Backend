@@ -35,4 +35,9 @@ public class Hotel {
     @Builder.Default
     @OneToMany(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Room> rooms = new ArrayList<>();
+
+    public void updateState(HotelState state) {
+        this.state = state;
+        this.answerTime = LocalDateTime.now();
+    }
 }
