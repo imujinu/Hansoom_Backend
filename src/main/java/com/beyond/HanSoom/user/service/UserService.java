@@ -1,6 +1,7 @@
 package com.beyond.HanSoom.user.service;
 
 import com.beyond.HanSoom.user.domain.User;
+import com.beyond.HanSoom.user.domain.UserState;
 import com.beyond.HanSoom.user.dto.*;
 import com.beyond.HanSoom.user.repository.UserRepository;
 import com.beyond.HanSoom.user.security.JwtTokenProvider;
@@ -94,6 +95,12 @@ public class UserService {
         return UserMypageDto.fromEntity(user);
     }
 
-
-
+    // 회원 탈퇴 (사용자 기준)
+    public Long deleteUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("없는 사용자입니다."));
+        user.setState(UserState.WITHDRAW);
+        return user.getId();
+    }
 }

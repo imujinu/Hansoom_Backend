@@ -33,6 +33,7 @@ public class User {
     @Column(nullable = false)
     @Builder.Default
     @Enumerated(value = EnumType.STRING)
+    @Setter
     private UserState state = UserState.NORMAL;
     private String profileImage;
     @CreationTimestamp // Todo - BaseClass로 빼기 (@MappedSuperClass)
