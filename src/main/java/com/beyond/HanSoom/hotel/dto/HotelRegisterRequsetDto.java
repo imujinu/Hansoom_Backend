@@ -25,7 +25,7 @@ public class HotelRegisterRequsetDto {
 
     private List<RoomRegisterRequestDto> rooms;
 
-    public Hotel toEntity(MultipartFile hotelImage) {
+    public Hotel toEntity(String hotelImageUrl) {
         return Hotel.builder()
                 .hotelName(this.hotelName)
                 .address(this.address)
@@ -33,7 +33,7 @@ public class HotelRegisterRequsetDto {
                 .describtion(this.describtion)
                 .type(this.type)
                 .state(HotelState.WAIT)
-                .image(hotelImage.getOriginalFilename())
+                .image(hotelImageUrl)
                 .build();
     }
 }

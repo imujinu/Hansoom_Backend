@@ -1,5 +1,6 @@
 package com.beyond.HanSoom.hotel.service;
 
+import com.beyond.HanSoom.common.S3Uploader;
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.hotel.dto.HotelRegisterRequsetDto;
 import com.beyond.HanSoom.hotel.repository.HotelRepository;
@@ -20,14 +21,19 @@ import java.util.stream.Collectors;
 @Transactional
 @RequiredArgsConstructor
 public class HotelService {
-    public final HotelRepository hotelRepository;
+    private final HotelRepository hotelRepository;
+    private final S3Uploader s3Uploader;
 
     public void registerHotel(HotelRegisterRequsetDto dto, MultipartFile hotelImage, List<MultipartFile> roomImages) {
-        Hotel hotel = hotelRepository.save(dto.toEntity(hotelImage));
+        // 호텔 이미지 S3 저장
+        String hotelImageUrl = (hotelImage != null && !hotelImage.isEmpty())
+                ? s3Uploader.upload(hotelImage, "hotel")
+                : null;
+        // 호텔 객체 저장
+        Hotel hotel = hotelRepository.save(dto.toEntity(hotelImageUrl));
+
+        // 객실 생성
         List<Room> rooms = dto.getRooms().stream().map(a -> a.toEntity(hotel)).toList();
-        for(Room r : rooms) {
-            hotel.getRooms().add(r);
-        }
 
         Map<Integer, List<MultipartFile>> roomImageMap = new HashMap<>();
         for(MultipartFile file : roomImages) {
@@ -40,17 +46,16 @@ public class HotelService {
             List<MultipartFile> imageList = roomImageMap.getOrDefault(i, List.of());
 
             for (MultipartFile image : imageList) {
-//                String savedFileName = saveImageLocally(image, "uploads/room/");
+                String imageUrl = s3Uploader.upload(image, "room");
                 RoomImage roomImage = RoomImage.builder()
-                        .imageUrl(image.getOriginalFilename())
+                        .imageUrl(imageUrl)
                         .room(room)
                         .build();
                 room.getRoomImages().add(roomImage); // 양방향 연관관계 설정
             }
-
             hotel.getRooms().add(room); // 호텔에 객실 추가
         }
-
+        hotelRepository.save(hotel);
     }
 
     private int extractRoomIndex(String filename) {
