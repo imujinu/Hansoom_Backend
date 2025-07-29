@@ -1,4 +1,7 @@
 package com.beyond.HanSoom.room.repository;
 
-public class RoomRepository {
+import com.beyond.HanSoom.room.domain.Room;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface RoomRepository extends JpaRepository<Room, Long> {
 }

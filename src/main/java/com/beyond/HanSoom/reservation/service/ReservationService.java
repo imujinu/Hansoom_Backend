@@ -1,4 +1,69 @@
 package com.beyond.HanSoom.reservation.service;
 
+import com.beyond.HanSoom.hotel.domain.Hotel;
+import com.beyond.HanSoom.hotel.repository.HotelRepository;
+import com.beyond.HanSoom.reservation.dto.req.ReservationReqDto;
+import com.beyond.HanSoom.reservation.repository.ReservationRepository;
+import com.beyond.HanSoom.room.domain.Room;
+import com.beyond.HanSoom.room.repository.RoomRepository;
+import com.beyond.HanSoom.user.domain.User;
+import com.beyond.HanSoom.user.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Date;
+
+import static java.time.DayOfWeek.SATURDAY;
+import static java.time.DayOfWeek.SUNDAY;
+
+@Service
+@Transactional
+@RequiredArgsConstructor
 public class ReservationService {
+    private ReservationRepository reservationRepository;
+    private UserRepository userRepository;
+    private RoomRepository roomRepository;
+    private HotelRepository hotelRepository;
+
+    public Long reserve(ReservationReqDto dto) {
+
+        // 값 유효성 검증
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email).orElseThrow(()->new EntityNotFoundException("해당 유저가 존재하지 않습니다."));
+        Room room = roomRepository.findById(dto.getRoomId()).orElseThrow(()->new EntityNotFoundException("해당 객실이 존재하지 않습니다."));; //todo : roomrepo가 필요함
+        Hotel hotel = hotelRepository.findById(dto.getHotelId()).orElseThrow(()->new EntityNotFoundException("해당 호텔이 존재하지 않습니다."));;
+
+        if(dto.getPeople()>room.getMaximumPeople()){
+            throw new IllegalStateException("인원이 초과 되었습니다.");
+        }
+
+
+        // 실제 숙박비 계산
+        LocalDate date = dto.getCheckIn();
+        DayOfWeek day = date.getDayOfWeek();
+        long totalPrice = 0;
+
+        while(date.isEqual(dto.getCheckOut())){
+
+        if(day==SATURDAY || day==SUNDAY ){
+            totalPrice += room.getWeeksdendPrice();
+        }else{
+            totalPrice += room.getWeekPrice;
+        }
+            date=date.plusDays(1);
+        }
+
+        return reservationRepository.save(dto.toEntity(price,user,hotel, room)).getId();
+
+    }
+
+
+
+
 }
