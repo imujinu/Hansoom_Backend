@@ -45,6 +45,7 @@ spring:
 #      bucket: eunduk-board-bucket
 
 jwt:
+  # Todo - 만료시간 조정
   expirationAt: 1000 # 1000분
   # 인코딩된 문자 32자 이상 필요. (특수문자 X)
   # beyondaccesstokensecretkeybeyondaccesstokensecretkeybeyondaccesstokensecretkey
@@ -55,7 +56,3 @@ logging:
     # debug, info, error 로그 출력
     #    root: debug
     root: info # default
-
-## mapper파일 (mybatis의 쿼리파일)의 위치를 명시하고 scanning한다. 기본적으로 resource폴더는 default.
-#mybatis:
-#  mapper-locations: classpath:/mapper/**/*.xml

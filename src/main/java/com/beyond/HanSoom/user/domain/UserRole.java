@@ -1,6 +1,6 @@
 package com.beyond.HanSoom.user.domain;
 
-public enum UserType {
+public enum UserRole {
     USER,
     HOST,
     ADMIN
