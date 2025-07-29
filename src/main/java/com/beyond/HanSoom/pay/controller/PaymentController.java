@@ -18,7 +18,7 @@ public class PaymentController {
 
     @PostMapping("/pay")
     ResponseEntity<?> pay(@RequestBody PaymentReqDto paymentReqDto){
-        Long reserveId = paymentService.pay(paymentReqDto);
+//        Long reserveId = paymentService.pay(paymentReqDto);
         return new ResponseEntity<>("ok", HttpStatus.OK);
     }
 

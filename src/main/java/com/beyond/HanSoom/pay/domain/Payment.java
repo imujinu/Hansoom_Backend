@@ -21,8 +21,7 @@ public class Payment {
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reserve_id")
-    @Column(nullable = false)
+    @JoinColumn(name = "reserve_id", nullable = false)
     private Reservation reservation;
 
     @Column(nullable = false)

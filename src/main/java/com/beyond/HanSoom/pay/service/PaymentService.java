@@ -1,5 +1,6 @@
 package com.beyond.HanSoom.pay.service;
 
+import com.beyond.HanSoom.pay.dto.PaymentReqDto;
 import com.beyond.HanSoom.pay.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,5 +13,6 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
 
 
-
+//    public Long pay(PaymentReqDto paymentReqDto) {
+//    }
 }

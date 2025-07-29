@@ -30,7 +30,7 @@ public class ReservationResDto {
     @AllArgsConstructor
     @NoArgsConstructor
     @Builder
-    public class HotelDto{
+    public static class HotelDto{
         private String hotelName;
         private String hotelAddress;
         private String hotelImage;
@@ -40,9 +40,14 @@ public class ReservationResDto {
 
 
     public ReservationResDto fromEntity(Reservation reservation){
+        Hotel hotel = reservation.getHotel();
         return ReservationResDto.builder()
                 .id(reservation.getId())
-                .hotelDto(reservation.getHotel().getHotelName(), reservation.getHotel().getAddress(),reservation.getHotel().getImage() )
+                .hotelDto(HotelDto.builder()
+                        .hotelName(hotel.getHotelName())
+                        .hotelAddress(hotel.getAddress())
+                        .hotelImage(hotel.getImage())
+                        .build())
                 .roomId(reservation.getRoom().getId())
                 .checkIn(reservation.getCheckInDate())
                 .checkOut(reservation.getCheckOutDate())
