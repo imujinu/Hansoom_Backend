@@ -1,10 +1,9 @@
 package com.beyond.HanSoom.hotel.controller;
 
-import com.beyond.HanSoom.common.CommonSuccessDto;
+import com.beyond.HanSoom.common.dto.CommonSuccessDto;
 import com.beyond.HanSoom.hotel.dto.HotelRegisterRequsetDto;
 import com.beyond.HanSoom.hotel.dto.HotelStateUpdateDto;
 import com.beyond.HanSoom.hotel.service.HotelService;
-import com.beyond.HanSoom.roomImage.domain.RoomImage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

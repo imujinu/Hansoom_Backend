@@ -4,26 +4,18 @@ import com.beyond.HanSoom.user.domain.User;
 import com.beyond.HanSoom.user.domain.UserState;
 import com.beyond.HanSoom.user.dto.*;
 import com.beyond.HanSoom.user.repository.UserRepository;
-import com.beyond.HanSoom.user.security.JwtTokenProvider;
+import com.beyond.HanSoom.common.auth.JwtTokenProvider;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -49,18 +41,27 @@ public class UserService {
     }
 
     // 로그인
-    public String login(UserLoginDto dto) {
+    public UserLoginResDto login(UserLoginReqDto dto) {
         // 이메일, 비밀번호 검증
         User user = userRepository.findByEmail(dto.getEmail()).orElseThrow(() -> new EntityNotFoundException("없는 사용자입니다."));
         boolean isValidPassword = passwordEncoder.matches(dto.getPassword(), user.getPassword());
         if(!isValidPassword) throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
 
         // 토큰 생성해서 반환
-        String token = jwtTokenProvider.createAtToken(user);
+        String accessToken = jwtTokenProvider.createAtToken(user);
+        String refreshToken = jwtTokenProvider.createRtToken(user);
 
         log.info("[HANSOOM][INFO] - UserService/login - 로그인 성공, email={}", dto.getEmail());
 
-        return token;
+        return new UserLoginResDto(accessToken, refreshToken);
+    }
+
+    // 토큰 재발급
+    public UserLoginResDto tokenRefresh(RefreshTokenDto dto) {
+        User user = jwtTokenProvider.validateRt(dto.getRefreshToken());
+        String accessToken = jwtTokenProvider.createAtToken(user);
+
+        return new UserLoginResDto(accessToken, null);
     }
 
     // 사용자 조회 (페이징, 검색 옵션) // Todo - 호텔 별 사용자 필터링

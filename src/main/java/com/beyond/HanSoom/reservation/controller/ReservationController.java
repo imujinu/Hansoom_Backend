@@ -1,7 +1,5 @@
 package com.beyond.HanSoom.reservation.controller;
 
-import com.beyond.HanSoom.common.CommonSuccessDto;
-import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.reservation.dto.req.ReservationReqDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResDto;
 import com.beyond.HanSoom.reservation.service.ReservationService;

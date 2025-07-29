@@ -1,6 +1,6 @@
-package com.beyond.HanSoom.user.security;
+package com.beyond.HanSoom.common.auth;
 
-import com.beyond.HanSoom.common.CommonErrorDto;
+import com.beyond.HanSoom.common.dto.CommonErrorDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
