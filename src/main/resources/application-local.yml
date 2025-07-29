@@ -34,15 +34,15 @@ spring:
     show_sql: true
 
 # aws s3 접근하기 위한 계정 세팅
-#cloud:
-#  aws:
-#    credentials:
-#      access-key:
-#      secret-key:
-#    region:
-#      static: ap-northeast-2
-#    s3:
-#      bucket: eunduk-board-bucket
+cloud:
+  aws:
+    credentials:
+      access-key: AKIAYAF66XOOKWFXSPKI
+      secret-key: 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
+    region:
+      static: ap-northeast-2
+    s3:
+      bucket: eunduk-board-bucket
 
 jwt:
   # Todo - 만료시간 조정

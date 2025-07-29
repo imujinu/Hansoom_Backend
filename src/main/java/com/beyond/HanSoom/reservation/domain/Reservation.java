@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.UUID;
 
 @Entity
 @NoArgsConstructor
@@ -20,22 +21,19 @@ import java.util.Date;
 @Getter
 public class Reservation {
     @Id
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy= GenerationType.UUID)
+    private UUID id;
 
-    @OneToMany(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    @Column(nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToMany(fetch = FetchType.LAZY)
-    @JoinColumn(name = "hotel_id")
-    @Column(nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hotel_id", nullable = false)
     private Hotel hotel;
 
-    @OneToMany(fetch = FetchType.LAZY)
-    @JoinColumn(name = "room_id")
-    @Column(nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "room_id", nullable = false)
     private Room room;
 
     @Column(nullable = false)
@@ -58,4 +56,8 @@ public class Reservation {
     @Builder.Default
     @Enumerated(EnumType.STRING)
     private State state = State.RESERVE;
+
+    public void cancel(){
+        this.state = State.CANCEL;
+    }
 }

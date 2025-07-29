@@ -2,7 +2,9 @@ package com.beyond.HanSoom.reservation.service;
 
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.hotel.repository.HotelRepository;
+import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.reservation.dto.req.ReservationReqDto;
+import com.beyond.HanSoom.reservation.dto.res.ReservationResDto;
 import com.beyond.HanSoom.reservation.repository.ReservationRepository;
 import com.beyond.HanSoom.room.domain.Room;
 import com.beyond.HanSoom.room.repository.RoomRepository;
@@ -18,6 +20,9 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static java.time.DayOfWeek.SATURDAY;
 import static java.time.DayOfWeek.SUNDAY;
@@ -31,7 +36,7 @@ public class ReservationService {
     private RoomRepository roomRepository;
     private HotelRepository hotelRepository;
 
-    public Long reserve(ReservationReqDto dto) {
+    public UUID reserve(ReservationReqDto dto) {
 
         // 값 유효성 검증
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -49,21 +54,35 @@ public class ReservationService {
         DayOfWeek day = date.getDayOfWeek();
         long totalPrice = 0;
 
-        while(date.isEqual(dto.getCheckOut())){
+        while(!date.isEqual(dto.getCheckOut())){
 
         if(day==SATURDAY || day==SUNDAY ){
-            totalPrice += room.getWeeksdendPrice();
+            totalPrice += room.getWeekendPrice();
+            totalPrice += room.getExtraFee();
         }else{
-            totalPrice += room.getWeekPrice;
+            totalPrice += room.getWeekPrice();
+            totalPrice += room.getExtraFee();
         }
             date=date.plusDays(1);
         }
 
-        return reservationRepository.save(dto.toEntity(price,user,hotel, room)).getId();
+        return reservationRepository.save(dto.toEntity(totalPrice,user,hotel, room)).getId();
 
     }
 
 
+    public List<ReservationResDto> find() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email).orElseThrow(()->new EntityNotFoundException("해당 유저가 존재하지 않습니다."));
+        List<Reservation> reservation = reservationRepository.findAllByUser(user);
+        return reservation.stream().map(a-> new ReservationResDto().fromEntity(a)).collect(Collectors.toList());
+    }
 
-
+    public UUID cancel(){
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email).orElseThrow(()->new EntityNotFoundException("해당 유저가 존재하지 않습니다."));
+        Reservation reservation = reservationRepository.findByUser(user);
+        reservation.cancel();
+        return reservation.getId();
+    }
 }

@@ -1,5 +1,7 @@
-package com.beyond.HanSoom.reservation.domain;
+package com.beyond.HanSoom.pay.domain;
 
+import com.beyond.HanSoom.reservation.domain.Reservation;
+import com.beyond.HanSoom.reservation.domain.State;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,24 +21,21 @@ public class Payment {
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reserve_id")
-    @Column(nullable = false)
-     private Reservation reservation;
+    @JoinColumn(name = "reserve_id", nullable = false)
+    private Reservation reservation;
 
     @Column(nullable = false)
-    private String payment_type;
+    private String PaymentType;
 
     @Column(nullable = false)
-    private Long amount;
+    private String price;
 
     @Column(nullable = false)
     private State state;
 
     @Column(nullable = false)
-    private LocalDateTime paymentTime;
+    private LocalDateTime PaymentTime;
 
-    @Column(nullable = false)
-    private LocalDateTime cancelTime;
-
+    private LocalDateTime PaymentCancelTime;
 
 }
