@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -19,7 +20,7 @@ public class ReservationController {
     //예약
     @PostMapping("/reservation")
     public ResponseEntity<?> reservation(@RequestBody ReservationReqDto dto){
-       Long reserveId = reservationService.reserve(dto);
+       UUID reserveId = reservationService.reserve(dto);
 
         return new ResponseEntity<>("ok", HttpStatus.ACCEPTED); //todo : 빌더패턴으로 리턴
     }
@@ -27,8 +28,8 @@ public class ReservationController {
     //예약 조회
     @GetMapping("/find")
     public ResponseEntity<?> find(){
-        Long reservId = reservationService.find();
-        return new ResponseEntity<>(resDto, HttpStatus.OK);
+        List<ReservationResDto> resDtos = reservationService.find();
+        return new ResponseEntity<>("ok", HttpStatus.OK);
     }
 
 
