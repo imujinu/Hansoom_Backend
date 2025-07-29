@@ -1,11 +1,15 @@
 package com.beyond.HanSoom.reservation.controller;
 
 import com.beyond.HanSoom.common.CommonSuccessDto;
+import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.reservation.dto.req.ReservationReqDto;
+import com.beyond.HanSoom.reservation.dto.res.ReservationResDto;
 import com.beyond.HanSoom.reservation.service.ReservationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/reserve")
@@ -23,20 +27,18 @@ public class ReservationController {
     //예약 조회
     @GetMapping("/find")
     public ResponseEntity<?> find(){
-        return null;
+        Long reservId = reservationService.find();
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
 
 
     //예약 취소
     @PatchMapping("/cancel")
     public ResponseEntity<?> cancel(){
-        return null;
+        UUID reserveId= reservationService.cancel();
+        return new ResponseEntity<>(reserveId, HttpStatus.ACCEPTED);
     }
 
-    //결제
-    @RequestMapping("/pay")
-    public ResponseEntity<?> pay(){
-        return null;
-    }
+
 
 }
