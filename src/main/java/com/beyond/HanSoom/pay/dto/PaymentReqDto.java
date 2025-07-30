@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class PaymentReqDto {
-    private Long reservationId;
-    private String paymentType;
+    private String paymentKey;
+    private String orderId;
+    private String amount;
 }

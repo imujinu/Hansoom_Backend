@@ -55,9 +55,11 @@ public class Reservation {
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
-    private State state = State.RESERVE;
+    private State state = State.PENDING;
 
     public void cancel(){
-        this.state = State.CANCEL;
+        this.state = State.CANCELD;
+    }
+    public void reserve(){this.state = State.RESERVED;
     }
 }
