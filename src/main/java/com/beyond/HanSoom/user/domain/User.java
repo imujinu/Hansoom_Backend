@@ -28,13 +28,13 @@ public class User {
     private String phoneNumber;
     @Column(nullable = false)
     @Builder.Default
-    private UserType type = UserType.USER;
+    @Enumerated(value = EnumType.STRING)
+    private UserRole userRole = UserRole.USER;
     @Column(nullable = false)
     @Builder.Default
+    @Enumerated(value = EnumType.STRING)
+    @Setter
     private UserState state = UserState.NORMAL;
-    @Column(nullable = false)
-    @Builder.Default
-    private int point = 0;
     private String profileImage;
     @CreationTimestamp // Todo - BaseClass로 빼기 (@MappedSuperClass)
     private LocalDateTime createdTime;
@@ -42,4 +42,11 @@ public class User {
     private LocalDateTime updatedTime;
 
     // Todo - 필요한 경우 @OneToMany / @oneToOne 속성 등록
+
+    // 사용자 정보 수정 (마이페이지)
+    public void updateUserInfo(String name, String nickName, String phoneNumber) {
+        this.name = name;
+        this.nickName = nickName;
+        this.phoneNumber = phoneNumber;
+    }
 }
