@@ -3,7 +3,7 @@ package com.beyond.HanSoom.user.service;
 import com.beyond.HanSoom.user.domain.SocialType;
 import com.beyond.HanSoom.user.domain.User;
 import com.beyond.HanSoom.user.dto.AccessTokenDto;
-import com.beyond.HanSoom.user.dto.GoogleProfileDto;
+import com.beyond.HanSoom.user.dto.KakaoProfileDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -12,25 +12,22 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 
 @Service
-public class GoogleService {
+public class KakaoService {
 
-    @Value("${oauth.google.client-id}")
-    private String googleClientId;
+    @Value("${oauth.kakao.client-id}")
+    private String kakaoClientId;
 
-    @Value("${oauth.google.client-secret}")
-    private String googleClientSecret;
+    @Value("${oauth.kakao.redirect-uri}")
+    private String kakaoRedirectUri;
 
-    @Value("${oauth.google.redirect-uri}")
-    private String googleRedirectUri;
-
-    public User createOauth(GoogleProfileDto googleProfileDto) {
+    public User createOauth(KakaoProfileDto kakaoProfileDto) {
         User user = User.builder()
-                .name(googleProfileDto.getName())
-                .nickName(googleProfileDto.getName())
-                .email(googleProfileDto.getEmail())
-                .socialType(SocialType.GOOGLE)
-                .socialId(googleProfileDto.getSub())
-                .profileImage(googleProfileDto.getPicture())
+                .name(kakaoProfileDto.getKakao_account().getProfile().getNickname())
+                .nickName(kakaoProfileDto.getKakao_account().getProfile().getNickname())
+                .email(kakaoProfileDto.getKakao_account().getEmail())
+                .socialType(SocialType.KAKAO)
+                .socialId(kakaoProfileDto.getId())
+                .profileImage(kakaoProfileDto.getKakao_account().getProfile().getProfile_image_url())
                 .build();
         return user;
     }
@@ -38,31 +35,33 @@ public class GoogleService {
     public AccessTokenDto getAccessToken(String code) {
         RestClient restClient = RestClient.create();
 
+        // MultiValueMap을 통해 자동으로 form-data 형식으로 body 조립 가능
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("code", code);
-        params.add("client_id", googleClientId);
-        params.add("client_secret", googleClientSecret);
-        params.add("redirect_uri", googleRedirectUri);
+        params.add("client_id", kakaoClientId);
+        params.add("redirect_uri", kakaoRedirectUri);
         params.add("grant_type", "authorization_code");
 
         ResponseEntity<AccessTokenDto> response = restClient.post()
-                .uri("https://oauth2.googleapis.com/token")
+                .uri("https://kauth.kakao.com/oauth/token")
                 .header("Content-Type", "application/x-www-form-urlencoded")
+
                 .body(params)
+
                 .retrieve()
                 .toEntity(AccessTokenDto.class);
 
         return response.getBody();
     }
 
-    public GoogleProfileDto getGoogleProfile(String token) {
+    public KakaoProfileDto getKakaoProfile(String token) {
         RestClient restClient = RestClient.create();
 
-        ResponseEntity<GoogleProfileDto> response = restClient.post()
-                .uri("https://openidconnect.googleapis.com/v1/userinfo")
+        ResponseEntity<KakaoProfileDto> response = restClient.post()
+                .uri("https://kapi.kakao.com/v2/user/me")
                 .header("Authorization", "Bearer "+token)
                 .retrieve()
-                .toEntity(GoogleProfileDto.class);
+                .toEntity(KakaoProfileDto.class);
 
         System.out.println("profile json" + response.getBody());
 

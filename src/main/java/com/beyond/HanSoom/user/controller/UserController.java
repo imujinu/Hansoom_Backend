@@ -55,7 +55,8 @@ public class UserController {
     // 카카오 로그인 (정보 없으면 회원가입까지)
     @PostMapping("/kakao/login")
     public ResponseEntity<?> kakaoLogin(@RequestBody RedirectDto dto) {
-        return new ResponseEntity<>(new CommonSuccessDto(), HttpStatus.OK);
+        UserLoginResDto userLoginResDto = userService.kakaoLogin(dto);
+        return new ResponseEntity<>(new CommonSuccessDto(userLoginResDto, HttpStatus.OK.value(), "kakao 로그인 성공"), HttpStatus.OK);
     }
 
 
