@@ -37,7 +37,7 @@ public class ReservationReqDto {
                 .reservationDate(LocalDateTime.now())
                 .people(this.people)
                 .request(this.request)
-                .state(State.RESERVE)
+                .state(State.PENDING)
                 .build();
     }
 }
