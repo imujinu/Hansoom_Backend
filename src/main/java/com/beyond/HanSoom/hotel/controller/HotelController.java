@@ -3,8 +3,10 @@ package com.beyond.HanSoom.hotel.controller;
 import com.beyond.HanSoom.common.CommonSuccessDto;
 import com.beyond.HanSoom.hotel.dto.HotelRegisterRequsetDto;
 import com.beyond.HanSoom.hotel.dto.HotelStateUpdateDto;
+import com.beyond.HanSoom.hotel.dto.HotelUpdateDto;
 import com.beyond.HanSoom.hotel.service.HotelService;
 import com.beyond.HanSoom.roomImage.domain.RoomImage;
+import jakarta.servlet.annotation.MultipartConfig;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +38,23 @@ public class HotelController {
                         .result("OK")
                         .status_code(HttpStatus.OK.value())
                         .status_message("호텔 등록 답변 완료")
+                        .build(),
+                HttpStatus.OK
+        );
+    }
+
+    @PutMapping("/hotels/{id}")
+    public ResponseEntity<?> updateHotel(@PathVariable Long id,
+                                         @RequestPart HotelUpdateDto dto,
+                                         @RequestPart MultipartFile hotelImage,
+                                         @RequestPart List<MultipartFile> roomImages)
+    {
+        hotelService.updateHotel(id, dto, hotelImage, roomImages);
+        return new ResponseEntity<>(
+                CommonSuccessDto.builder()
+                        .result("OK")
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("호텔 정보 수정")
                         .build(),
                 HttpStatus.OK
         );

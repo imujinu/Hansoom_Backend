@@ -51,4 +51,9 @@ public class S3Uploader {
         // 전체 URL 반환 (정적 버킷 기준)
         return "https://" + bucket + ".s3." + region + ".amazonaws.com/" + fileName;
     }
+
+    public void delete(String imageUrl) {
+        String fileName = imageUrl.split("amazonaws.com/")[1];
+        s3Client.deleteObject(a -> a.bucket(bucket).key(fileName));
+    }
 }

@@ -42,4 +42,17 @@ public class Hotel {
         this.state = state;
         this.answerTime = LocalDateTime.now();
     }
+
+    public void updateHotel(String name, String address, String phone, String desc, HotelType type, String image) {
+        this.hotelName = name;
+        this.address = address;
+        this.phoneNumber = phone;
+        this.describtion = desc;
+        this.type = type;
+        this.image = image;
+    }
+
+    public void updateRooms(List<Room> rooms) {
+        this.rooms = rooms;
+    }
 }

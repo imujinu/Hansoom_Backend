@@ -2,6 +2,7 @@ package com.beyond.HanSoom.room.domain;
 
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.hotel.domain.HotelState;
+import com.beyond.HanSoom.room.dto.RoomUpdateDto;
 import com.beyond.HanSoom.roomImage.domain.RoomImage;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -49,5 +50,24 @@ public class Room {
 
     public void updateState(HotelState state) {
         this.state = state;
+    }
+
+    public void updateInfo(RoomUpdateDto dto) {
+        this.type = dto.getType();
+        this.roomCount = dto.getRoomCount();
+        this.weekPrice = dto.getWeekPrice();
+        this.weekendPrice = dto.getWeekendPrice();
+        this.standardPeople = dto.getStandardPeople();
+        this.maximumPeople = dto.getMaximumPeople();
+        this.roomOption1 = dto.getRoomOption1();
+        this.roomOption2 = dto.getRoomOption2();
+        this.checkIn = dto.getCheckIn();
+        this.checkOut = dto.getCheckOut();
+        this.extraFee = dto.getExtraFee();
+        this.describtion = dto.getDescribtion();
+    }
+
+    public void updateRoomImages(List<RoomImage> roomImageList) {
+        this.roomImages = roomImageList;
     }
 }
