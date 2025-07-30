@@ -22,9 +22,7 @@ public class User {
     @Column(nullable = false)
     private String name;
     private String nickName;
-    @Column(nullable = false)
     private String password;
-    @Column(nullable = false)
     private String phoneNumber;
     @Column(nullable = false)
     @Builder.Default
@@ -36,6 +34,9 @@ public class User {
     @Setter
     private UserState state = UserState.NORMAL;
     private String profileImage;
+    @Enumerated(value = EnumType.STRING)
+    private SocialType socialType;
+    private String socialId;
     @CreationTimestamp // Todo - BaseClass로 빼기 (@MappedSuperClass)
     private LocalDateTime createdTime;
     @UpdateTimestamp

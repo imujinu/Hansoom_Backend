@@ -1,5 +1,6 @@
 package com.beyond.HanSoom.user.service;
 
+import com.beyond.HanSoom.user.domain.SocialType;
 import com.beyond.HanSoom.user.domain.User;
 import com.beyond.HanSoom.user.domain.UserState;
 import com.beyond.HanSoom.user.dto.*;
@@ -17,6 +18,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -24,6 +28,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final GoogleService googleService;
 
 
     // 회원가입
@@ -38,6 +43,19 @@ public class UserService {
         log.info("[HANSOOM][INFO] - UserService/save - 회원가입 성공, email={}", dto.getEmail());
 
         // Todo - 프로필 사진 저장 구현
+    }
+
+    public User createOauth(GoogleProfileDto googleProfileDto) {
+        User user = User.builder()
+                .name(googleProfileDto.getName())
+                .nickName(googleProfileDto.getName())
+                .email(googleProfileDto.getEmail())
+                .socialType(SocialType.GOOGLE)
+                .socialId(googleProfileDto.getSub())
+                .profileImage(googleProfileDto.getPicture())
+                .build();
+        userRepository.save(user);
+        return user;
     }
 
     // 로그인
@@ -55,6 +73,32 @@ public class UserService {
 
         return new UserLoginResDto(accessToken, refreshToken);
     }
+
+    // 구글 로그인 (정보 없으면 회원가입까지)
+    public UserLoginResDto googleLogin(RedirectDto dto) {
+
+        // accessToken 발급
+        AccessTokenDto accessTokenDto = googleService.getAccessToken(dto.getCode());
+        // 사용자 정보 얻기
+        GoogleProfileDto googleProfileDto = googleService.getGoogleProfile(accessTokenDto.getAccess_token());
+
+        // 회원가입이 되어있지 않다면 회원가입
+        User user = userRepository.findBySocialId(googleProfileDto.getSub()).orElse(null);
+        if(user == null) {
+            user = createOauth(googleProfileDto);
+            log.info("[HANSOOM][INFO] - UserService/googleLogin - google 회원가입 성공, email={}", user.getEmail());
+        }
+
+        // 토큰 생성해서 반환
+        String accessToken = jwtTokenProvider.createAtToken(user);
+        String refreshToken = jwtTokenProvider.createRtToken(user);
+
+        log.info("[HANSOOM][INFO] - UserService/googleLogin - google 로그인 성공, email={}", user.getEmail());
+
+        return new UserLoginResDto(accessToken, refreshToken);
+    }
+
+    // 카카오 로그인 (정보 없으면 회원가입까지)
 
     // 토큰 재발급
     public UserLoginResDto tokenRefresh(RefreshTokenDto dto) {

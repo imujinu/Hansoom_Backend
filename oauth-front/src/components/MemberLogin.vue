@@ -21,7 +21,7 @@
                             >
                                 
                             </v-text-field>
-                            <v-btn type="button" color="primary" block @click="memberLogin()">로ddd그인</v-btn>
+                            <v-btn type="button" color="primary" block @click="memberLogin()">로그인</v-btn>
                         </v-form>
                         <br>
                         <v-row>
@@ -55,7 +55,7 @@ export default {
         return{
             email : "",
             password : "",
-            googleUrl: "https://kauth.kakao.com/oauth/authorize",
+            googleUrl: "https://accounts.google.com/o/oauth2/auth",
             googleClientId: "184039275121-3v895hcqj0imbjne3pfs9ceg6h8gld30.apps.googleusercontent.com",
             googleRedirectUrl: "http://localhost:3000/oauth/google/redirect",
             // openid는 요청하지 않아도 기본적으로 제공. email과 profile은 요청 시 제공.
@@ -68,17 +68,18 @@ export default {
     },
     methods: {
         async memberLogin() {
-            const loginrData = {
+            const loginData = {
                 email : this.email,
                 password : this.password
             }
-            const response = await axios.post("http://localhost:8080/member/doLogin", loginrData);
+            const response = await axios.post("http://localhost:8080/member/doLogin", loginData);
             const token = response.data.token;
             localStorage.setItem("token", token);
             window.location.href = "/";
         },
         googleLogin() {
             const auth_uri = `${this.googleUrl}?client_id=${this.googleClientId}&redirect_uri=${this.googleRedirectUrl}&response_type=code&scope=${this.googleScope}`;
+            console.log(auth_uri);
             window.location.href = auth_uri;
         },
         kakaoLogin() {
