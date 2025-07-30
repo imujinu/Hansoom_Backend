@@ -29,7 +29,7 @@ spring:
       # create : 매번 table을 drop후 재 생성
       # update : entity 변경사항만 alter를 적용하고 기존 데이터 유지
       # validate : 실제 DB와의 차이점을 check만 하고 ddl 문 실행 x, 콘솔로만 변경사항 출력.
-      ddl-auto: update
+      ddl-auto: create
     # 콘솔창에 ddl, dml 등의 쿼리를 출력하여 보여주는 옵션
     show_sql: true
 

@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 public class HotelService {
     private final HotelRepository hotelRepository;
     private final S3Uploader s3Uploader;
+    private final GeocoderService geocoderService;
 
     public void registerHotel(HotelRegisterRequsetDto dto, MultipartFile hotelImage, List<MultipartFile> roomImages) {
         // 호텔 이미지 S3 저장
@@ -32,7 +33,9 @@ public class HotelService {
                 ? s3Uploader.upload(hotelImage, "hotel")
                 : null;
         // 호텔 객체 저장
-        Hotel hotel = hotelRepository.save(dto.toEntity(hotelImageUrl));
+
+        GeocoderService.Coordinate coord = geocoderService.getCoordinates(dto.getAddress());
+        Hotel hotel = hotelRepository.save(dto.toEntity(hotelImageUrl, coord));
 
         // 객실 생성
         List<Room> rooms = dto.getRooms().stream().map(a -> a.toEntity(hotel)).toList();

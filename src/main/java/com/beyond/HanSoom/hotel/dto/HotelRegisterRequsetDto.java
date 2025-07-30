@@ -3,6 +3,7 @@ package com.beyond.HanSoom.hotel.dto;
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.hotel.domain.HotelState;
 import com.beyond.HanSoom.hotel.domain.HotelType;
+import com.beyond.HanSoom.hotel.service.GeocoderService;
 import com.beyond.HanSoom.room.dto.RoomRegisterRequestDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,7 +26,7 @@ public class HotelRegisterRequsetDto {
 
     private List<RoomRegisterRequestDto> rooms;
 
-    public Hotel toEntity(String hotelImageUrl) {
+    public Hotel toEntity(String hotelImageUrl, GeocoderService.Coordinate coordinate) {
         return Hotel.builder()
                 .hotelName(this.hotelName)
                 .address(this.address)
@@ -34,6 +35,8 @@ public class HotelRegisterRequsetDto {
                 .type(this.type)
                 .state(HotelState.WAIT)
                 .image(hotelImageUrl)
+                .latitude(coordinate.getLatitude())
+                .longitude(coordinate.getLongitude())
                 .build();
     }
 }

@@ -31,6 +31,8 @@ public class Hotel {
     @Enumerated(EnumType.STRING)
     private HotelType type;
     private LocalDateTime answerTime;
+    private double latitude;
+    private double longitude;
 
     @Builder.Default
     @OneToMany(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
