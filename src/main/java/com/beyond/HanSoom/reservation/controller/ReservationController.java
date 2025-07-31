@@ -5,6 +5,7 @@ import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.reservation.dto.req.ReservationReqDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResDto;
 import com.beyond.HanSoom.reservation.service.ReservationService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,16 +14,17 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/reserve")
+@RequestMapping("/reservation")
+@Slf4j
 public class ReservationController {
     private ReservationService reservationService;
 
     //예약
-    @PostMapping("/reservation")
+    @PostMapping("/confirm")
     public ResponseEntity<?> reservation(@RequestBody ReservationReqDto dto){
-       UUID reserveId = reservationService.reserve(dto);
-
-        return new ResponseEntity<>("ok", HttpStatus.ACCEPTED); //todo : 빌더패턴으로 리턴
+        reservationService.confirm(dto);
+        System.out.println(dto);
+        return new ResponseEntity<>(dto, HttpStatus.OK);
     }
 
     //예약 조회
@@ -39,6 +41,7 @@ public class ReservationController {
         UUID reserveId= reservationService.cancel();
         return new ResponseEntity<>(reserveId, HttpStatus.ACCEPTED);
     }
+
 
 
 
