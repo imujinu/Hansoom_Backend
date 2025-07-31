@@ -2,6 +2,7 @@ package com.beyond.HanSoom.reservation.repository;
 
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.reservation.domain.Reservation;
+import com.beyond.HanSoom.reservation.domain.State;
 import com.beyond.HanSoom.room.domain.Room;
 import com.beyond.HanSoom.user.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,6 +21,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     Reservation findByUser(User user);
 
-    @Query("select r from reservation r where r.hotel=:hotel and r.room=:room and r.user=:user and r.checkIn < :checkOut and r.checkOut > :checkIn  ")
-    int checkRoom(@Param("user")User user, @Param("room")Room room, @Param("hotel")Hotel hotel, @Param("checkIn")LocalDate checkIn, @Param("checkOut")LocalDate checkOut);
+    //입력되는 날짜의 체크아웃 날짜 이전에 체크인 ex ) 3~5일 예약이면 5일 이전에 체크한 값 이면서 , 입력값의 체크인 날짜 이후에 나가는 모든 값 = 5일 이전 값 중 3일 이후에 체크아웃하는 모든 예약 정보
+    @Query("select r from reservation r where r.hotel=:hotel and r.room=:room and r.user=:user and r.checkIn < :checkOut and r.checkOut > :checkIn and r.state=:state  ")
+    int checkRoom(@Param("user")User user, @Param("room")Room room, @Param("hotel")Hotel hotel, @Param("checkIn")LocalDate checkIn, @Param("checkOut")LocalDate checkOut, @Param("state")State state);
 }

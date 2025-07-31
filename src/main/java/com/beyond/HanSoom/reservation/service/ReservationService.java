@@ -2,7 +2,10 @@ package com.beyond.HanSoom.reservation.service;
 
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.hotel.repository.HotelRepository;
+import com.beyond.HanSoom.pay.domain.Payment;
+import com.beyond.HanSoom.pay.repository.PaymentRepository;
 import com.beyond.HanSoom.reservation.domain.Reservation;
+import com.beyond.HanSoom.reservation.domain.State;
 import com.beyond.HanSoom.reservation.dto.req.ReservationReqDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResDto;
 import com.beyond.HanSoom.reservation.repository.ReservationRepository;
@@ -35,8 +38,8 @@ public class ReservationService {
     private UserRepository userRepository;
     private RoomRepository roomRepository;
     private HotelRepository hotelRepository;
-
-    public UUID confirm(ReservationReqDto dto) {
+    private PaymentRepository paymentRepository;
+    public String confirm(ReservationReqDto dto) {
         // 값 유효성 검증
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email).orElseThrow(()->new EntityNotFoundException("해당 유저가 존재하지 않습니다."));
@@ -49,7 +52,7 @@ public class ReservationService {
         }
 
         // 예약 가능 여부 검증
-        int roomStock = reservationRepository.checkRoom(user,room,hotel, dto.getCheckIn(), dto.getCheckOut());
+        int roomStock = reservationRepository.checkRoom(user,room,hotel, dto.getCheckIn(), dto.getCheckOut(), State.RESERVED);
         if(roomStock>room.getRoomCount()){
             throw new IllegalArgumentException("빈 객실이 존재하지 않습니다.");
         }
@@ -69,7 +72,7 @@ public class ReservationService {
             date=date.plusDays(1);
         }
 
-        return reservationRepository.save(dto.toEntity(totalPrice,user,hotel, room)).getId();
+        return reservationRepository.save(dto.toEntity(totalPrice,user,hotel, room)).getUuid();
 
     }
 
@@ -81,11 +84,23 @@ public class ReservationService {
         return reservation.stream().map(a-> new ReservationResDto().fromEntity(a)).collect(Collectors.toList());
     }
 
-    public UUID cancel(){
+    public String cancel(){
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email).orElseThrow(()->new EntityNotFoundException("해당 유저가 존재하지 않습니다."));
         Reservation reservation = reservationRepository.findByUser(user);
         reservation.cancel();
-        return reservation.getId();
+        return reservation.getUuid();
+    }
+
+    public String complete(Long orderId) {
+        Reservation reservation = reservationRepository.findById(orderId).orElseThrow(()->new EntityNotFoundException("존재하지 않는 예약 내역 입니다."));
+        Payment payment = paymentRepository.findByReservationId(reservation.getId());
+
+        if(reservation.getState() == State.SUCCESS && payment.getState()==State.SUCCESS){
+            reservation.changeState(State.RESERVED);
+            return reservation.getUuid();
+        }else{
+            throw new IllegalStateException("결제가 완료되지 않은 주문 입니다.");
+        }
     }
 }

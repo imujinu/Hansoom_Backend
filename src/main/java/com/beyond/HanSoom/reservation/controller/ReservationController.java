@@ -2,6 +2,7 @@ package com.beyond.HanSoom.reservation.controller;
 
 import com.beyond.HanSoom.common.CommonSuccessDto;
 import com.beyond.HanSoom.reservation.domain.Reservation;
+import com.beyond.HanSoom.reservation.dto.req.ReservationCompleResDto;
 import com.beyond.HanSoom.reservation.dto.req.ReservationReqDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResDto;
 import com.beyond.HanSoom.reservation.service.ReservationService;
@@ -19,14 +20,20 @@ import java.util.UUID;
 public class ReservationController {
     private ReservationService reservationService;
 
-    //예약
+    //예약 신청
     @PostMapping("/confirm")
     public ResponseEntity<?> reservation(@RequestBody ReservationReqDto dto){
-        reservationService.confirm(dto);
-        System.out.println(dto);
-        return new ResponseEntity<>(dto, HttpStatus.OK);
+        String uuId = reservationService.confirm(dto);
+
+        return new ResponseEntity<>(uuId, HttpStatus.OK);
     }
 
+    //예약 확정
+    @PostMapping
+    public ResponseEntity<?> complete(@RequestBody ReservationCompleResDto resDto){
+        String uuid = reservationService.complete(resDto.getOrderId());
+        return new ResponseEntity<>(uuid, HttpStatus.OK);
+    }
     //예약 조회
     @GetMapping("/find")
     public ResponseEntity<?> find(){
@@ -38,7 +45,7 @@ public class ReservationController {
     //예약 취소
     @PatchMapping("/cancel")
     public ResponseEntity<?> cancel(){
-        UUID reserveId= reservationService.cancel();
+        String reserveId= reservationService.cancel();
         return new ResponseEntity<>(reserveId, HttpStatus.ACCEPTED);
     }
 
