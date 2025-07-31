@@ -21,8 +21,10 @@ import java.util.UUID;
 @Getter
 public class Reservation {
     @Id
-    @GeneratedValue(strategy= GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    private Long id;
+
+    private String uuid;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -60,6 +62,18 @@ public class Reservation {
     public void cancel(){
         this.state = State.CANCELD;
     }
-    public void reserve(){this.state = State.RESERVED;
+    public void reserve(){this.state = State.RESERVED;}
+
+
+    //PrePersit는 값이 DB에 저장되기 전 JPA가 감지하고 실행시켜주는 어노테이션
+
+    @PrePersist
+    public void insertUUID(){
+        this.uuid = UUID.randomUUID().toString();
     }
+
+    public void changeState(State state){
+        this.state = state;
+    }
+
 }

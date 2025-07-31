@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -21,11 +23,11 @@ public class Payment {
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reserve_id", nullable = false)
+    @JoinColumn(name = "reservation_id", nullable = false)
     private Reservation reservation;
 
     @Column(nullable = false)
-    private String PaymentType;
+    private String paymentType;
 
     @Column(nullable = false)
     private String price;
@@ -34,8 +36,10 @@ public class Payment {
     private State state;
 
     @Column(nullable = false)
+    @CreationTimestamp
     private LocalDateTime PaymentTime;
 
+    @UpdateTimestamp
     private LocalDateTime PaymentCancelTime;
 
 }
