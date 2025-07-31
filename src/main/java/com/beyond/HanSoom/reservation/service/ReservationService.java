@@ -36,18 +36,23 @@ public class ReservationService {
     private RoomRepository roomRepository;
     private HotelRepository hotelRepository;
 
-    public UUID reserve(ReservationReqDto dto) {
-
+    public UUID confirm(ReservationReqDto dto) {
         // 값 유효성 검증
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email).orElseThrow(()->new EntityNotFoundException("해당 유저가 존재하지 않습니다."));
-        Room room = roomRepository.findById(dto.getRoomId()).orElseThrow(()->new EntityNotFoundException("해당 객실이 존재하지 않습니다."));; //todo : roomrepo가 필요함
         Hotel hotel = hotelRepository.findById(dto.getHotelId()).orElseThrow(()->new EntityNotFoundException("해당 호텔이 존재하지 않습니다."));;
+        Room room = roomRepository.findByIdAndHotel(dto.getRoomId(),hotel).orElseThrow(()-> new EntityNotFoundException("해당 객실이 존재하지 않습니다."));
 
+        // 예약 인원 검증
         if(dto.getPeople()>room.getMaximumPeople()){
             throw new IllegalStateException("인원이 초과 되었습니다.");
         }
 
+        // 예약 가능 여부 검증
+        int roomStock = reservationRepository.checkRoom(user,room,hotel, dto.getCheckIn(), dto.getCheckOut());
+        if(roomStock>room.getRoomCount()){
+            throw new IllegalArgumentException("빈 객실이 존재하지 않습니다.");
+        }
 
         // 실제 숙박비 계산
         LocalDate date = dto.getCheckIn();
@@ -58,10 +63,8 @@ public class ReservationService {
 
         if(day==SATURDAY || day==SUNDAY ){
             totalPrice += room.getWeekendPrice();
-            totalPrice += room.getExtraFee();
         }else{
             totalPrice += room.getWeekPrice();
-            totalPrice += room.getExtraFee();
         }
             date=date.plusDays(1);
         }
