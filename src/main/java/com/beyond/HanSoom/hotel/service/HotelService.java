@@ -1,6 +1,6 @@
 package com.beyond.HanSoom.hotel.service;
 
-import com.beyond.HanSoom.common.S3Uploader;
+import com.beyond.HanSoom.common.service.S3Uploader;
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.hotel.dto.HotelRegisterRequsetDto;
 import com.beyond.HanSoom.hotel.dto.HotelStateUpdateDto;
@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional

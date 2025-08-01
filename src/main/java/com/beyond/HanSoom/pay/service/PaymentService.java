@@ -49,6 +49,7 @@ public class PaymentService {
                 .retrieve()
                 .bodyToMono(Map.class)
                 .block();
+
         Reservation reservation =  reservationRepository.findById(Long.parseLong(paymentReqDto.getOrderId())).orElseThrow(()->new EntityNotFoundException("존재하지 않는 주문입니다."));
 
 

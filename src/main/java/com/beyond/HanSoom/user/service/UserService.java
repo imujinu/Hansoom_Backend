@@ -4,26 +4,18 @@ import com.beyond.HanSoom.user.domain.User;
 import com.beyond.HanSoom.user.domain.UserState;
 import com.beyond.HanSoom.user.dto.*;
 import com.beyond.HanSoom.user.repository.UserRepository;
-import com.beyond.HanSoom.user.security.JwtTokenProvider;
+import com.beyond.HanSoom.common.auth.JwtTokenProvider;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor

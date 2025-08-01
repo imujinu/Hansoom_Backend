@@ -1,4 +1,4 @@
-package com.beyond.HanSoom.common;
+package com.beyond.HanSoom.common.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;

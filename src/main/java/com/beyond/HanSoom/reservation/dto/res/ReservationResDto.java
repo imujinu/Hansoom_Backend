@@ -17,7 +17,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 public class ReservationResDto {
-    private UUID id;
+    private String uuid;
     private HotelDto hotelDto;
     private Long roomId;
     private LocalDate checkIn;
@@ -42,7 +42,7 @@ public class ReservationResDto {
     public ReservationResDto fromEntity(Reservation reservation){
         Hotel hotel = reservation.getHotel();
         return ReservationResDto.builder()
-                .id(reservation.getId())
+                .uuid(reservation.getUuid())
                 .hotelDto(HotelDto.builder()
                         .hotelName(hotel.getHotelName())
                         .hotelAddress(hotel.getAddress())

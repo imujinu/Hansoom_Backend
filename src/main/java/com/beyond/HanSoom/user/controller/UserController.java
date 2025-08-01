@@ -1,7 +1,6 @@
 package com.beyond.HanSoom.user.controller;
 
-import com.beyond.HanSoom.common.CommonSuccessDto;
-import com.beyond.HanSoom.user.domain.User;
+import com.beyond.HanSoom.common.dto.CommonSuccessDto;
 import com.beyond.HanSoom.user.dto.*;
 import com.beyond.HanSoom.user.service.UserService;
 import jakarta.validation.Valid;

@@ -1,4 +1,4 @@
-package com.beyond.HanSoom.common;
+package com.beyond.HanSoom.common.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Builder
-public class CommonSuccessDto {
-    private Object result;
+public class CommonErrorDto {
     private int status_code;
     private String status_message;
 }

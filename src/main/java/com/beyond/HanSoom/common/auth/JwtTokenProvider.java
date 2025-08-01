@@ -1,4 +1,4 @@
-package com.beyond.HanSoom.user.security;
+package com.beyond.HanSoom.common.auth;
 
 import com.beyond.HanSoom.user.domain.User;
 import io.jsonwebtoken.Claims;

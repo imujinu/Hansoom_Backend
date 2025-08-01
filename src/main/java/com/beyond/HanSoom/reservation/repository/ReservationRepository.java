@@ -21,7 +21,31 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     Reservation findByUser(User user);
 
-    //입력되는 날짜의 체크아웃 날짜 이전에 체크인 ex ) 3~5일 예약이면 5일 이전에 체크한 값 이면서 , 입력값의 체크인 날짜 이후에 나가는 모든 값 = 5일 이전 값 중 3일 이후에 체크아웃하는 모든 예약 정보
-    @Query("select r from reservation r where r.hotel=:hotel and r.room=:room and r.user=:user and r.checkIn < :checkOut and r.checkOut > :checkIn and r.state=:state  ")
-    int checkRoom(@Param("user")User user, @Param("room")Room room, @Param("hotel")Hotel hotel, @Param("checkIn")LocalDate checkIn, @Param("checkOut")LocalDate checkOut, @Param("state")State state);
+    //입력되는 날짜의 체크아웃 날짜 이전에 체크인 한 예약 정보 가져오기 ex ) 3~5일 예약이면 5일 이전에 체크한 값 이면서 , 입력값의 체크인 날짜 이후에 나가는 모든 값 = 5일 이전 값 중 3일 이후에 체크아웃하는 모든 예약 정보
+//    @Query("select r from reservation r where r.hotel=:hotel and r.room=:room and r.user=:user and r.checkIn < :checkOut and r.checkOut > :checkIn and r.state=:state  ")
+    @Query("""
+    select r
+    from Reservation r
+    join fetch r.hotel
+    join fetch r.room
+    join fetch r.user
+    where r.hotel = :hotel
+      and r.room = :room
+      and r.user = :user
+      and r.checkInDate < :checkOut
+      and r.checkOutDate > :checkIn
+      and r.state = :state
+""")
+    List<Reservation> checkRoom(
+            @Param("user") User user,
+            @Param("room") Room room,
+            @Param("hotel") Hotel hotel,
+            @Param("checkIn") LocalDate checkIn,
+            @Param("checkOut") LocalDate checkOut,
+            @Param("state") State state
+    );
+
+
+    Reservation findByIdAndUser(Long reservationId, User user);
+
 }

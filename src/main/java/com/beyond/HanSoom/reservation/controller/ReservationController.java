@@ -1,6 +1,5 @@
 package com.beyond.HanSoom.reservation.controller;
 
-import com.beyond.HanSoom.common.CommonSuccessDto;
 import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.reservation.dto.req.ReservationCompleResDto;
 import com.beyond.HanSoom.reservation.dto.req.ReservationReqDto;
@@ -9,10 +8,10 @@ import com.beyond.HanSoom.reservation.service.ReservationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/reservation")
@@ -41,15 +40,16 @@ public class ReservationController {
         return new ResponseEntity<>("ok", HttpStatus.OK);
     }
 
-
+    @GetMapping("/find/{id}")
+    public ResponseEntity<?> findDetail(){
+        Reservation reservation = reservationService.findDetail();
+        return new ResponseEntity<>(reservation, HttpStatus.OK);
+    }
     //예약 취소
-    @PatchMapping("/cancel")
-    public ResponseEntity<?> cancel(){
-        String reserveId= reservationService.cancel();
+    @PatchMapping("/cancel/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> cancel(@PathVariable Long reservationId){
+        String reserveId= reservationService.cancel(reservationId);
         return new ResponseEntity<>(reserveId, HttpStatus.ACCEPTED);
     }
-
-
-
-
 }

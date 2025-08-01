@@ -1,5 +1,8 @@
-package com.beyond.HanSoom.user.security;
+package com.beyond.HanSoom.common.config;
 
+import com.beyond.HanSoom.common.auth.JwtAutenticationHandler;
+import com.beyond.HanSoom.common.auth.JwtAuthorizationHandler;
+import com.beyond.HanSoom.common.auth.JwtTokenFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

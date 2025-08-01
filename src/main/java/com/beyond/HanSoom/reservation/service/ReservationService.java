@@ -34,15 +34,15 @@ import static java.time.DayOfWeek.SUNDAY;
 @Transactional
 @RequiredArgsConstructor
 public class ReservationService {
-    private ReservationRepository reservationRepository;
-    private UserRepository userRepository;
-    private RoomRepository roomRepository;
-    private HotelRepository hotelRepository;
-    private PaymentRepository paymentRepository;
+    private final ReservationRepository reservationRepository;
+    private final UserRepository userRepository;
+    private final RoomRepository roomRepository;
+    private final HotelRepository hotelRepository;
+    private final PaymentRepository paymentRepository;
+
     public String confirm(ReservationReqDto dto) {
         // 값 유효성 검증
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByEmail(email).orElseThrow(()->new EntityNotFoundException("해당 유저가 존재하지 않습니다."));
+        User user = getUser();
         Hotel hotel = hotelRepository.findById(dto.getHotelId()).orElseThrow(()->new EntityNotFoundException("해당 호텔이 존재하지 않습니다."));;
         Room room = roomRepository.findByIdAndHotel(dto.getRoomId(),hotel).orElseThrow(()-> new EntityNotFoundException("해당 객실이 존재하지 않습니다."));
 
@@ -52,18 +52,18 @@ public class ReservationService {
         }
 
         // 예약 가능 여부 검증
-        int roomStock = reservationRepository.checkRoom(user,room,hotel, dto.getCheckIn(), dto.getCheckOut(), State.RESERVED);
-        if(roomStock>room.getRoomCount()){
+        List<Reservation> reservationList = reservationRepository.checkRoom(user,room,hotel, dto.getCheckIn(), dto.getCheckOut(), State.RESERVED);
+        if(reservationList.size()>room.getRoomCount()){
             throw new IllegalArgumentException("빈 객실이 존재하지 않습니다.");
         }
 
         // 실제 숙박비 계산
         LocalDate date = dto.getCheckIn();
-        DayOfWeek day = date.getDayOfWeek();
+
         long totalPrice = 0;
 
         while(!date.isEqual(dto.getCheckOut())){
-
+        DayOfWeek day = date.getDayOfWeek();
         if(day==SATURDAY || day==SUNDAY ){
             totalPrice += room.getWeekendPrice();
         }else{
@@ -78,16 +78,16 @@ public class ReservationService {
 
 
     public List<ReservationResDto> find() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByEmail(email).orElseThrow(()->new EntityNotFoundException("해당 유저가 존재하지 않습니다."));
+        User user = getUser();
         List<Reservation> reservation = reservationRepository.findAllByUser(user);
         return reservation.stream().map(a-> new ReservationResDto().fromEntity(a)).collect(Collectors.toList());
     }
 
-    public String cancel(){
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByEmail(email).orElseThrow(()->new EntityNotFoundException("해당 유저가 존재하지 않습니다."));
-        Reservation reservation = reservationRepository.findByUser(user);
+
+
+    public String cancel(Long reservationId){
+        User user = getUser();
+        Reservation reservation = reservationRepository.findByIdAndUser(reservationId,user);
         reservation.cancel();
         return reservation.getUuid();
     }
@@ -96,11 +96,22 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(orderId).orElseThrow(()->new EntityNotFoundException("존재하지 않는 예약 내역 입니다."));
         Payment payment = paymentRepository.findByReservationId(reservation.getId());
 
-        if(reservation.getState() == State.SUCCESS && payment.getState()==State.SUCCESS){
+        if(payment!=null && reservation.getState() == State.SUCCESS && payment.getState()==State.SUCCESS){
             reservation.changeState(State.RESERVED);
             return reservation.getUuid();
         }else{
             throw new IllegalStateException("결제가 완료되지 않은 주문 입니다.");
         }
+    }
+
+    private User getUser() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email).orElseThrow(()->new EntityNotFoundException("해당 유저가 존재하지 않습니다."));
+        return user;
+    }
+
+
+    public Reservation findDetail() {
+        return null;
     }
 }
