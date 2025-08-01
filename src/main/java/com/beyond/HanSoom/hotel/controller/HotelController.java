@@ -60,4 +60,17 @@ public class HotelController {
         );
     }
 
+    @DeleteMapping("/hotels/{id}")
+    public ResponseEntity<?> deleteHotel(@PathVariable Long id) {
+        hotelService.deleteHotel(id);
+        return new ResponseEntity<>(
+                CommonSuccessDto.builder()
+                        .result("OK")
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("호텔 삭제 성공")
+                        .build(),
+                HttpStatus.OK
+        )
+    }
+
 }

@@ -43,16 +43,19 @@ public class Hotel {
         this.answerTime = LocalDateTime.now();
     }
 
-    public void updateHotel(String name, String address, String phone, String desc, HotelType type, String image) {
+    public void updateBasicInfo(String name, String address, String phone, String desc, HotelType type) {
         this.hotelName = name;
         this.address = address;
         this.phoneNumber = phone;
         this.describtion = desc;
         this.type = type;
-        this.image = image;
     }
 
     public void updateRooms(List<Room> rooms) {
         this.rooms = rooms;
+    }
+
+    public void updateImage(String newHotelImageUrl) {
+        this.image = newHotelImageUrl;
     }
 }

@@ -21,7 +21,6 @@ public class RoomUpdateDto {
     private int maximumPeople;
     private String roomOption1;
     private String roomOption2;
-    private int extraFee;
     private String describtion;
     private LocalTime checkIn;
     private LocalTime checkOut;

@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -33,7 +34,6 @@ public class Room {
     private int weekendPrice;
     private int standardPeople;
     private int maximumPeople;
-    private int extraFee;
     private LocalTime checkIn;
     private LocalTime checkOut;
     @Builder.Default
@@ -47,6 +47,9 @@ public class Room {
     @Builder.Default
     @OneToMany(mappedBy = "room", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<RoomImage> roomImages = new ArrayList<>();
+
+    @Transient
+    private List<String> imageUrlsMarkedForDeletion = new ArrayList<>();
 
     public void updateState(HotelState state) {
         this.state = state;
@@ -63,8 +66,17 @@ public class Room {
         this.roomOption2 = dto.getRoomOption2();
         this.checkIn = dto.getCheckIn();
         this.checkOut = dto.getCheckOut();
-        this.extraFee = dto.getExtraFee();
         this.describtion = dto.getDescribtion();
+    }
+
+    public void markImagesForDeletion() {
+        this.imageUrlsMarkedForDeletion = this.roomImages.stream()
+                .map(RoomImage::getImageUrl)
+                .collect(Collectors.toList());
+    }
+
+    public boolean hasImagesMarkedForDeletion() {
+        return !imageUrlsMarkedForDeletion.isEmpty();
     }
 
     public void updateRoomImages(List<RoomImage> roomImageList) {
