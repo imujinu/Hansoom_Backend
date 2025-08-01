@@ -51,6 +51,12 @@ dependencies {
 	implementation 'org.json:json:20240303'
 
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+	//redis 의존성
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+	//rabbitmq 의존성
+	implementation 'org.springframework.boot:spring-boot-starter-amqp'
 }
 
 tasks.named('test') {

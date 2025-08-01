@@ -1,4 +1,4 @@
-package com.beyond.HanSoom.common;
+package com.beyond.HanSoom.common.config;
 
 
 import org.springframework.beans.factory.annotation.Value;
