@@ -1,5 +1,6 @@
 package com.beyond.HanSoom.user.service;
 
+import com.beyond.HanSoom.common.service.S3Uploader;
 import com.beyond.HanSoom.user.domain.SocialType;
 import com.beyond.HanSoom.user.domain.User;
 import com.beyond.HanSoom.user.domain.UserState;
@@ -30,6 +31,7 @@ public class UserService {
     private final JwtTokenProvider jwtTokenProvider;
     private final GoogleService googleService;
     private final KakaoService kakaoService;
+    private final S3Uploader s3Uploader;
 
 
     // 회원가입
@@ -42,8 +44,11 @@ public class UserService {
         userRepository.save(user);
 
         log.info("[HANSOOM][INFO] - UserService/save - 회원가입 성공, email={}", dto.getEmail());
-
-        // Todo - 프로필 사진 저장 구현
+        
+        String profileImageUrl = (profileImage != null && !profileImage.isEmpty())
+                ? s3Uploader.upload(profileImage, "user")
+                : null;
+        user.updateProfileImage(profileImageUrl);
     }
 
     // 로그인

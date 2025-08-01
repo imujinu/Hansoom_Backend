@@ -50,4 +50,8 @@ public class User {
         this.nickName = nickName;
         this.phoneNumber = phoneNumber;
     }
+
+    public void updateProfileImage(String profileImage) {
+        this.profileImage = profileImage;
+    }
 }
