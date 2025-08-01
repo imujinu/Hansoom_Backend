@@ -163,6 +163,9 @@ public class UserService {
         String email = authentication.getName();
         User user = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("없는 사용자입니다."));
         user.updateUserInfo(dto.getName(), dto.getNickName(), dto.getPhoneNumber());
+
+        log.info("[HANSOOM][INFO] - UserService/updateUser - 사용자 정보 수정 성공, email={}", email);
+
         return user.getId();
     }
 
@@ -172,6 +175,9 @@ public class UserService {
         String email = authentication.getName();
         User user = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("없는 사용자입니다."));
         user.setState(UserState.WITHDRAW);
+
+        log.info("[HANSOOM][INFO] - UserService/deleteUser - 회원탈퇴 성공, email={}", email);
+
         return user.getId();
     }
 }
