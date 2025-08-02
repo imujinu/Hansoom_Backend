@@ -29,7 +29,7 @@ public class Room {
     private int roomCount;
     private String roomOption1;
     private String roomOption2;
-    private String describtion;
+    private String description;
     private int weekPrice;
     private int weekendPrice;
     private int standardPeople;
@@ -45,11 +45,8 @@ public class Room {
     private Hotel hotel;
 
     @Builder.Default
-    @OneToMany(mappedBy = "room", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "room", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RoomImage> roomImages = new ArrayList<>();
-
-    @Transient
-    private List<String> imageUrlsMarkedForDeletion = new ArrayList<>();
 
     public void updateState(HotelState state) {
         this.state = state;
@@ -66,20 +63,11 @@ public class Room {
         this.roomOption2 = dto.getRoomOption2();
         this.checkIn = dto.getCheckIn();
         this.checkOut = dto.getCheckOut();
-        this.describtion = dto.getDescribtion();
+        this.description = dto.getDescription();
     }
 
-    public void markImagesForDeletion() {
-        this.imageUrlsMarkedForDeletion = this.roomImages.stream()
-                .map(RoomImage::getImageUrl)
-                .collect(Collectors.toList());
-    }
-
-    public boolean hasImagesMarkedForDeletion() {
-        return !imageUrlsMarkedForDeletion.isEmpty();
-    }
-
-    public void updateRoomImages(List<RoomImage> roomImageList) {
-        this.roomImages = roomImageList;
+    public void updateRoomImages(List<RoomImage> images) {
+        this.roomImages.clear();
+        this.roomImages.addAll(images);
     }
 }

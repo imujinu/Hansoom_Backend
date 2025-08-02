@@ -3,13 +3,16 @@ package com.beyond.HanSoom.hotel.service;
 import com.beyond.HanSoom.common.S3Uploader;
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.hotel.domain.HotelState;
+import com.beyond.HanSoom.hotel.dto.HotelDetailResponseDto;
 import com.beyond.HanSoom.hotel.dto.HotelRegisterRequsetDto;
 import com.beyond.HanSoom.hotel.dto.HotelStateUpdateDto;
 import com.beyond.HanSoom.hotel.dto.HotelUpdateDto;
 import com.beyond.HanSoom.hotel.repository.HotelRepository;
 import com.beyond.HanSoom.room.domain.Room;
+import com.beyond.HanSoom.room.dto.RoomDetailResponseDto;
 import com.beyond.HanSoom.room.dto.RoomUpdateDto;
 import com.beyond.HanSoom.roomImage.domain.RoomImage;
+import com.beyond.HanSoom.roomImage.dto.RoomImageResponseDto;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -81,167 +84,161 @@ public class HotelService {
     }
 
     public void updateHotel(Long id, HotelUpdateDto dto, MultipartFile hotelImage, List<MultipartFile> roomImages) {
+        // 1. 호텔 조회
         Hotel hotel = hotelRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("호텔이 존재하지 않습니다."));
 
-        // 1. 백업용 이미지 URL 저장 (롤백을 위해)
-        String oldHotelImageUrl = hotel.getImage();
-        List<String> uploadedImageUrls = new ArrayList<>();
-
         try {
-            // 2. 호텔 기본 정보 업데이트 (이미지 제외)
-            hotel.updateBasicInfo(dto.getHotelName(), dto.getAddress(),
-                    dto.getPhoneNumber(), dto.getDescribtion(), dto.getType());
+            // 2. 주소로 좌표 조회
+            GeocoderService.Coordinate coord = geocoderService.getCoordinates(dto.getAddress());
 
-            // 3. 호텔 이미지 처리
-            String newHotelImageUrl = null;
+            // 3. 호텔 기본 정보 업데이트
+            hotel.updateBasicInfo(dto.getHotelName(), dto.getAddress(),
+                    dto.getPhoneNumber(), dto.getDescription(), dto.getType(),
+                    coord.getLatitude(), coord.getLongitude());
+
+            // 4. 호텔 이미지 업데이트 (있을 때만)
             if (hotelImage != null && !hotelImage.isEmpty()) {
-                newHotelImageUrl = s3Uploader.upload(hotelImage, "hotel");
-                uploadedImageUrls.add(newHotelImageUrl);
-                hotel.updateImage(newHotelImageUrl);
+                String oldImageUrl = hotel.getImage(); // 기존 이미지 URL 저장
+                String newImageUrl = s3Uploader.upload(hotelImage, "hotel");
+                hotel.updateImage(newImageUrl);
+
+                // 업데이트 성공 후 기존 이미지 삭제 (백그라운드에서)
+                if (oldImageUrl != null) {
+                    deleteImageAsync(oldImageUrl);
+                }
             }
 
-            // 4. 객실 정보 처리
-            List<Room> updatedRooms = processRoomUpdates(hotel, dto.getRooms(), roomImages, uploadedImageUrls);
-            hotel.updateRooms(updatedRooms);
+            // 5. 객실 정보 업데이트
+            updateRooms(hotel, dto.getRooms(), roomImages);
 
-            // 5. DB 저장 (트랜잭션 커밋)
+            // 6. 저장
             hotelRepository.save(hotel);
 
-            // 6. 성공 후 기존 이미지 삭제
-            cleanupOldImages(hotel, oldHotelImageUrl);
+            log.info("[HANSOOM][INFO] 호텔 업데이트 성공 - ID: {}", hotel.getId());
 
         } catch (Exception e) {
-            // 7. 실패 시 업로드된 이미지들 롤백
-            rollbackUploadedImages(uploadedImageUrls);
-            throw new RuntimeException("호텔 업데이트 실패: " + e.getMessage(), e);
+            log.error("[HANSOOM][ERROR] 호텔 업데이트 실패: {}", e.getMessage(), e);
+            throw new RuntimeException("호텔 업데이트 실패: " + e.getMessage());
         }
     }
 
-    private List<Room> processRoomUpdates(Hotel hotel, List<RoomUpdateDto> roomDtos,
-                                          List<MultipartFile> roomImages, List<String> uploadedImageUrls) {
-
+    /**
+     * 객실 정보 업데이트 (기존 방식과 유사하지만 단순화)
+     */
+    private void updateRooms(Hotel hotel, List<RoomUpdateDto> roomDtos, List<MultipartFile> roomImages) {
+        // 기존 객실들을 Map으로 변환 (빠른 조회용)
         Map<Long, Room> existingRooms = hotel.getRooms().stream()
-                .collect(Collectors.toMap(Room::getId, Function.identity()));
+                .collect(Collectors.toMap(Room::getId, room -> room));
 
-        List<Room> updatedRooms = new ArrayList<>();
-        Set<Long> processedRoomIds = new HashSet<>();
+        List<Room> newRoomList = new ArrayList<>();
 
+        // 각 DTO로 객실 처리
         for (RoomUpdateDto roomDto : roomDtos) {
-            Room room = processIndividualRoom(hotel, roomDto, existingRooms, roomImages, uploadedImageUrls);
-            updatedRooms.add(room);
+            Room room;
 
-            if (room.getId() != null) {
-                processedRoomIds.add(room.getId());
+            if (roomDto.getRoomId() != null && existingRooms.containsKey(roomDto.getRoomId())) {
+                // 기존 객실 업데이트
+                room = existingRooms.get(roomDto.getRoomId());
+                room.updateInfo(roomDto);
+
+                // 기존 이미지들 비동기 삭제
+                deleteRoomImagesAsync(room);
+
+            } else {
+                // 새 객실 생성
+                room = Room.builder()
+                        .hotel(hotel)
+                        .type(roomDto.getType())
+                        .roomCount(roomDto.getRoomCount())
+                        .weekPrice(roomDto.getWeekPrice())
+                        .weekendPrice(roomDto.getWeekendPrice())
+                        .standardPeople(roomDto.getStandardPeople())
+                        .maximumPeople(roomDto.getMaximumPeople())
+                        .roomOption1(roomDto.getRoomOption1())
+                        .roomOption2(roomDto.getRoomOption2())
+                        .checkIn(roomDto.getCheckIn())
+                        .checkOut(roomDto.getCheckOut())
+                        .description(roomDto.getDescription())
+                        .state(HotelState.APPLY)
+                        .build();
+            }
+
+            // 새 이미지들 업로드 및 연결
+            List<RoomImage> newImages = uploadRoomImages(roomDto.getRoomKey(), roomImages, room);
+            room.updateRoomImages(newImages);
+
+            newRoomList.add(room);
+        }
+
+        // 삭제된 객실들 처리 (요청에 없는 기존 객실들)
+        Set<Long> updatedRoomIds = roomDtos.stream()
+                .map(RoomUpdateDto::getRoomId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        for (Room existingRoom : hotel.getRooms()) {
+            if (!updatedRoomIds.contains(existingRoom.getId())) {
+                // 삭제된 객실
+                existingRoom.updateState(HotelState.REMOVE);
+                deleteRoomImagesAsync(existingRoom);
             }
         }
 
-        // 삭제된 객실 처리
-        markRemovedRooms(hotel.getRooms(), processedRoomIds);
-
-        return updatedRooms;
+        // 호텔에 새 객실 리스트 설정
+        hotel.updateRooms(newRoomList);
     }
 
-    private Room processIndividualRoom(Hotel hotel, RoomUpdateDto roomDto, Map<Long, Room> existingRooms,
-                                       List<MultipartFile> roomImages, List<String> uploadedImageUrls) {
-        Room room;
-
-        if (roomDto.getRoomId() != null && existingRooms.containsKey(roomDto.getRoomId())) {
-            // 기존 객실 업데이트
-            room = existingRooms.get(roomDto.getRoomId());
-            room.updateInfo(roomDto);
-
-            // 기존 이미지는 성공 후 삭제하도록 마킹만 함
-            room.markImagesForDeletion();
-
-        } else {
-            // 신규 객실 생성
-            room = createNewRoom(hotel, roomDto);
-        }
-
-        // 새 이미지 업로드 및 연결
-        List<RoomImage> newImages = uploadRoomImagesFor(roomDto.getRoomKey(), roomImages, room, uploadedImageUrls);
-        room.updateRoomImages(newImages);
-
-        return room;
-    }
-    private Room createNewRoom(Hotel hotel, RoomUpdateDto roomDto) {
-        return Room.builder()
-                .hotel(hotel)
-                .type(roomDto.getType())
-                .roomCount(roomDto.getRoomCount())
-                .weekPrice(roomDto.getWeekPrice())
-                .weekendPrice(roomDto.getWeekendPrice())
-                .standardPeople(roomDto.getStandardPeople())
-                .maximumPeople(roomDto.getMaximumPeople())
-                .roomOption1(roomDto.getRoomOption1())
-                .roomOption2(roomDto.getRoomOption2())
-                .checkIn(roomDto.getCheckIn())
-                .checkOut(roomDto.getCheckOut())
-                .describtion(roomDto.getDescribtion())
-                .state(HotelState.APPLY)
-                .build();
-    }
-
-    private List<RoomImage> uploadRoomImagesFor(String roomKey, List<MultipartFile> files,
-                                                Room room, List<String> uploadedImageUrls) {
+    /**
+     * 객실 이미지 업로드 (기존과 동일)
+     */
+    private List<RoomImage> uploadRoomImages(String roomKey, List<MultipartFile> files, Room room) {
         return files.stream()
-                .filter(f -> f.getOriginalFilename() != null && f.getOriginalFilename().startsWith(roomKey))
-                .map(f -> {
-                    String imageUrl = s3Uploader.upload(f, "room");
-                    uploadedImageUrls.add(imageUrl); // 롤백을 위해 추적
+                .filter(file -> file.getOriginalFilename() != null &&
+                        file.getOriginalFilename().startsWith(roomKey))
+                .map(file -> {
+                    String imageUrl = s3Uploader.upload(file, "room");
                     return RoomImage.builder()
                             .room(room)
                             .imageUrl(imageUrl)
                             .build();
                 })
-                .toList();
+                .collect(Collectors.toList());
     }
 
-    private void markRemovedRooms(List<Room> rooms, Set<Long> processedRoomIds) {
-        rooms.stream()
-                .filter(room -> room.getId() != null && !processedRoomIds.contains(room.getId()))
-                .forEach(room -> {
-                    room.updateState(HotelState.REMOVE);
-                    room.markImagesForDeletion();
-                });
-    }
+    /**
+     * 객실 이미지들 비동기 삭제
+     */
+    private void deleteRoomImagesAsync(Room room) {
+        if (room.getRoomImages() != null && !room.getRoomImages().isEmpty()) {
+            List<String> imageUrls = room.getRoomImages().stream()
+                    .map(RoomImage::getImageUrl)
+                    .collect(Collectors.toList());
 
-    private void cleanupOldImages(Hotel hotel, String oldHotelImageUrl) {
-        // 백그라운드에서 비동기로 처리하는 것이 좋음
-        CompletableFuture.runAsync(() -> {
-            try {
-                // 호텔 이미지 삭제
-                if (oldHotelImageUrl != null && !oldHotelImageUrl.equals(hotel.getImage())) {
-                    s3Uploader.delete(oldHotelImageUrl);
-                }
-
-                // 삭제 마킹된 객실 이미지들 삭제
-                hotel.getRooms().stream()
-                        .filter(Room::hasImagesMarkedForDeletion)
-                        .forEach(room -> {
-                            List<String> imageUrls = room.getImageUrlsMarkedForDeletion();
-                            s3Uploader.batchDelete(imageUrls); // 배치 삭제
-                            room.clearDeletionMarks();
-                        });
-
-            } catch (Exception e) {
-                log.warn("이미지 정리 중 오류 발생: {}", e.getMessage());
-                // 실패해도 메인 로직에는 영향 없음
-            }
-        });
-    }
-
-    private void rollbackUploadedImages(List<String> uploadedImageUrls) {
-        if (!uploadedImageUrls.isEmpty()) {
+            // 백그라운드에서 삭제
             CompletableFuture.runAsync(() -> {
-                try {
-                    s3Uploader.batchDelete(uploadedImageUrls);
-                } catch (Exception e) {
-                    log.error("이미지 롤백 실패: {}", e.getMessage());
+                for (String url : imageUrls) {
+                    try {
+                        s3Uploader.delete(url);
+                    } catch (Exception e) {
+                        log.error("[HANSOOM][ERROR] 이미지 삭제 실패: {}", url);
+                    }
                 }
             });
         }
+    }
+
+    /**
+     * 단일 이미지 비동기 삭제
+     */
+    private void deleteImageAsync(String imageUrl) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                s3Uploader.delete(imageUrl);
+            } catch (Exception e) {
+                log.error("[HANSOOM][ERROR] 이미지 삭제 실패: {}", imageUrl);
+            }
+        });
     }
 
     public void deleteHotel(Long id) {
@@ -250,5 +247,16 @@ public class HotelService {
         for(Room r : hotel.getRooms()) {
             r.updateState(HotelState.REMOVE);
         }
+    }
+
+//    호텔 단건 조회
+    public HotelDetailResponseDto findById(Long id) {
+        Hotel hotel = hotelRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("호텔 정보가 없습니다."));
+        List<RoomDetailResponseDto> roomDto = new ArrayList<>();
+        for(Room r : hotel.getRooms()) {
+            List<RoomImageResponseDto> roomImages = r.getRoomImages().stream().map(a -> RoomImageResponseDto.fromEntity(a)).toList();
+            roomDto.add(RoomDetailResponseDto.fromEntity(r, roomImages));
+        }
+        return HotelDetailResponseDto.fromEntity(hotel, roomDto);
     }
 }

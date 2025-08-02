@@ -24,7 +24,7 @@ public class Hotel {
     private String address;
     private String phoneNumber;
     private String image;
-    private String describtion;
+    private String description;
     @Builder.Default
     @Enumerated(EnumType.STRING)
     private HotelState state = HotelState.WAIT;
@@ -43,16 +43,19 @@ public class Hotel {
         this.answerTime = LocalDateTime.now();
     }
 
-    public void updateBasicInfo(String name, String address, String phone, String desc, HotelType type) {
+    public void updateBasicInfo(String name, String address, String phone, String desc, HotelType type, Double latitude, Double longitude) {
         this.hotelName = name;
         this.address = address;
         this.phoneNumber = phone;
-        this.describtion = desc;
+        this.description = desc;
         this.type = type;
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
     public void updateRooms(List<Room> rooms) {
-        this.rooms = rooms;
+        this.rooms.clear();
+        this.rooms.addAll(rooms);
     }
 
     public void updateImage(String newHotelImageUrl) {

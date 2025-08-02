@@ -19,7 +19,7 @@ public class RoomRegisterRequestDto {
     private int roomCount;
     private String roomOption1;
     private String roomOption2;
-    private String describtion;
+    private String description;
     private int weekPrice;
     private int weekendPrice;
     private int standardPeople;
@@ -33,7 +33,7 @@ public class RoomRegisterRequestDto {
                 .roomCount(this.roomCount)
                 .roomOption1(this.roomOption1)
                 .roomOption2(this.roomOption2)
-                .describtion(this.describtion)
+                .description(this.description)
                 .weekPrice(this.weekPrice)
                 .weekendPrice(this.weekendPrice)
                 .standardPeople(this.standardPeople)

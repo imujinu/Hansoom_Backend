@@ -17,7 +17,7 @@ public class HotelUpdateDto {
     private String hotelName;
     private String address;
     private String phoneNumber;
-    private String describtion;
+    private String description;
     private HotelType type;
     private List<RoomUpdateDto> rooms;
 }

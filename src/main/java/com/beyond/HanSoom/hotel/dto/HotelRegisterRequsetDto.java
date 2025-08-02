@@ -22,7 +22,7 @@ public class HotelRegisterRequsetDto {
     private String hotelName;
     private String address;
     private String phoneNumber;
-    private String describtion;
+    private String description;
     private HotelType type;
 
     private List<RoomRegisterRequestDto> rooms;
@@ -32,7 +32,7 @@ public class HotelRegisterRequsetDto {
                 .hotelName(this.hotelName)
                 .address(this.address)
                 .phoneNumber(this.phoneNumber)
-                .describtion(this.describtion)
+                .description(this.description)
                 .type(this.type)
                 .state(HotelState.WAIT)
                 .image(hotelImageUrl)
