@@ -23,7 +23,8 @@ public class ReservationReqDto {
     private Long roomId;
     private LocalDate checkIn;
     private LocalDate checkOut;
-    private Long people;
+    private Long people ;
+    private LocalDateTime reservationTime;
     private String request;
 
     public Reservation toEntity(Long price, User user, Hotel hotel, Room room){
@@ -34,10 +35,10 @@ public class ReservationReqDto {
                 .checkInDate(this.checkIn)
                 .checkOutDate(this.checkOut)
                 .price(price)
-                .reservationDate(LocalDateTime.now())
+                .reservationDate(this.reservationTime)
                 .people(this.people)
                 .request(this.request)
-                .state(State.RESERVE)
+                .state(State.PENDING)
                 .build();
     }
 }

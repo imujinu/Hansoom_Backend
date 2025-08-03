@@ -1,7 +1,6 @@
 package com.beyond.HanSoom.user.controller;
 
-import com.beyond.HanSoom.common.CommonSuccessDto;
-import com.beyond.HanSoom.user.domain.User;
+import com.beyond.HanSoom.common.dto.CommonSuccessDto;
 import com.beyond.HanSoom.user.dto.*;
 import com.beyond.HanSoom.user.service.UserService;
 import jakarta.validation.Valid;
@@ -34,10 +33,32 @@ public class UserController {
 
     // 로그인
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody @Valid UserLoginDto dto) {
-        String token = userService.login(dto);
-        return new ResponseEntity<>(new CommonSuccessDto(token, HttpStatus.OK.value(), "로그인 성공"), HttpStatus.OK);
+    public ResponseEntity<?> login(@RequestBody @Valid UserLoginReqDto dto) {
+        UserLoginResDto userLoginResDto = userService.login(dto);
+        return new ResponseEntity<>(new CommonSuccessDto(userLoginResDto, HttpStatus.OK.value(), "로그인 성공"), HttpStatus.OK);
     }
+
+    // 토큰 재발급
+    @PostMapping("/auth/refresh")
+    public ResponseEntity<?> tokenRefresh(@RequestBody @Valid RefreshTokenDto dto) {
+        UserLoginResDto userLoginResDto = userService.tokenRefresh(dto);
+        return new ResponseEntity<>(new CommonSuccessDto(userLoginResDto, HttpStatus.OK.value(), "access token 재발급 성공"), HttpStatus.OK);
+    }
+
+    // 구글 로그인 (정보 없으면 회원가입까지)
+    @PostMapping("/google/login")
+    public ResponseEntity<?> googleLogin(@RequestBody RedirectDto dto) {
+        UserLoginResDto userLoginResDto = userService.googleLogin(dto);
+        return new ResponseEntity<>(new CommonSuccessDto(userLoginResDto, HttpStatus.OK.value(), "google 로그인 성공"), HttpStatus.OK);
+    }
+
+    // 카카오 로그인 (정보 없으면 회원가입까지)
+    @PostMapping("/kakao/login")
+    public ResponseEntity<?> kakaoLogin(@RequestBody RedirectDto dto) {
+        UserLoginResDto userLoginResDto = userService.kakaoLogin(dto);
+        return new ResponseEntity<>(new CommonSuccessDto(userLoginResDto, HttpStatus.OK.value(), "kakao 로그인 성공"), HttpStatus.OK);
+    }
+
 
     // 로그아웃
 

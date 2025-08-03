@@ -1,4 +1,4 @@
-package com.beyond.HanSoom.pay.dto;
+package com.beyond.HanSoom.user.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PaymentReqDto {
-    private String paymentKey;
-    private String orderId;
-    private String amount;
+public class UserLoginResDto {
+    private String accessToken;
+    private String refreshToken;
 }
