@@ -1,4 +1,4 @@
-package com.beyond.HanSoom.common.domain;
+package com.beyond.HanSoom.common.service;
 
 import com.beyond.HanSoom.user.domain.User;
 import com.beyond.HanSoom.user.domain.UserRole;

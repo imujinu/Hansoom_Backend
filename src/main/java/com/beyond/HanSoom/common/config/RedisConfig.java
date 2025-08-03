@@ -8,6 +8,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
@@ -17,26 +18,44 @@ public class RedisConfig {
     @Value("${spring.redis.port}")
     private int port;
 
-    // RedisConnectionFactory
     @Bean
-    @Qualifier("rtInventory")
-    public RedisConnectionFactory redisConnectionFactory() {
+    @Qualifier("reservationInventory")
+    public RedisConnectionFactory redisConnectionFactory(){
         RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
         configuration.setHostName(host);
         configuration.setPort(port);
         configuration.setDatabase(0);
-
         return new LettuceConnectionFactory(configuration);
     }
 
-    // RedisTemplate
+    @Bean
+    @Qualifier("reservationInventory")
+    public RedisTemplate<Object, String> redisTemplate(@Qualifier("reservationInventory")RedisConnectionFactory redisConnectionFactory){
+        RedisTemplate<Object, String> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setKeySerializer(new GenericJackson2JsonRedisSerializer());
+        redisTemplate.setValueSerializer(new StringRedisSerializer());
+        redisTemplate.setConnectionFactory(redisConnectionFactory);
+        return redisTemplate;
+
+    }
+
     @Bean
     @Qualifier("rtInventory")
-    public RedisTemplate<String, String> redisTemplate(@Qualifier("rtInventory") RedisConnectionFactory redisConnectionFactory) {
+    public RedisConnectionFactory rtInventoryFactory() {
+        RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
+        configuration.setHostName(host);
+        configuration.setPort(port);
+        configuration.setDatabase(1);
+        return new LettuceConnectionFactory(configuration);
+    }
+
+    @Bean
+    @Qualifier("rtInventory")
+    public RedisTemplate<String, String> rtInventoryTemplate(@Qualifier("rtInventory") RedisConnectionFactory rtInventoryFactory) {
         RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setValueSerializer(new StringRedisSerializer());
-        redisTemplate.setConnectionFactory(redisConnectionFactory); // Factory 객체 연결
+        redisTemplate.setConnectionFactory(rtInventoryFactory); // Factory 객체 연결
         return redisTemplate;
     }
 }

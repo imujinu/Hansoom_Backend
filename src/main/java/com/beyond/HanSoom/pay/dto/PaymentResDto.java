@@ -5,12 +5,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
+
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
-public class PaymentReqDto {
-    private String paymentKey;
-    private String orderId;
-    private String amount;
+public class PaymentResDto {
+    private Map<String,Object> response;
+    private boolean isSuccess;
+
 }

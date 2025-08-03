@@ -15,6 +15,13 @@ spring:
   redis:
     host: localhost
     port: 6379
+  rabbitmq:
+    port: 5672
+    host: localhost
+    username: guest
+    password: guest
+    virtual-host: /
+
   # 아래는 jdbc의 기본 db 관련 설정인데, jdbc 뿐만 아니라 mybatis / jpa 등 spring의 대부분의 DB 기술에 동일하게 사용
   datasource:
     driver-class-name: org.mariadb.jdbc.Driver
@@ -32,7 +39,7 @@ spring:
       # create : 매번 table을 drop후 재 생성
       # update : entity 변경사항만 alter를 적용하고 기존 데이터 유지
       # validate : 실제 DB와의 차이점을 check만 하고 ddl 문 실행 x, 콘솔로만 변경사항 출력.
-      ddl-auto: update
+      ddl-auto: create
     # 콘솔창에 ddl, dml 등의 쿼리를 출력하여 보여주는 옵션
     show_sql: true
 
