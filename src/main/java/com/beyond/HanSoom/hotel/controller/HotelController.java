@@ -1,8 +1,10 @@
 package com.beyond.HanSoom.hotel.controller;
 
 import com.beyond.HanSoom.common.dto.CommonSuccessDto;
+import com.beyond.HanSoom.hotel.dto.HotelDetailResponseDto;
 import com.beyond.HanSoom.hotel.dto.HotelRegisterRequsetDto;
 import com.beyond.HanSoom.hotel.dto.HotelStateUpdateDto;
+import com.beyond.HanSoom.hotel.dto.HotelUpdateDto;
 import com.beyond.HanSoom.hotel.service.HotelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -35,6 +37,49 @@ public class HotelController {
                         .result("OK")
                         .status_code(HttpStatus.OK.value())
                         .status_message("호텔 등록 답변 완료")
+                        .build(),
+                HttpStatus.OK
+        );
+    }
+
+    @PutMapping("/hotels/{id}")
+    public ResponseEntity<?> updateHotel(@PathVariable Long id,
+                                         @RequestPart(name = "hotelUpdateDto") HotelUpdateDto dto,
+                                         @RequestPart(name = "hotelImage") MultipartFile hotelImage,
+                                         @RequestPart(name = "roomImages") List<MultipartFile> roomImages)
+    {
+        hotelService.updateHotel(id, dto, hotelImage, roomImages);
+        return new ResponseEntity<>(
+                CommonSuccessDto.builder()
+                        .result("OK")
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("호텔 정보 수정")
+                        .build(),
+                HttpStatus.OK
+        );
+    }
+
+    @DeleteMapping("/hotels/{id}")
+    public ResponseEntity<?> deleteHotel(@PathVariable Long id) {
+        hotelService.deleteHotel(id);
+        return new ResponseEntity<>(
+                CommonSuccessDto.builder()
+                        .result("OK")
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("호텔 삭제 성공")
+                        .build(),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/detail/{id}")
+    public ResponseEntity<?> findById(@PathVariable Long id) {
+        HotelDetailResponseDto dto = hotelService.findById(id);
+        return new ResponseEntity<>(
+                CommonSuccessDto.builder()
+                        .result(dto)
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("호텔 정보 조회")
                         .build(),
                 HttpStatus.OK
         );
