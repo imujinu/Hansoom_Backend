@@ -20,7 +20,7 @@ public class RedisConfig {
     private int port;
 
     @Bean
-    @Qualifier("reservationInventory")
+    @Qualifier("reservationList")
     public RedisConnectionFactory redisConnectionFactory(){
         RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
         configuration.setHostName(host);
@@ -29,10 +29,14 @@ public class RedisConfig {
         return new LettuceConnectionFactory(configuration);
     }
 
-    public RedisTemplate<Object, String> redisTemplate(@Qualifier("reservationInventory")RedisConnectionFactory redisConnectionFactory){
-        RedisTemplate<Object, String> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setKeySerializer(new GenericJackson2JsonRedisSerializer());
-        redisTemplate.setValueSerializer(new StringRedisSerializer());
+    @Bean
+    @Qualifier("reservationList")
+    public RedisTemplate<String, String> redisTemplate(@Qualifier("reservationList")RedisConnectionFactory redisConnectionFactory){
+        RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+
+        redisTemplate.setHashKeySerializer(new StringRedisSerializer());
+        redisTemplate.setHashValueSerializer(new StringRedisSerializer());
         redisTemplate.setConnectionFactory(redisConnectionFactory);
         return redisTemplate;
 
