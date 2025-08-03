@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -26,7 +27,7 @@ public class ReviewCreateReqDto {
     private Long hotelId;
     @NotNull(message = "예약Id가 비어있습니다.")
     private Long reservationId;
-    private List<MultipartFile> multipartFileList; // Todo - Review 이미지 처리
+    private List<MultipartFile> reviewImages = new ArrayList<>();
 
     public Review toEntity(User user, Hotel hotel, Reservation reservation) {
         return Review.builder()

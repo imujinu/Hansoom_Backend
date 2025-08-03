@@ -1,5 +1,6 @@
 package com.beyond.HanSoom.review.service;
 
+import com.beyond.HanSoom.common.service.S3Uploader;
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.hotel.repository.HotelRepository;
 import com.beyond.HanSoom.reservation.domain.Reservation;
@@ -7,6 +8,7 @@ import com.beyond.HanSoom.reservation.repository.ReservationRepository;
 import com.beyond.HanSoom.review.domain.Review;
 import com.beyond.HanSoom.review.dto.ReviewCreateReqDto;
 import com.beyond.HanSoom.review.repository.ReviewRepository;
+import com.beyond.HanSoom.reviewImage.domain.ReviewImage;
 import com.beyond.HanSoom.user.domain.User;
 import com.beyond.HanSoom.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -16,6 +18,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
@@ -26,6 +29,7 @@ public class ReviewService {
     private final UserRepository userRepository;
     private final HotelRepository hotelRepository;
     private final ReservationRepository reservationRepository;
+    private final S3Uploader s3Uploader;
 
     // 리뷰작성
     public Long createReview(ReviewCreateReqDto dto) {
@@ -34,9 +38,16 @@ public class ReviewService {
         Hotel hotel = hotelRepository.findById(dto.getHotelId()).orElseThrow(() -> new EntityNotFoundException("없는 호텔입니다."));
         Reservation reservation = reservationRepository.findById(dto.getReservationId()).orElseThrow(() -> new EntityNotFoundException("없는 예약입니다."));
 
-        // Todo - reviewImages 처리
-
         Review review = dto.toEntity(user, hotel, reservation);
+
+        for(MultipartFile imageFile : dto.getReviewImages()) {
+            String imageUrl = s3Uploader.upload(imageFile, "review");
+            ReviewImage reviewImage = ReviewImage.builder()
+                    .reviewImageUrl(imageUrl)
+                    .review(review)
+                    .build();
+            review.getReviewImageList().add(reviewImage);
+        }
         reviewRepository.save(review);
 
         log.info("[HANSOOM][INFO] - ReviewService/createReview - 리뷰작성 성공, id={}", review.getId());

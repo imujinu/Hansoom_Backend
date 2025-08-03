@@ -3,6 +3,7 @@ package com.beyond.HanSoom.review.domain;
 import com.beyond.HanSoom.common.domain.BaseTimeEntity;
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.reservation.domain.Reservation;
+import com.beyond.HanSoom.reviewImage.domain.ReviewImage;
 import com.beyond.HanSoom.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -11,6 +12,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
@@ -40,4 +43,8 @@ public class Review extends BaseTimeEntity {
     @JoinColumn(name = "reservation_id")
     @ManyToOne(fetch = FetchType.LAZY)
     private Reservation reservation;
+
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<ReviewImage> reviewImageList = new ArrayList<>();
 }
