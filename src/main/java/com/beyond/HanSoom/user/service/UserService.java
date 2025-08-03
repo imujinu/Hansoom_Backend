@@ -54,6 +54,7 @@ public class UserService {
         User user = userRepository.findByEmail(dto.getEmail()).orElseThrow(() -> new EntityNotFoundException("없는 사용자입니다."));
         boolean isValidPassword = passwordEncoder.matches(dto.getPassword(), user.getPassword());
         if(!isValidPassword) throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        if(user.getState() == UserState.WITHDRAW) throw new IllegalArgumentException("탈퇴한 회원입니다.");
 
         // 토큰 생성해서 반환
         String accessToken = jwtTokenProvider.createAtToken(user);
@@ -79,6 +80,7 @@ public class UserService {
             userRepository.save(user);
             log.info("[HANSOOM][INFO] - UserService/googleLogin - google 회원가입 성공, email={}", user.getEmail());
         }
+        if(user.getState() == UserState.WITHDRAW) throw new IllegalArgumentException("탈퇴한 회원입니다.");
 
         // 토큰 생성해서 반환
         String accessToken = jwtTokenProvider.createAtToken(user);
@@ -104,6 +106,7 @@ public class UserService {
             userRepository.save(user);
             log.info("[HANSOOM][INFO] - UserService/googleLogin - kakao 회원가입 성공, email={}", user.getEmail());
         }
+        if(user.getState() == UserState.WITHDRAW) throw new IllegalArgumentException("탈퇴한 회원입니다.");
 
         // 토큰 생성해서 반환
         String accessToken = jwtTokenProvider.createAtToken(user);
