@@ -15,7 +15,6 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 public class RedisConfig {
     @Value("${spring.redis.host}")
     private String host;
-
     @Value("${spring.redis.port}")
     private int port;
 
@@ -30,11 +29,11 @@ public class RedisConfig {
     }
 
     @Bean
+
     @Qualifier("reservationList")
     public RedisTemplate<String, String> redisTemplate(@Qualifier("reservationList")RedisConnectionFactory redisConnectionFactory){
         RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
         redisTemplate.setKeySerializer(new StringRedisSerializer());
-
         redisTemplate.setHashKeySerializer(new StringRedisSerializer());
         redisTemplate.setHashValueSerializer(new StringRedisSerializer());
         redisTemplate.setConnectionFactory(redisConnectionFactory);
@@ -42,4 +41,23 @@ public class RedisConfig {
 
     }
 
+    @Bean
+    @Qualifier("rtInventory")
+    public RedisConnectionFactory rtInventoryFactory() {
+        RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
+        configuration.setHostName(host);
+        configuration.setPort(port);
+        configuration.setDatabase(1);
+        return new LettuceConnectionFactory(configuration);
+    }
+
+    @Bean
+    @Qualifier("rtInventory")
+    public RedisTemplate<String, String> rtInventoryTemplate(@Qualifier("rtInventory") RedisConnectionFactory rtInventoryFactory) {
+        RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(new StringRedisSerializer());
+        redisTemplate.setConnectionFactory(rtInventoryFactory); // Factory 객체 연결
+        return redisTemplate;
+    }
 }

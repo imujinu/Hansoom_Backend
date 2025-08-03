@@ -1,5 +1,7 @@
 package com.beyond.HanSoom.user.service;
 
+import com.beyond.HanSoom.common.service.S3Uploader;
+import com.beyond.HanSoom.user.domain.SocialType;
 import com.beyond.HanSoom.user.domain.User;
 import com.beyond.HanSoom.user.domain.UserState;
 import com.beyond.HanSoom.user.dto.*;
@@ -24,6 +26,9 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final GoogleService googleService;
+    private final KakaoService kakaoService;
+    private final S3Uploader s3Uploader;
 
 
     // 회원가입
@@ -36,23 +41,85 @@ public class UserService {
         userRepository.save(user);
 
         log.info("[HANSOOM][INFO] - UserService/save - 회원가입 성공, email={}", dto.getEmail());
-
-        // Todo - 프로필 사진 저장 구현
+        
+        String profileImageUrl = (profileImage != null && !profileImage.isEmpty())
+                ? s3Uploader.upload(profileImage, "user")
+                : null;
+        user.updateProfileImage(profileImageUrl);
     }
 
     // 로그인
-    public String login(UserLoginDto dto) {
+    public UserLoginResDto login(UserLoginReqDto dto) {
         // 이메일, 비밀번호 검증
         User user = userRepository.findByEmail(dto.getEmail()).orElseThrow(() -> new EntityNotFoundException("없는 사용자입니다."));
         boolean isValidPassword = passwordEncoder.matches(dto.getPassword(), user.getPassword());
         if(!isValidPassword) throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
 
         // 토큰 생성해서 반환
-        String token = jwtTokenProvider.createAtToken(user);
+        String accessToken = jwtTokenProvider.createAtToken(user);
+        String refreshToken = jwtTokenProvider.createRtToken(user);
 
         log.info("[HANSOOM][INFO] - UserService/login - 로그인 성공, email={}", dto.getEmail());
 
-        return token;
+        return new UserLoginResDto(accessToken, refreshToken);
+    }
+
+    // 구글 로그인 (정보 없으면 회원가입까지)
+    public UserLoginResDto googleLogin(RedirectDto dto) {
+
+        // accessToken 발급
+        AccessTokenDto accessTokenDto = googleService.getAccessToken(dto.getCode());
+        // 사용자 정보 얻기
+        GoogleProfileDto googleProfileDto = googleService.getGoogleProfile(accessTokenDto.getAccess_token());
+
+        // 회원가입이 되어있지 않다면 회원가입
+        User user = userRepository.findBySocialId(googleProfileDto.getSub()).orElse(null);
+        if(user == null) {
+            user = googleService.createOauth(googleProfileDto);
+            userRepository.save(user);
+            log.info("[HANSOOM][INFO] - UserService/googleLogin - google 회원가입 성공, email={}", user.getEmail());
+        }
+
+        // 토큰 생성해서 반환
+        String accessToken = jwtTokenProvider.createAtToken(user);
+        String refreshToken = jwtTokenProvider.createRtToken(user);
+
+        log.info("[HANSOOM][INFO] - UserService/googleLogin - google 로그인 성공, email={}", user.getEmail());
+
+        return new UserLoginResDto(accessToken, refreshToken);
+    }
+
+    // 카카오 로그인 (정보 없으면 회원가입까지)
+    public UserLoginResDto kakaoLogin(RedirectDto dto) {
+
+        // accessToken 발급
+        AccessTokenDto accessTokenDto = kakaoService.getAccessToken(dto.getCode());
+        // 사용자 정보 얻기
+        KakaoProfileDto kakaoProfileDto = kakaoService.getKakaoProfile(accessTokenDto.getAccess_token());
+
+        // 회원가입이 되어있지 않다면 회원가입
+        User user = userRepository.findBySocialId(kakaoProfileDto.getId()).orElse(null);
+        if(user == null) {
+            user = kakaoService.createOauth(kakaoProfileDto);
+            userRepository.save(user);
+            log.info("[HANSOOM][INFO] - UserService/googleLogin - kakao 회원가입 성공, email={}", user.getEmail());
+        }
+
+        // 토큰 생성해서 반환
+        String accessToken = jwtTokenProvider.createAtToken(user);
+        String refreshToken = jwtTokenProvider.createRtToken(user);
+
+        log.info("[HANSOOM][INFO] - UserService/googleLogin - kakao 로그인 성공, email={}", user.getEmail());
+
+        return new UserLoginResDto(accessToken, refreshToken);
+    }
+
+    // 토큰 재발급
+    public UserLoginResDto tokenRefresh(RefreshTokenDto dto) {
+        User user = jwtTokenProvider.validateRt(dto.getRefreshToken());
+        String accessToken = jwtTokenProvider.createAtToken(user);
+
+        return new UserLoginResDto(accessToken, null);
     }
 
     // 사용자 조회 (페이징, 검색 옵션) // Todo - 호텔 별 사용자 필터링
@@ -93,6 +160,9 @@ public class UserService {
         String email = authentication.getName();
         User user = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("없는 사용자입니다."));
         user.updateUserInfo(dto.getName(), dto.getNickName(), dto.getPhoneNumber());
+
+        log.info("[HANSOOM][INFO] - UserService/updateUser - 사용자 정보 수정 성공, email={}", email);
+
         return user.getId();
     }
 
@@ -102,6 +172,9 @@ public class UserService {
         String email = authentication.getName();
         User user = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("없는 사용자입니다."));
         user.setState(UserState.WITHDRAW);
+
+        log.info("[HANSOOM][INFO] - UserService/deleteUser - 회원탈퇴 성공, email={}", email);
+
         return user.getId();
     }
 }

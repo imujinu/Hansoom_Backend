@@ -10,6 +10,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -50,5 +51,15 @@ public class S3Uploader {
 
         // 전체 URL 반환 (정적 버킷 기준)
         return "https://" + bucket + ".s3." + region + ".amazonaws.com/" + fileName;
+    }
+
+    public void delete(String imageUrl) {
+        String fileName = imageUrl.split("amazonaws.com/")[1];
+        s3Client.deleteObject(a -> a.bucket(bucket).key(fileName));
+    }
+
+    public void batchDelete(List<String> imageUrls) {
+        // 배치로 여러 이미지를 한 번에 삭제
+        imageUrls.parallelStream().forEach(this::delete);
     }
 }
