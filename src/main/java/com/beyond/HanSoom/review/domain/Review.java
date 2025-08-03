@@ -22,7 +22,7 @@ public class Review extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(precision = 3, scale = 2, nullable = false)
-    private BigDecimal price;
+    private BigDecimal rating;
     @Column(length = 1000)
     private String contents;
     @Builder.Default

@@ -1,4 +1,10 @@
 package com.beyond.HanSoom.review.repository;
 
-public class ReviewRepository {
+import com.beyond.HanSoom.review.domain.Review;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface ReviewRepository extends JpaRepository<Review, Long> {
+
 }
