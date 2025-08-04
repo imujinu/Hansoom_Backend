@@ -56,7 +56,7 @@ public class ReservationInventoryService {
 
 
 
-    public void decreaseInventory(ReservationDto dto) {
+    public void increaseInventory(ReservationDto dto) {
 
         String key = buildKey(dto.getHotelId(), dto.getRoomType());
         //예약 가능 여부 검색
