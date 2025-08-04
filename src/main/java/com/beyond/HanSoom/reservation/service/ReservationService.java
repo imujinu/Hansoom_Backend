@@ -1,5 +1,7 @@
 package com.beyond.HanSoom.reservation.service;
 
+import com.beyond.HanSoom.common.dto.ReservationDto;
+import com.beyond.HanSoom.common.service.ReservationInventoryService;
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.hotel.repository.HotelRepository;
 import com.beyond.HanSoom.pay.domain.Payment;
@@ -15,6 +17,7 @@ import com.beyond.HanSoom.user.domain.User;
 import com.beyond.HanSoom.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,7 +42,7 @@ public class ReservationService {
     private final RoomRepository roomRepository;
     private final HotelRepository hotelRepository;
     private final PaymentRepository paymentRepository;
-
+    private final ReservationInventoryService reservationInventoryService;
     public String confirm(ReservationReqDto dto) {
         // 값 유효성 검증
         User user = getUser();
@@ -56,6 +59,8 @@ public class ReservationService {
         if(reservationList.size()>room.getRoomCount()){
             throw new IllegalArgumentException("빈 객실이 존재하지 않습니다.");
         }
+
+        reservationInventoryService.getInventory(new ReservationDto().makeDto(hotel, room, dto.getCheckIn(), dto.getCheckOut(), room.getRoomCount()));
 
         // 실제 숙박비 계산
         LocalDate date = dto.getCheckIn();
