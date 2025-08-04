@@ -28,5 +28,5 @@ public class ReviewController {
 
     // 리뷰 수정
 
-    // 리뷰
+    // 리뷰 삭제
 }

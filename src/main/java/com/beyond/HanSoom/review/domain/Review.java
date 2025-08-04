@@ -31,8 +31,6 @@ public class Review extends BaseTimeEntity {
     @Builder.Default
     @Column(nullable = false)
     private ReviewState state = ReviewState.NORMAL;
-    @Builder.Default
-    private Long likes = 0L;
 
     @JoinColumn(name = "user_id")
     @ManyToOne(fetch = FetchType.LAZY)
