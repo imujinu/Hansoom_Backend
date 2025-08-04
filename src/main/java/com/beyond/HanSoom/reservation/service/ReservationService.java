@@ -17,6 +17,7 @@ import com.beyond.HanSoom.user.domain.User;
 import com.beyond.HanSoom.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,7 @@ import static java.time.DayOfWeek.SUNDAY;
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Slf4j
 public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
@@ -60,7 +62,9 @@ public class ReservationService {
             throw new IllegalArgumentException("빈 객실이 존재하지 않습니다.");
         }
 
-        reservationInventoryService.getInventory(new ReservationDto().makeDto(hotel, room, dto.getCheckIn(), dto.getCheckOut(), room.getRoomCount()));
+        ReservationDto reservationDto = new ReservationDto().makeDto(hotel, room, dto.getCheckIn(), dto.getCheckOut(), room.getRoomCount());
+        // 빈 객실 조회 없다면 에러 발생
+        reservationInventoryService.getInventory(reservationDto);
 
         // 실제 숙박비 계산
         LocalDate date = dto.getCheckIn();
@@ -76,6 +80,8 @@ public class ReservationService {
         }
             date=date.plusDays(1);
         }
+
+        reservationInventoryService.increaseInventory(reservationDto);
 
         return reservationRepository.save(dto.toEntity(totalPrice,user,hotel, room)).getUuid();
 
@@ -101,8 +107,11 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(orderId).orElseThrow(()->new EntityNotFoundException("존재하지 않는 예약 내역 입니다."));
         Payment payment = paymentRepository.findByReservationId(reservation.getId());
 
-        if(payment!=null && reservation.getState() == State.SUCCESS && payment.getState()==State.SUCCESS){
+        ReservationDto reservationDto = new ReservationDto().makeDto(reservation.getHotel(), reservation.getRoom(), reservation.getCheckInDate(), reservation.getCheckOutDate(), reservation.getRoom().getRoomCount());
+
+        if(reservation.getState() == State.SUCCESS){
             reservation.changeState(State.RESERVED);
+            reservationInventoryService.increaseInventory(reservationDto);
             return reservation.getUuid();
         }else{
             throw new IllegalStateException("결제가 완료되지 않은 주문 입니다.");
@@ -116,7 +125,5 @@ public class ReservationService {
     }
 
 
-    public Reservation findDetail() {
-        return null;
-    }
+
 }
