@@ -24,13 +24,15 @@ public class Hotel {
     private String address;
     private String phoneNumber;
     private String image;
-    private String describtion;
+    private String description;
     @Builder.Default
     @Enumerated(EnumType.STRING)
     private HotelState state = HotelState.WAIT;
     @Enumerated(EnumType.STRING)
     private HotelType type;
     private LocalDateTime answerTime;
+    private double latitude;
+    private double longitude;
 
     @Builder.Default
     @OneToMany(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
@@ -39,5 +41,24 @@ public class Hotel {
     public void updateState(HotelState state) {
         this.state = state;
         this.answerTime = LocalDateTime.now();
+    }
+
+    public void updateBasicInfo(String name, String address, String phone, String desc, HotelType type, Double latitude, Double longitude) {
+        this.hotelName = name;
+        this.address = address;
+        this.phoneNumber = phone;
+        this.description = desc;
+        this.type = type;
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
+
+    public void updateRooms(List<Room> rooms) {
+        this.rooms.clear();
+        this.rooms.addAll(rooms);
+    }
+
+    public void updateImage(String newHotelImageUrl) {
+        this.image = newHotelImageUrl;
     }
 }

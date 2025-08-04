@@ -19,12 +19,11 @@ public class RoomRegisterRequestDto {
     private int roomCount;
     private String roomOption1;
     private String roomOption2;
-    private String describtion;
+    private String description;
     private int weekPrice;
     private int weekendPrice;
     private int standardPeople;
     private int maximumPeople;
-    private int extraFee;
     private LocalTime checkIn;
     private LocalTime checkOut;
 
@@ -34,12 +33,11 @@ public class RoomRegisterRequestDto {
                 .roomCount(this.roomCount)
                 .roomOption1(this.roomOption1)
                 .roomOption2(this.roomOption2)
-                .describtion(this.describtion)
+                .description(this.description)
                 .weekPrice(this.weekPrice)
                 .weekendPrice(this.weekendPrice)
                 .standardPeople(this.standardPeople)
                 .maximumPeople(this.maximumPeople)
-                .extraFee(this.extraFee)
                 .checkIn(this.checkIn)
                 .checkOut(this.checkOut)
                 .state(HotelState.WAIT)
