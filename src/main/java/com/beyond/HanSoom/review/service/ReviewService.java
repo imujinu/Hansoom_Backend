@@ -95,4 +95,12 @@ public class ReviewService {
     }
 
     // 리뷰삭제
+    public void deleteReview(Long id) {
+        Review review = reviewRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("없는 리뷰입니다."));
+        review.deleteReview();
+        
+        log.info("[HANSOOM][INFO] - ReviewService/deleteReview - 리뷰삭제 성공, id={}", id);
+    }
+
 }

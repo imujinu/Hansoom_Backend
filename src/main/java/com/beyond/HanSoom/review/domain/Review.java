@@ -30,6 +30,7 @@ public class Review extends BaseTimeEntity {
     private String contents;
     @Builder.Default
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private ReviewState state = ReviewState.NORMAL;
 
     @JoinColumn(name = "user_id")
@@ -49,5 +50,8 @@ public class Review extends BaseTimeEntity {
     public void updateReview(BigDecimal rating, String contents) {
         this.rating = rating;
         this.contents = contents;
+    }
+    public void deleteReview() {
+        this.state = ReviewState.REMOVE;
     }
 }

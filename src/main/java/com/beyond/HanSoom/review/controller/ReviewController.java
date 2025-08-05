@@ -32,4 +32,12 @@ public class ReviewController {
     }
 
     // 리뷰삭제
+    @DeleteMapping("/delete/{inputId}")
+    public ResponseEntity<?> deleteReview(@PathVariable Long inputId) {
+        reviewService.deleteReview(inputId);
+        return new ResponseEntity<>(new CommonSuccessDto(inputId, HttpStatus.OK.value(), "리뷰삭제 성공"), HttpStatus.OK);
+    }
+
+    // 리뷰 목록 (호텔별, 사용자별, 예약별)
+
 }
