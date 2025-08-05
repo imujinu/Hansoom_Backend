@@ -3,19 +3,23 @@ package com.beyond.HanSoom.hotel.service;
 import com.beyond.HanSoom.common.service.S3Uploader;
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.hotel.domain.HotelState;
-import com.beyond.HanSoom.hotel.dto.HotelDetailResponseDto;
-import com.beyond.HanSoom.hotel.dto.HotelRegisterRequsetDto;
-import com.beyond.HanSoom.hotel.dto.HotelStateUpdateDto;
-import com.beyond.HanSoom.hotel.dto.HotelUpdateDto;
+import com.beyond.HanSoom.hotel.dto.*;
 import com.beyond.HanSoom.hotel.repository.HotelRepository;
 import com.beyond.HanSoom.room.domain.Room;
 import com.beyond.HanSoom.room.dto.RoomDetailResponseDto;
 import com.beyond.HanSoom.room.dto.RoomUpdateDto;
 import com.beyond.HanSoom.roomImage.domain.RoomImage;
 import com.beyond.HanSoom.roomImage.dto.RoomImageResponseDto;
+import com.beyond.HanSoom.user.domain.User;
+import com.beyond.HanSoom.user.domain.UserRole;
+import com.beyond.HanSoom.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,11 +33,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class HotelService {
+    private final UserRepository userRepository;
     private final HotelRepository hotelRepository;
     private final S3Uploader s3Uploader;
     private final GeocoderService geocoderService;
 
     public void registerHotel(HotelRegisterRequsetDto dto, MultipartFile hotelImage, List<MultipartFile> roomImages) {
+//        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+//        User user = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("등록된 사용자가 아닙니다."));
+
         // 호텔 이미지 S3 저장
         String hotelImageUrl = (hotelImage != null && !hotelImage.isEmpty())
                 ? s3Uploader.upload(hotelImage, "hotel")
@@ -250,13 +258,45 @@ public class HotelService {
     }
 
 //    호텔 단건 조회
-    public HotelDetailResponseDto findById(Long id) {
-        Hotel hotel = hotelRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("호텔 정보가 없습니다."));
-        List<RoomDetailResponseDto> roomDto = new ArrayList<>();
-        for(Room r : hotel.getRooms()) {
-            List<RoomImageResponseDto> roomImages = r.getRoomImages().stream().map(a -> RoomImageResponseDto.fromEntity(a)).toList();
-            roomDto.add(RoomDetailResponseDto.fromEntity(r, roomImages));
+    @Transactional(readOnly = true)
+    public HotelDetailResponseDto findById(Long id, HotelDetailSearchDto searchDto) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Optional<User> user = userRepository.findByEmail(email);
+        if(user.isPresent() && user.get().getUserRole() == UserRole.ADMIN) {
+            Hotel hotel = hotelRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("호텔 정보가 없습니다."));
+            List<RoomDetailResponseDto> roomDto = new ArrayList<>();
+            for(Room r : hotel.getRooms()) {
+                if(searchDto.getPeople() > r.getMaximumPeople()) continue;
+                List<RoomImageResponseDto> roomImages = r.getRoomImages().stream().map(a -> RoomImageResponseDto.fromEntity(a)).toList();
+                roomDto.add(RoomDetailResponseDto.fromEntity(r, roomImages));
+            }
+            return HotelDetailResponseDto.fromEntity(hotel, roomDto);
         }
-        return HotelDetailResponseDto.fromEntity(hotel, roomDto);
+        else {
+            Hotel hotel = hotelRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("호텔 정보가 없습니다."));
+            List<RoomDetailResponseDto> roomDto = new ArrayList<>();
+            for(Room r : hotel.getRooms()) {
+                if(r.getState()==HotelState.REMOVE) continue;
+                if(searchDto.getPeople() > r.getMaximumPeople()) continue;
+                List<RoomImageResponseDto> roomImages = r.getRoomImages().stream().map(a -> RoomImageResponseDto.fromEntity(a)).toList();
+                roomDto.add(RoomDetailResponseDto.fromEntity(r, roomImages));
+            }
+            return HotelDetailResponseDto.fromEntity(hotel, roomDto);
+        }
+    }
+
+//    Admin 조회
+    @Transactional(readOnly = true)
+    public Page<HotelListAdminResponseDto> findAllAdmin(Pageable pageable) {
+        Page<Hotel> hotels = hotelRepository.findAll(pageable);
+        return hotels.map(HotelListAdminResponseDto::fromEntity);
+    }
+
+//    고객 조회
+    @Transactional(readOnly = true)
+    public Page<HotelListResponseDto> findAll(Pageable pageable, HotelListSearchDto searchDto) {
+        Specification<Hotel> spec = HotelSpecification.withSearchConditions(searchDto);
+        Page<Hotel> hotelPage = hotelRepository.findAll(spec, pageable);
+        return hotelPage.map(HotelListResponseDto::fromEntity);
     }
 }

@@ -1,12 +1,11 @@
 package com.beyond.HanSoom.hotel.controller;
 
 import com.beyond.HanSoom.common.dto.CommonSuccessDto;
-import com.beyond.HanSoom.hotel.dto.HotelDetailResponseDto;
-import com.beyond.HanSoom.hotel.dto.HotelRegisterRequsetDto;
-import com.beyond.HanSoom.hotel.dto.HotelStateUpdateDto;
-import com.beyond.HanSoom.hotel.dto.HotelUpdateDto;
+import com.beyond.HanSoom.hotel.dto.*;
 import com.beyond.HanSoom.hotel.service.HotelService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -73,13 +72,39 @@ public class HotelController {
     }
 
     @GetMapping("/detail/{id}")
-    public ResponseEntity<?> findById(@PathVariable Long id) {
-        HotelDetailResponseDto dto = hotelService.findById(id);
+    public ResponseEntity<?> findById(@PathVariable Long id, HotelDetailSearchDto searchDto) {
+        HotelDetailResponseDto dto = hotelService.findById(id, searchDto);
         return new ResponseEntity<>(
                 CommonSuccessDto.builder()
                         .result(dto)
                         .status_code(HttpStatus.OK.value())
                         .status_message("호텔 정보 조회")
+                        .build(),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/admin/list")
+    public ResponseEntity<?> findAllAdmin(Pageable pageable) {
+        Page<HotelListAdminResponseDto> dto = hotelService.findAllAdmin(pageable);
+        return new ResponseEntity<>(
+                CommonSuccessDto.builder()
+                        .result(dto)
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("관리자 호텔 리스트 조회")
+                        .build(),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<?> findAll(Pageable pageable, HotelListSearchDto searchDto) {
+        Page<HotelListResponseDto> dto = hotelService.findAll(pageable, searchDto);
+        return new ResponseEntity<>(
+                CommonSuccessDto.builder()
+                        .result(dto)
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("호텔 리스트 조회")
                         .build(),
                 HttpStatus.OK
         );
