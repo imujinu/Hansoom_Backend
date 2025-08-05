@@ -6,7 +6,9 @@ import com.beyond.HanSoom.hotel.repository.HotelRepository;
 import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.reservation.repository.ReservationRepository;
 import com.beyond.HanSoom.review.domain.Review;
+import com.beyond.HanSoom.review.domain.ReviewState;
 import com.beyond.HanSoom.review.dto.ReviewCreateReqDto;
+import com.beyond.HanSoom.review.dto.ReviewListResDto;
 import com.beyond.HanSoom.review.dto.ReviewUpdateReqDto;
 import com.beyond.HanSoom.review.repository.ReviewRepository;
 import com.beyond.HanSoom.reviewImage.domain.ReviewImage;
@@ -15,6 +17,8 @@ import com.beyond.HanSoom.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -61,6 +65,19 @@ public class ReviewService {
 
         return review.getId();
     }
+
+    // 사용자가 작성한 모든 리뷰목록 (User)
+    public Page<ReviewListResDto> getUserReviews(Pageable pageable) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("없는 사용자입니다."));
+        Page<Review> reviewPage = reviewRepository.findByUserAndState(pageable, user, ReviewState.NORMAL);
+        Page<ReviewListResDto> reviewListResDtoPage = reviewPage.map(a -> ReviewListResDto.fromEntity(a));
+        
+        log.info("[HANSOOM][INFO] - ReviewService/getUserReviews - 사용자 리뷰목록 출력 성공, email={}", email);
+        
+        return reviewListResDtoPage;
+    }
+
 
     // 리뷰수정
     public void updateReview(ReviewUpdateReqDto dto) {

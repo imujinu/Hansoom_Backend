@@ -3,6 +3,7 @@ package com.beyond.HanSoom.review.domain;
 import com.beyond.HanSoom.common.domain.BaseTimeEntity;
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.reservation.domain.Reservation;
+import com.beyond.HanSoom.review.dto.ReviewImageResDto;
 import com.beyond.HanSoom.reviewImage.domain.ReviewImage;
 import com.beyond.HanSoom.user.domain.User;
 import jakarta.persistence.*;
@@ -53,5 +54,8 @@ public class Review extends BaseTimeEntity {
     }
     public void deleteReview() {
         this.state = ReviewState.REMOVE;
+    }
+    public List<ReviewImageResDto> getReviewImageDtoList() {
+        return reviewImageList.stream().map(a -> ReviewImageResDto.fromEntity(a)).toList();
     }
 }
