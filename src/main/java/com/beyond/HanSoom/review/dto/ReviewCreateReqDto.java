@@ -27,6 +27,7 @@ public class ReviewCreateReqDto {
     private Long hotelId;
     @NotNull(message = "예약Id가 비어있습니다.")
     private Long reservationId;
+    @Builder.Default
     private List<MultipartFile> reviewImages = new ArrayList<>();
 
     public Review toEntity(User user, Hotel hotel, Reservation reservation) {

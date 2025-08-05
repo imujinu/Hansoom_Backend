@@ -45,13 +45,15 @@ public class ReviewService {
 
         Review review = dto.toEntity(user, hotel, reservation);
 
-        for(MultipartFile imageFile : dto.getReviewImages()) {
-            String imageUrl = s3Uploader.upload(imageFile, "review");
-            ReviewImage reviewImage = ReviewImage.builder()
-                    .reviewImageUrl(imageUrl)
-                    .review(review)
-                    .build();
-            review.getReviewImageList().add(reviewImage);
+        if(!dto.getReviewImages().isEmpty()) {
+            for(MultipartFile imageFile : dto.getReviewImages()) {
+                String imageUrl = s3Uploader.upload(imageFile, "review");
+                ReviewImage reviewImage = ReviewImage.builder()
+                        .reviewImageUrl(imageUrl)
+                        .review(review)
+                        .build();
+                review.getReviewImageList().add(reviewImage);
+            }
         }
         reviewRepository.save(review);
 
@@ -80,14 +82,16 @@ public class ReviewService {
         });
 
         // 새 이미지 파일 업로드 및 추가
-        for (MultipartFile file : dto.getNewImages()) {
-            if (!file.isEmpty()) {
-                String uploadedUrl = s3Uploader.upload(file, "review");
-                ReviewImage newImg = ReviewImage.builder()
-                        .review(review)
-                        .reviewImageUrl(uploadedUrl)
-                        .build();
-                review.getReviewImageList().add(newImg);
+        if(!dto.getNewImages().isEmpty()) {
+            for (MultipartFile file : dto.getNewImages()) {
+                if (!file.isEmpty()) {
+                    String uploadedUrl = s3Uploader.upload(file, "review");
+                    ReviewImage newImg = ReviewImage.builder()
+                            .review(review)
+                            .reviewImageUrl(uploadedUrl)
+                            .build();
+                    review.getReviewImageList().add(newImg);
+                }
             }
         }
 
