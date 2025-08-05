@@ -2,6 +2,7 @@ package com.beyond.HanSoom.review.controller;
 
 import com.beyond.HanSoom.common.dto.CommonSuccessDto;
 import com.beyond.HanSoom.review.dto.ReviewCreateReqDto;
+import com.beyond.HanSoom.review.dto.ReviewDetailResDto;
 import com.beyond.HanSoom.review.dto.ReviewListResDto;
 import com.beyond.HanSoom.review.dto.ReviewUpdateReqDto;
 import com.beyond.HanSoom.review.service.ReviewService;
@@ -43,10 +44,12 @@ public class ReviewController {
         return new ResponseEntity<>(new CommonSuccessDto(reviewListResDtoPage, HttpStatus.OK.value(), "호텔 리뷰목록 출력 성공"), HttpStatus.OK);
     }
 
-
     // 리뷰 상세
-
-
+    @GetMapping("/detail/{reviewId}")
+    public ResponseEntity<?> getDetailReview(@PathVariable Long reviewId) {
+        ReviewDetailResDto reviewDetailResDto = reviewService.getDetailReview(reviewId);
+        return new ResponseEntity<>(new CommonSuccessDto(reviewDetailResDto, HttpStatus.OK.value(), "리뷰상세 조회 성공"), HttpStatus.OK);
+    }
 
     // 리뷰수정
     @PutMapping("/update")

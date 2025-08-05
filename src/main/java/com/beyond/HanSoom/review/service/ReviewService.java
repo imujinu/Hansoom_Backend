@@ -8,6 +8,7 @@ import com.beyond.HanSoom.reservation.repository.ReservationRepository;
 import com.beyond.HanSoom.review.domain.Review;
 import com.beyond.HanSoom.review.domain.ReviewState;
 import com.beyond.HanSoom.review.dto.ReviewCreateReqDto;
+import com.beyond.HanSoom.review.dto.ReviewDetailResDto;
 import com.beyond.HanSoom.review.dto.ReviewListResDto;
 import com.beyond.HanSoom.review.dto.ReviewUpdateReqDto;
 import com.beyond.HanSoom.review.repository.ReviewRepository;
@@ -19,13 +20,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -89,6 +88,11 @@ public class ReviewService {
         return reviewListResDtoPage;
     }
 
+    // 리뷰 상세
+    public ReviewDetailResDto getDetailReview(Long reviewId) {
+        Review review = reviewRepository.findById(reviewId).orElseThrow(() -> new EntityNotFoundException("없는 리뷰입니다."));
+        return ReviewDetailResDto.fromEntity(review);
+    }
 
     // 리뷰수정
     public void updateReview(ReviewUpdateReqDto dto) {
