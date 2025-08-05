@@ -53,7 +53,8 @@ cloud:
       static: ap-northeast-2
     s3:
       bucket: eunduk-board-bucket
-
+  kakao:
+    rest-api-key: ac91670aa83923e0a1e1abe6f8a4020d
 
 jwt:
   # Todo - 만료시간 조정
