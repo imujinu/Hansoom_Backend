@@ -12,6 +12,7 @@ import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.reservation.domain.State;
 import com.beyond.HanSoom.reservation.dto.req.ReservationReqDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResDto;
+import com.beyond.HanSoom.reservation.dto.res.ReservationResponse;
 import com.beyond.HanSoom.reservation.repository.ReservationRepository;
 import com.beyond.HanSoom.room.domain.Room;
 import com.beyond.HanSoom.room.repository.RoomRepository;
@@ -61,19 +62,12 @@ public class ReservationService {
             throw new IllegalStateException("인원이 초과 되었습니다.");
         }
 
-        // 예약 가능 여부 검증
-        List<Reservation> reservationList = reservationRepository.checkRoom(user,room,hotel, dto.getCheckIn(), dto.getCheckOut(), State.RESERVED);
-        if(reservationList.size()>room.getRoomCount()){
-            throw new IllegalArgumentException("빈 객실이 존재하지 않습니다.");
-        }
+//        // 예약 가능 여부 검증
+//        List<Reservation> reservationList = reservationRepository.checkRoom(user,room,hotel, dto.getCheckIn(), dto.getCheckOut(), State.RESERVED);
+//        if(reservationList.size()>room.getRoomCount()){
+//            throw new IllegalArgumentException("빈 객실이 존재하지 않습니다.");
+//        }
 
-        ReservationDto reservationDto = new ReservationDto().makeDto(hotel, room, dto.getCheckIn(), dto.getCheckOut(), room.getRoomCount());
-        // 빈 객실 조회 없다면 에러 발생
-        int stock = reservationInventoryService.getInventory(reservationDto);
-
-        if(stock==0){
-            throw new IllegalArgumentException("재고부족");
-        }
 
         // 실제 숙박비 계산
         LocalDate date = dto.getCheckIn();
@@ -90,6 +84,7 @@ public class ReservationService {
             date=date.plusDays(1);
         }
 
+        ReservationDto reservationDto = new ReservationDto().makeDto(hotel, room, dto.getCheckIn(), dto.getCheckOut(), room.getRoomCount());
         reservationInventoryService.increaseInventory(reservationDto);
 
         return reservationRepository.save(dto.toEntity(totalPrice,user,hotel, room)).getUuid();
@@ -165,6 +160,10 @@ public class ReservationService {
 //            // 대기 중 상태 리턴
 //            return ReservationResponse.waiting(position);
 //        }
+//    }
+//
+//    private String generateLockKey(ReservationRequest request) {
+//        return "lock:" + generateQueueKey(request);
 //    }
 
 }
