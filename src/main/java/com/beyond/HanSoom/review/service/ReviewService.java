@@ -78,6 +78,17 @@ public class ReviewService {
         return reviewListResDtoPage;
     }
 
+    // 호텔의 모든 리뷰목록 (Hotel)
+    public Page<ReviewListResDto> getHotelReviews(Pageable pageable, Long hotelId) {
+        Hotel hotel = hotelRepository.findById(hotelId).orElseThrow(() -> new EntityNotFoundException("없는 호텔입니다."));
+        Page<Review> reviewPage = reviewRepository.findByHotelAndState(pageable, hotel, ReviewState.NORMAL);
+        Page<ReviewListResDto> reviewListResDtoPage = reviewPage.map(a -> ReviewListResDto.fromEntity(a));
+
+        log.info("[HANSOOM][INFO] - ReviewService/getHotelReviews - 호텔 리뷰목록 출력 성공, hotelId={}", hotelId);
+
+        return reviewListResDtoPage;
+    }
+
 
     // 리뷰수정
     public void updateReview(ReviewUpdateReqDto dto) {

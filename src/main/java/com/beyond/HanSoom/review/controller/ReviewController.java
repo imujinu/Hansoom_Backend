@@ -29,7 +29,6 @@ public class ReviewController {
     }
 
     // 사용자가 작성한 모든 리뷰목록 (User)
-    // 페이징 처리, 일단 검색은 X
     @GetMapping("/user/list")
     public ResponseEntity<?> getUserReviews(@PageableDefault(size = 5, sort = "id", direction = Sort.Direction.DESC)Pageable pageable) {
         Page<ReviewListResDto> reviewListResDtoPage = reviewService.getUserReviews(pageable);
@@ -37,8 +36,13 @@ public class ReviewController {
     }
 
     // 호텔의 모든 리뷰목록 (Hotel)
-    // 페이징 처리, 일단 검색은 X
-//    @GetMapping("/hotel/{hotelId}/list") , getHotelReviews
+    @GetMapping("/hotel/{hotelId}/list")
+    public ResponseEntity<?> getHotelReviews(@PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC)Pageable pageable,
+                                             @PathVariable Long hotelId) {
+        Page<ReviewListResDto> reviewListResDtoPage = reviewService.getHotelReviews(pageable, hotelId);
+        return new ResponseEntity<>(new CommonSuccessDto(reviewListResDtoPage, HttpStatus.OK.value(), "호텔 리뷰목록 출력 성공"), HttpStatus.OK);
+    }
+
 
     // 리뷰 상세
 
