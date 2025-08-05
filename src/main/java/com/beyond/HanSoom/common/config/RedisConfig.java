@@ -8,6 +8,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
@@ -24,12 +25,12 @@ public class RedisConfig {
         RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
         configuration.setHostName(host);
         configuration.setPort(port);
-        configuration.setDatabase(0);
+        configuration.setDatabase(8);
         return new LettuceConnectionFactory(configuration);
     }
 
-    @Bean
 
+    @Bean
     @Qualifier("reservationList")
     public RedisTemplate<String, String> redisTemplate(@Qualifier("reservationList")RedisConnectionFactory redisConnectionFactory){
         RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
@@ -60,4 +61,12 @@ public class RedisConfig {
         redisTemplate.setConnectionFactory(rtInventoryFactory); // Factory 객체 연결
         return redisTemplate;
     }
+
+    @Bean
+    @Qualifier("distributeLock")
+    public StringRedisTemplate distributeLockStringRedisTemplate(
+            @Qualifier("reservationList") RedisConnectionFactory factory) {
+        return new StringRedisTemplate(factory);
+    }
+
 }
