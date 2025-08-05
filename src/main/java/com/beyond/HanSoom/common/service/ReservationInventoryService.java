@@ -59,7 +59,10 @@ public class ReservationInventoryService {
 
         String key = buildKey(dto.getHotelId(), dto.getRoomType());
         //예약 가능 여부 검색
-        getInventory(dto);
+        int stock = getInventory(dto);
+        if(stock==0){
+            throw new IllegalStateException("재고가 부족합니다.");
+        }
         // 예약 추가
         List<String> fields = getFields(dto.getStartDate(), dto.getEndDate());
         List<Object> values = redisTemplate.opsForHash().multiGet(key, fields.stream().collect(Collectors.toList()));
@@ -76,7 +79,7 @@ public class ReservationInventoryService {
     public void cancelInventory(Long hotelId, String roomType,
                                 LocalDate startDate, LocalDate endDate){
         String key = buildKey(hotelId, roomType);
-        List<String> fields = getFields(startDate,endDate);
+        List<String> fields = getFields(startDate,endDate.minusDays(-1));
 
         for(int i=0; i<fields.size(); i++){
             LocalDate date = LocalDate.parse(fields.get(i));

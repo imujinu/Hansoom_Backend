@@ -60,7 +60,7 @@ public class Reservation {
     private State state = State.PENDING;
 
     public void cancel(){
-        this.state = State.CANCELD;
+        this.state = State.CANCELLED;
     }
     public void reserve(){this.state = State.RESERVED;}
 
