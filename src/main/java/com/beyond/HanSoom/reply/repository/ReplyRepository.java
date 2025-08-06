@@ -1,4 +1,7 @@
 package com.beyond.HanSoom.reply.repository;
 
-public class ReplyRepository {
+import com.beyond.HanSoom.reply.domain.Reply;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface ReplyRepository extends JpaRepository<Reply, Long> {
 }
