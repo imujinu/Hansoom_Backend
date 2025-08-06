@@ -19,12 +19,17 @@ public class ReplyController {
 
     // 답글 작성
     @PostMapping("/create")
-    public ResponseEntity<?> createReply(@RequestBody ReplyCreateReqDto dto) {
+    public ResponseEntity<?> createReply(@RequestBody @Valid ReplyCreateReqDto dto) {
         Long id = replyService.createReply(dto);
         return new ResponseEntity<>(new CommonSuccessDto(id, HttpStatus.CREATED.value(), "답글작성 성공"), HttpStatus.CREATED);
     }
 
     // 답글 수정
+    @PutMapping("/update/{replyId}")
+    public ResponseEntity<?> updateReply(@PathVariable Long replyId, @RequestBody ReplyUpdateReqDto dto) {
+        replyService.updateReply(replyId, dto);
+        return new ResponseEntity<>(new CommonSuccessDto(replyId, HttpStatus.OK.value(), "답글수정 성공"), HttpStatus.OK);
+    }
 
     // 답글 삭제
 

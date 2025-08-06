@@ -30,4 +30,8 @@ public class Reply extends BaseTimeEntity {
     @JoinColumn(name = "review_id")
     @ManyToOne(fetch = FetchType.LAZY)
     private Review review;
+
+    public void updateContents(String contents) {
+        this.contents = contents;
+    }
 }

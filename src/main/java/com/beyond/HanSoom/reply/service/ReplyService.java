@@ -41,6 +41,12 @@ public class ReplyService {
     }
 
     // 답글 수정
+    public void updateReply(Long id, ReplyUpdateReqDto dto) {
+        Reply reply = replyRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("없는 답글입니다."));
+        reply.updateContents(dto.getContents());
+        
+        log.info("[HANSOOM][INFO] - ReplyService/updateReply - 답글수정 성공, id={}", id);
+    }
 
     // 답글 삭제
 
