@@ -30,7 +30,7 @@ public class HotelListAdminResponseDto {
                 .address(hotel.getAddress())
                 .state(hotel.getState())
                 .createdTime(hotel.getCreatedTime())
-//                .hostName(hotel.getUser().getName())
+                .hostName(hotel.getUser().getName())
                 .build();
     }
 }

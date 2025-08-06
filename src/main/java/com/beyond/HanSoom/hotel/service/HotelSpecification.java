@@ -20,7 +20,7 @@ public class HotelSpecification {
 
             List<Predicate> predicates = new ArrayList<>();
 
-            predicates.add(cb.notEqual(root.get("state"), HotelState.REMOVE));
+            predicates.add(cb.equal(root.get("state"), HotelState.APPLY));
             predicates.add(cb.notEqual(roomJoin.get("state"), HotelState.REMOVE));
             predicates.add(cb.greaterThanOrEqualTo(roomJoin.get("maximumPeople"), dto.getPeople()));
 

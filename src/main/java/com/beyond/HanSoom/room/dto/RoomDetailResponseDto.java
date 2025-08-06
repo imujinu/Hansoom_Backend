@@ -30,8 +30,9 @@ public class RoomDetailResponseDto {
     private LocalTime checkIn;
     private LocalTime checkOut;
     private List<RoomImageResponseDto> roomImages;
+    private int remainRoomCount;
 
-    public static RoomDetailResponseDto fromEntity(Room room, List<RoomImageResponseDto> dto) {
+    public static RoomDetailResponseDto fromEntity(Room room, List<RoomImageResponseDto> dto, int remainRoomCount) {
         return RoomDetailResponseDto.builder()
                 .id(room.getId())
                 .type(room.getType())
@@ -46,6 +47,7 @@ public class RoomDetailResponseDto {
                 .checkIn(room.getCheckIn())
                 .checkOut(room.getCheckOut())
                 .roomImages(dto)
+                .remainRoomCount(remainRoomCount)
                 .build();
     }
 }
