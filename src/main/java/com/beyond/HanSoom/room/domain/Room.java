@@ -1,5 +1,6 @@
 package com.beyond.HanSoom.room.domain;
 
+import com.beyond.HanSoom.common.domain.BaseTimeEntity;
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.hotel.domain.HotelState;
 import com.beyond.HanSoom.room.dto.RoomUpdateDto;
@@ -9,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Where;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -21,7 +23,7 @@ import java.util.stream.Collectors;
 @Getter
 @Entity
 @Builder
-public class Room {
+public class Room extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

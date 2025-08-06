@@ -5,14 +5,13 @@ import com.beyond.HanSoom.hotel.domain.HotelState;
 import com.beyond.HanSoom.hotel.domain.HotelType;
 import com.beyond.HanSoom.hotel.service.GeocoderService;
 import com.beyond.HanSoom.room.dto.RoomRegisterRequestDto;
+import com.beyond.HanSoom.user.domain.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Map;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -27,7 +26,7 @@ public class HotelRegisterRequsetDto {
 
     private List<RoomRegisterRequestDto> rooms;
 
-    public Hotel toEntity(String hotelImageUrl, GeocoderService.Coordinate coordinate) {
+    public Hotel toEntity(String hotelImageUrl, GeocoderService.Coordinate coordinate, User user) {
         return Hotel.builder()
                 .hotelName(this.hotelName)
                 .address(this.address)
@@ -38,6 +37,7 @@ public class HotelRegisterRequsetDto {
                 .image(hotelImageUrl)
                 .latitude(coordinate.getLatitude())
                 .longitude(coordinate.getLongitude())
+                .user(user)
                 .build();
     }
 }
