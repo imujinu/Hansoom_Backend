@@ -24,4 +24,4 @@
 [NOTION LINK](https://vivid-swallow-267.notion.site/247b1da1d9f980179d12d61e05389f50?source=copy_link)
 
 ## 📄 API 명세서
-
+[POSTMAN LINK](https://documenter.getpostman.com/view/40187629/2sB3BBqsB9#702f82d9-09c1-43f8-830c-56f957a19796)
