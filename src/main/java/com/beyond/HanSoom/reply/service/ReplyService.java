@@ -2,6 +2,7 @@ package com.beyond.HanSoom.reply.service;
 
 import com.beyond.HanSoom.reply.domain.Reply;
 import com.beyond.HanSoom.reply.dto.ReplyCreateReqDto;
+import com.beyond.HanSoom.reply.dto.ReplyUpdateReqDto;
 import com.beyond.HanSoom.reply.repository.ReplyRepository;
 import com.beyond.HanSoom.review.domain.Review;
 import com.beyond.HanSoom.review.repository.ReviewRepository;
@@ -49,5 +50,10 @@ public class ReplyService {
     }
 
     // 답글 삭제
+    public void deleteReply(Long id) {
+        Reply reply = replyRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("없는 답글입니다."));
+        reply.deleteReply();
+        log.info("[HANSOOM][INFO] - ReplyService/deleteReply - 답글삭제 성공, id={}", id);
+    }
 
 }

@@ -34,4 +34,7 @@ public class Reply extends BaseTimeEntity {
     public void updateContents(String contents) {
         this.contents = contents;
     }
+    public void deleteReply() {
+        this.state = ReplyState.REMOVE;
+    }
 }
