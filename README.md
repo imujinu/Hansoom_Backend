@@ -20,7 +20,8 @@
 
 ## 🗂️ WBS(Work Breakdown Structure)
 
-## 📄 요구사항 명세서
+## 📄 주요기능, 요구사항명세서, 팀 전략
+[NOTION LINK](https://vivid-swallow-267.notion.site/247b1da1d9f980179d12d61e05389f50?source=copy_link)
 
 ## 📄 API 명세서
 
