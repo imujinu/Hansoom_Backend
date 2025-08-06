@@ -46,7 +46,7 @@ public class PaymentService {
             .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .build();
 
-    public PaymentService(PaymentRepository paymentRepository, ReservationRepository reservationRepository, @Qualifier("reservationList") RedisDistributedLock distributedLock, RedisTemplate<String, String> redisTemplate, QueueReservationService queueReservationService) {
+    public PaymentService(PaymentRepository paymentRepository, ReservationRepository reservationRepository, RedisDistributedLock distributedLock, @Qualifier("reservationList")RedisTemplate<String, String> redisTemplate, QueueReservationService queueReservationService) {
         this.paymentRepository = paymentRepository;
         this.reservationRepository = reservationRepository;
         this.distributedLock = distributedLock;

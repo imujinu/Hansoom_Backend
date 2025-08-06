@@ -55,7 +55,7 @@ public class ReservationService {
     private final RedisDistributedLock distributedLock; // 락
     private final RedisTemplate<String, String> redisTemplate;
 
-    public ReservationService(ReservationRepository reservationRepository, UserRepository userRepository, RoomRepository roomRepository, HotelRepository hotelRepository, PaymentRepository paymentRepository, ReservationInventoryService reservationInventoryService, QueueReservationService queueReservationService, RedisDistributedLock distributedLock, @Qualifier("reservationList") RedisTemplate<String, String> redisTemplate) {
+    public ReservationService(ReservationRepository reservationRepository, UserRepository userRepository, RoomRepository roomRepository, HotelRepository hotelRepository, PaymentRepository paymentRepository, ReservationInventoryService reservationInventoryService, QueueReservationService queueReservationService,  RedisDistributedLock distributedLock, @Qualifier("reservationList") RedisTemplate<String, String> redisTemplate) {
         this.reservationRepository = reservationRepository;
         this.userRepository = userRepository;
         this.roomRepository = roomRepository;
