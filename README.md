@@ -25,3 +25,6 @@
 
 ## 📄 API 명세서
 [POSTMAN LINK](https://documenter.getpostman.com/view/40187629/2sB3BBqsB9#702f82d9-09c1-43f8-830c-56f957a19796)
+
+## 📄 예시 페이지
+[PREVIEW LINK](https://readdy.link/preview/d972ce86-2686-4d95-91a4-ea112118bf7e/1293925)
