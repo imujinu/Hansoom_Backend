@@ -19,8 +19,8 @@ public class ReservationDto {
     private Long hotelId;
     private Long roomId;
     private Long userId;
-    private LocalDate startDate;
-    private LocalDate endDate;
+    private LocalDate checkIn;
+    private LocalDate checkOut;
     private int maxStock;
 
     public ReservationDto makeDto(Hotel hotel, Room room, User user, LocalDate checkIn, LocalDate checkOut, int maxStock){
@@ -28,8 +28,8 @@ public class ReservationDto {
                 .hotelId(hotel.getId())
                 .roomId(room.getId())
                 .userId(user.getId())
-                .startDate(checkIn)
-                .endDate(checkOut)
+                .checkIn(checkIn)
+                .checkOut(checkOut)
                 .maxStock(maxStock)
                 .build();
     }
