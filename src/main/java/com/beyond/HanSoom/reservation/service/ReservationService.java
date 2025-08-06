@@ -1,6 +1,8 @@
 package com.beyond.HanSoom.reservation.service;
 
 import com.beyond.HanSoom.common.dto.ReservationDto;
+import com.beyond.HanSoom.common.service.QueueReservationService;
+import com.beyond.HanSoom.common.service.RedisDistributedLock;
 import com.beyond.HanSoom.common.service.ReservationInventoryService;
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.hotel.repository.HotelRepository;
@@ -10,6 +12,7 @@ import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.reservation.domain.State;
 import com.beyond.HanSoom.reservation.dto.req.ReservationReqDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResDto;
+import com.beyond.HanSoom.reservation.dto.res.ReservationResponse;
 import com.beyond.HanSoom.reservation.repository.ReservationRepository;
 import com.beyond.HanSoom.room.domain.Room;
 import com.beyond.HanSoom.room.repository.RoomRepository;
@@ -45,6 +48,9 @@ public class ReservationService {
     private final HotelRepository hotelRepository;
     private final PaymentRepository paymentRepository;
     private final ReservationInventoryService reservationInventoryService;
+    private final QueueReservationService queueReservationService;
+    private final RedisDistributedLock distributedLock; // 락
+
     public String confirm(ReservationReqDto dto) {
         // 값 유효성 검증
         User user = getUser();
@@ -56,15 +62,12 @@ public class ReservationService {
             throw new IllegalStateException("인원이 초과 되었습니다.");
         }
 
-        // 예약 가능 여부 검증
-        List<Reservation> reservationList = reservationRepository.checkRoom(user,room,hotel, dto.getCheckIn(), dto.getCheckOut(), State.RESERVED);
-        if(reservationList.size()>room.getRoomCount()){
-            throw new IllegalArgumentException("빈 객실이 존재하지 않습니다.");
-        }
+//        // 예약 가능 여부 검증
+//        List<Reservation> reservationList = reservationRepository.checkRoom(user,room,hotel, dto.getCheckIn(), dto.getCheckOut(), State.RESERVED);
+//        if(reservationList.size()>room.getRoomCount()){
+//            throw new IllegalArgumentException("빈 객실이 존재하지 않습니다.");
+//        }
 
-        ReservationDto reservationDto = new ReservationDto().makeDto(hotel, room, dto.getCheckIn(), dto.getCheckOut(), room.getRoomCount());
-        // 빈 객실 조회 없다면 에러 발생
-        reservationInventoryService.getInventory(reservationDto);
 
         // 실제 숙박비 계산
         LocalDate date = dto.getCheckIn();
@@ -81,6 +84,7 @@ public class ReservationService {
             date=date.plusDays(1);
         }
 
+        ReservationDto reservationDto = new ReservationDto().makeDto(hotel, room, dto.getCheckIn(), dto.getCheckOut(), room.getRoomCount());
         reservationInventoryService.increaseInventory(reservationDto);
 
         return reservationRepository.save(dto.toEntity(totalPrice,user,hotel, room)).getUuid();
@@ -124,6 +128,42 @@ public class ReservationService {
         return user;
     }
 
-
+//    public ReservationResponse makeReservation(ReservationRequest request) {
+//        // 1. 대기열 등록 시도
+//        List<Long> queueResult = queueReservationService.addToQueue(request.toDto());
+//
+//        long position = queueResult.get(0);
+//        if (position == -2) {
+//            return ReservationResponse.fail("재고가 없습니다.");
+//        } else if (position == -1) {
+//            return ReservationResponse.fail("이미 대기열에 등록되어 있습니다.");
+//        }
+//
+//        if (position == 1) {
+//            // 바로 예약 처리 시도 (대기열 맨 앞)
+//            String lockKey = generateLockKey(request);
+//            String lockValue = generateLockValue(request.getUserId());
+//
+//            if (distributedLock.tryLock(lockKey, lockValue, 30000)) {
+//                try {
+//                    // 예약 실제 처리 (DB 등)
+//                    return processReservation(request);
+//                } finally {
+//                    distributedLock.releaseLock(lockKey, lockValue);
+//                    queueReservationService.processNextInQueue(lockKey + ":queue", lockKey, lockValue, 30000);
+//                }
+//            } else {
+//                // 락 못 얻으면 대기열에서 대기
+//                return ReservationResponse.waiting(position);
+//            }
+//        } else {
+//            // 대기 중 상태 리턴
+//            return ReservationResponse.waiting(position);
+//        }
+//    }
+//
+//    private String generateLockKey(ReservationRequest request) {
+//        return "lock:" + generateQueueKey(request);
+//    }
 
 }

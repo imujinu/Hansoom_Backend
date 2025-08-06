@@ -21,33 +21,32 @@ public class ReservationInventoryService {
         this.redisTemplate = redisTemplate;
     }
 
-    public Long getInventory(ReservationDto dto) {
+    public int getInventory(ReservationDto dto) {
 
         //redis 키값을 호텔 + 객실타입으로 조회
         String key = buildKey(dto.getHotelId(), dto.getRoomType());
 
         //입력된 모든 날짜를 체크인~체크아웃+1전까지 List에 추가함
-        List<String> fields = getFields(dto.getStartDate(), dto.getEndDate());
+        List<String> fields = getFields(dto.getStartDate(), dto.getEndDate().minusDays(1));
 
         // multiGet안에 Collection을 넣으면 알아서 반복문을 돌려준다.
         List<Object> values = redisTemplate.opsForHash().multiGet(key, fields.stream().collect(Collectors.toList()));
 
         boolean hasExceeded = values.stream()
-                .filter(Objects::nonNull)  // null 제외
-                .mapToInt(obj -> Integer.parseInt(obj.toString()))  // Object → int 변환
-                .anyMatch(stock -> stock == dto.getMaxStock());
+                .map(obj -> obj == null ? 0L : Integer.parseInt(obj.toString()))  // Object → int 변환
+                .anyMatch(stock -> stock >= dto.getMaxStock());
 
         if (hasExceeded) {
-            throw new IllegalStateException("재고가 존재하지 않습니다..");
+            return 0;
         }
 
-        Long minStock = Long.MAX_VALUE;
-        Map<LocalDate, Integer> result = new HashMap<>();
+        int minStock = dto.getMaxStock();
         for (int i = 0; i < fields.size(); i++) {
-            LocalDate date = LocalDate.parse(fields.get(i));
-            Long value = (Long) values.get(i);
-            if(value!=null){
-                minStock =Long.min(value ,minStock);
+            String strVal = values.get(i) != null ? values.get(i).toString() : null;
+            if (strVal != null) {
+                int used = Integer.parseInt(strVal);
+                int stock = dto.getMaxStock() - used;
+                minStock = Integer.min(stock, minStock);
             }
         }
 
@@ -60,7 +59,10 @@ public class ReservationInventoryService {
 
         String key = buildKey(dto.getHotelId(), dto.getRoomType());
         //예약 가능 여부 검색
-        getInventory(dto);
+        int stock = getInventory(dto);
+        if(stock==0){
+            throw new IllegalStateException("재고가 부족합니다.");
+        }
         // 예약 추가
         List<String> fields = getFields(dto.getStartDate(), dto.getEndDate());
         List<Object> values = redisTemplate.opsForHash().multiGet(key, fields.stream().collect(Collectors.toList()));
@@ -68,15 +70,16 @@ public class ReservationInventoryService {
         // redis 재고 증가
         for (int i = 0; i < fields.size(); i++) {
             LocalDate date = LocalDate.parse(fields.get(i));
-            Long value = (Long) values.get(i);
-            redisTemplate.opsForHash().increment(key,date.toString(), 1);
+            Object obj = values.get(i);
+            Long value = obj == null ? 0L : Long.parseLong(obj.toString());
+            redisTemplate.opsForHash().increment(key, date.toString(), 1);
         }
     }
 
     public void cancelInventory(Long hotelId, String roomType,
                                 LocalDate startDate, LocalDate endDate){
         String key = buildKey(hotelId, roomType);
-        List<String> fields = getFields(startDate,endDate);
+        List<String> fields = getFields(startDate,endDate.minusDays(-1));
 
         for(int i=0; i<fields.size(); i++){
             LocalDate date = LocalDate.parse(fields.get(i));
