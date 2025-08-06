@@ -278,11 +278,13 @@ public class HotelService {
     public HotelDetailResponseDto findById(Long id, HotelDetailSearchDto searchDto) {
         Hotel hotel = hotelRepository.findByIdAndState(id, HotelState.APPLY).orElseThrow(() -> new EntityNotFoundException("호텔 정보가 없습니다."));
         List<RoomDetailResponseDto> roomDto = new ArrayList<>();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("등록된 사용자가 없습니다."));
         for(Room r : hotel.getRooms()) {
             if(r.getState()==HotelState.REMOVE) continue;
             if(searchDto.getPeople() > r.getMaximumPeople()) continue;
 
-            ReservationDto reservationDto = new ReservationDto().makeDto(hotel, r, searchDto.getCheckIn(), searchDto.getCheckOut(), r.getRoomCount());
+            ReservationDto reservationDto = new ReservationDto().makeDto(hotel, r, user, searchDto.getCheckIn(), searchDto.getCheckOut(), r.getRoomCount());
             int remainRoom = reservationInventoryService.getInventory(reservationDto);
             if(remainRoom == 0) continue;
 
@@ -336,7 +338,7 @@ public class HotelService {
                 .filter(hotel -> hotel.getRooms().stream().anyMatch(room -> {
                     ReservationDto dto = ReservationDto.builder()
                             .hotelId(hotel.getId())
-                            .roomType(room.getType())
+                            .roomId(room.getId())
                             .startDate(searchDto.getCheckIn())
                             .endDate(searchDto.getCheckOut())
                             .maxStock(room.getRoomCount())
