@@ -12,13 +12,24 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class QueueReservationReqDto {
-    private String queueKey;
-    private Long userId;
-    private Long timestamp;
-    private Long maxWaitTime;
-    private Long hotelId;
-    private Long roomId;
+    private String hotelId;
+    private String roomId;
     private LocalDate checkIn;
     private LocalDate checkOut;
+    private long maxWaitTime;
     private int maxStock;
+    private String userId;
+
+
+    public QueueReservationReqDto makeDto(ReservationDto dto){
+        return QueueReservationReqDto.builder()
+                .hotelId(String.valueOf(dto.getHotelId()))
+                .roomId(String.valueOf(dto.getRoomId()))
+                .checkIn(dto.getStartDate())
+                .checkOut(dto.getEndDate())
+                .maxWaitTime(1800)
+                .maxStock(dto.getMaxStock())
+                .userId(String.valueOf(dto.getUserId()))
+                .build();
+    }
 }

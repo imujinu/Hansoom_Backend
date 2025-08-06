@@ -35,6 +35,7 @@ public class RedisConfig {
     public RedisTemplate<String, String> redisTemplate(@Qualifier("reservationList")RedisConnectionFactory redisConnectionFactory){
         RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
         redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(new StringRedisSerializer());
         redisTemplate.setHashKeySerializer(new StringRedisSerializer());
         redisTemplate.setHashValueSerializer(new StringRedisSerializer());
         redisTemplate.setConnectionFactory(redisConnectionFactory);

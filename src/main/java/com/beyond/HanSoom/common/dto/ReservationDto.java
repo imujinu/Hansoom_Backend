@@ -3,6 +3,7 @@ package com.beyond.HanSoom.common.dto;
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.reservation.dto.req.ReservationReqDto;
 import com.beyond.HanSoom.room.domain.Room;
+import com.beyond.HanSoom.user.domain.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,15 +17,17 @@ import java.time.LocalDate;
 @Builder
 public class ReservationDto {
     private Long hotelId;
-    private String roomType;
+    private Long roomId;
+    private Long userId;
     private LocalDate startDate;
     private LocalDate endDate;
     private int maxStock;
 
-    public ReservationDto makeDto(Hotel hotel, Room room, LocalDate checkIn, LocalDate checkOut, int maxStock){
+    public ReservationDto makeDto(Hotel hotel, Room room, User user, LocalDate checkIn, LocalDate checkOut, int maxStock){
         return ReservationDto.builder()
                 .hotelId(hotel.getId())
-                .roomType(room.getType())
+                .roomId(room.getId())
+                .userId(user.getId())
                 .startDate(checkIn)
                 .endDate(checkOut)
                 .maxStock(maxStock)

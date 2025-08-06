@@ -24,7 +24,7 @@ public class ReservationInventoryService {
     public int getInventory(ReservationDto dto) {
 
         //redis 키값을 호텔 + 객실타입으로 조회
-        String key = buildKey(dto.getHotelId(), dto.getRoomType());
+        String key = buildKey(dto.getHotelId(), dto.getRoomId());
 
         //입력된 모든 날짜를 체크인~체크아웃+1전까지 List에 추가함
         List<String> fields = getFields(dto.getStartDate(), dto.getEndDate().minusDays(1));
@@ -57,7 +57,7 @@ public class ReservationInventoryService {
 
     public void increaseInventory(ReservationDto dto) {
 
-        String key = buildKey(dto.getHotelId(), dto.getRoomType());
+        String key = buildKey(dto.getHotelId(), dto.getRoomId());
         //예약 가능 여부 검색
         int stock = getInventory(dto);
         if(stock==0){
@@ -76,9 +76,9 @@ public class ReservationInventoryService {
         }
     }
 
-    public void cancelInventory(Long hotelId, String roomType,
+    public void cancelInventory(Long hotelId, Long roomId,
                                 LocalDate startDate, LocalDate endDate){
-        String key = buildKey(hotelId, roomType);
+        String key = buildKey(hotelId, roomId);
         List<String> fields = getFields(startDate,endDate.minusDays(-1));
 
         for(int i=0; i<fields.size(); i++){
@@ -90,8 +90,8 @@ public class ReservationInventoryService {
 
     }
 
-    private String buildKey(Long hotelId, String roomType) {
-        return String.format("hotel:%d:room:%s", hotelId, roomType);
+    private String buildKey(Long hotelId, Long roomId) {
+        return String.format("hotel:%d:room:%d", hotelId, roomId);
     }
 
     private static List<String> getFields(LocalDate startDate, LocalDate endDate) {
