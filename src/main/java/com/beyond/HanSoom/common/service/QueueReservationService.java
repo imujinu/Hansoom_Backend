@@ -25,33 +25,48 @@ public class QueueReservationService {
      * 2. 대기열 등록 (userId:status 형태로)
      * 3. 순위 반환
      */
+    // keys : hotel, room, date
+    // userId
+    // 생성 시간
+    // 만료시간
+    // 최대재고
+    // 상태
     private static final String ADD_TO_QUEUE_SCRIPT =
-            // 1. 재고 체크
+
+
+            // 1. 재고 체크 (tonumber(ARGV[4]) or 0)
+            "local maxStock = tonumber(ARGV[4]) or 50 " +
             "for i = 1, #KEYS do " +
-                    "    local count = redis.call('ZCARD', KEYS[i]) " +
-                    "    if tonumber(count) >= tonumber(ARGV[5]) then " +
-                    "        return {-2, i} " +
-                    "    end " +
+                    "  local count = redis.call('ZCARD', KEYS[i]) " +
+                    "  if tonumber(count or 0) >= maxStock then " +
+                    "    return {-2, i} " +
+                    "  end " +
                     "end " +
 
-                    // 2. 중복 체크
                     "for i = 1, #KEYS do " +
-                    "    local exist = redis.call('ZSCORE', KEYS[i], ARGV[1] .. ':PENDING') " +
-                    "    if exist then " +
-                    "        return {-1, exist} " +
+                    "  local exist = redis.call('ZSCORE', KEYS[i], ARGV[1] .. ':' .. ARGV[5]) " +
+                    "  if exist ~= false and exist ~= nil then " +
+                    "    local existNum = tonumber(exist) " +
+                    "    local now = tonumber(ARGV[2]) " +
+                    "    if existNum ~= nil and existNum > now then " +
+                    "      return {-1, exist} " +
                     "    end " +
+                    "  end " +
                     "end " +
 
-                    // 3. 대기열 등록 (userId:PENDING 형태로)
+                    "local now = tonumber(ARGV[2]) or 0 " +
+                    "local maxWaitMillis = (tonumber(ARGV[3]) or 0) * 1000 " +
+                    "local expireAt = now + maxWaitMillis " +
+
                     "for i = 1, #KEYS do " +
-                    "    redis.call('ZADD', KEYS[i], ARGV[2], ARGV[1] .. ':PENDING') " +
-                    "    redis.call('EXPIRE', KEYS[i], ARGV[3]) " +
+                    "  redis.call('ZADD', KEYS[i], expireAt, ARGV[1] .. ':' .. ARGV[5]) " +
                     "end " +
 
-                    // 4. 첫 번째 날짜 키 기준 순위 및 총 인원 반환
-                    "local position = redis.call('ZRANK', KEYS[1], ARGV[1] .. ':PENDING') " +
+                    "local position = redis.call('ZRANK', KEYS[1], ARGV[1] .. ':' .. ARGV[5]) " +
+                    "if not position then position = -1 end " +
                     "local totalCount = redis.call('ZCARD', KEYS[1]) " +
                     "return {position + 1, totalCount}";
+
 
     /**
      * Lua 스크립트:
@@ -61,6 +76,10 @@ public class QueueReservationService {
      */
     private static final String PROCESS_NEXT_IN_QUEUE_SCRIPT =
             // 맨 앞 사람 꺼냄
+
+
+
+
             "local nextUser = redis.call('ZRANGE', KEYS[1], 0, 0)[1] " +
                     "if not nextUser then " +
                     "    return {0, nil} " +
@@ -82,8 +101,10 @@ public class QueueReservationService {
 
                     "return {1, userId}";
 
-    public List<Long> addToQueue(QueueReservationReqDto dto) {
+    public List<Object> addToQueue(QueueReservationReqDto dto) {
         List<String> keys = new ArrayList<>();
+        System.out.println(dto.getCheckIn());
+        System.out.println(dto.getCheckOut());
         LocalDate start = LocalDate.parse(dto.getCheckIn().toString());
         LocalDate end = LocalDate.parse(dto.getCheckOut().toString());
 
@@ -96,15 +117,26 @@ public class QueueReservationService {
             ));
         }
 
-        return redisTemplate.execute(
-                new DefaultRedisScript<>(ADD_TO_QUEUE_SCRIPT, List.class),
-                keys,
-                dto.getUserId(),
-                String.valueOf(dto.getTimestamp()),
-                String.valueOf(dto.getMaxWaitTime()),
-                "PENDING", // 초기 상태 (실제로는 스크립트에서 하드코딩)
-                String.valueOf(dto.getMaxStock())
-        );
+        try{
+            List<Object> list = redisTemplate.execute(
+                    new DefaultRedisScript<>(ADD_TO_QUEUE_SCRIPT, List.class),
+                    keys,
+                    dto.getUserId(),
+                    String.valueOf(System.currentTimeMillis()),
+                    String.valueOf(dto.getMaxWaitTime()),
+                    String.valueOf(dto.getMaxStock()),
+                    "PENDING" // 초기 상태 (실제로는 스크립트에서 하드코딩)
+            );
+            return list;
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("여기서 에러가 터짐!!");
+        }
+
+
+
     }
 
     /**

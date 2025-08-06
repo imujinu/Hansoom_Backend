@@ -4,6 +4,7 @@ import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.reservation.dto.req.ReservationCompleResDto;
 import com.beyond.HanSoom.reservation.dto.req.ReservationReqDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResDto;
+import com.beyond.HanSoom.reservation.dto.res.ReservationResponse;
 import com.beyond.HanSoom.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,9 +25,9 @@ public class ReservationController {
     //예약 신청
     @PostMapping("/confirm")
     public ResponseEntity<?> reservation(@RequestBody ReservationReqDto dto){
-        String uuId = reservationService.confirm(dto);
+        ReservationResponse uuId = reservationService.confirm(dto);
 
-        return new ResponseEntity<>(uuId, HttpStatus.OK);
+        return new ResponseEntity<>(uuId.getPosition(), HttpStatus.OK);
     }
 
     //예약 확정

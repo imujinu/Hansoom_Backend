@@ -1,5 +1,6 @@
 package com.beyond.HanSoom.reservation.service;
 
+import com.beyond.HanSoom.common.dto.QueueReservationReqDto;
 import com.beyond.HanSoom.common.dto.ReservationDto;
 import com.beyond.HanSoom.common.service.QueueReservationService;
 import com.beyond.HanSoom.common.service.RedisDistributedLock;
@@ -11,6 +12,7 @@ import com.beyond.HanSoom.pay.repository.PaymentRepository;
 import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.reservation.domain.State;
 import com.beyond.HanSoom.reservation.dto.req.ReservationReqDto;
+import com.beyond.HanSoom.reservation.dto.req.ReservationRequest;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResponse;
 import com.beyond.HanSoom.reservation.repository.ReservationRepository;
@@ -51,7 +53,7 @@ public class ReservationService {
     private final QueueReservationService queueReservationService;
     private final RedisDistributedLock distributedLock; // 락
 
-    public String confirm(ReservationReqDto dto) {
+    public ReservationResponse confirm(ReservationReqDto dto) {
         // 값 유효성 검증
         User user = getUser();
         Hotel hotel = hotelRepository.findById(dto.getHotelId()).orElseThrow(()->new EntityNotFoundException("해당 호텔이 존재하지 않습니다."));;
@@ -84,10 +86,11 @@ public class ReservationService {
             date=date.plusDays(1);
         }
 
-        ReservationDto reservationDto = new ReservationDto().makeDto(hotel, room, dto.getCheckIn(), dto.getCheckOut(), room.getRoomCount());
-        reservationInventoryService.increaseInventory(reservationDto);
-
-        return reservationRepository.save(dto.toEntity(totalPrice,user,hotel, room)).getUuid();
+        ReservationDto reservationDto = new ReservationDto().makeDto(hotel, room,user, dto.getCheckIn(), dto.getCheckOut(), room.getRoomCount());
+//        reservationInventoryService.increaseInventory(reservationDto);
+        makeReservation(reservationDto);
+        String reservationId = reservationRepository.save(dto.toEntity(totalPrice,user,hotel, room)).getUuid();
+        return ReservationResponse.success(reservationId);
 
     }
 
@@ -110,8 +113,8 @@ public class ReservationService {
     public String complete(Long orderId) {
         Reservation reservation = reservationRepository.findById(orderId).orElseThrow(()->new EntityNotFoundException("존재하지 않는 예약 내역 입니다."));
         Payment payment = paymentRepository.findByReservationId(reservation.getId());
-
-        ReservationDto reservationDto = new ReservationDto().makeDto(reservation.getHotel(), reservation.getRoom(), reservation.getCheckInDate(), reservation.getCheckOutDate(), reservation.getRoom().getRoomCount());
+        User user = getUser();
+        ReservationDto reservationDto = new ReservationDto().makeDto(reservation.getHotel(), reservation.getRoom(), user,  reservation.getCheckInDate(), reservation.getCheckOutDate(), reservation.getRoom().getRoomCount());
 
         if(reservation.getState() == State.SUCCESS){
             reservation.changeState(State.RESERVED);
@@ -128,11 +131,11 @@ public class ReservationService {
         return user;
     }
 
-//    public ReservationResponse makeReservation(ReservationRequest request) {
-//        // 1. 대기열 등록 시도
-//        List<Long> queueResult = queueReservationService.addToQueue(request.toDto());
-//
-//        long position = queueResult.get(0);
+    public ReservationResponse makeReservation(ReservationDto request) {
+        // 1. 대기열 등록 시도
+        List<Object> queueResult = queueReservationService.addToQueue(new QueueReservationReqDto().makeDto(request));
+        System.out.println(queueResult);
+//        long position = queueResult.;
 //        if (position == -2) {
 //            return ReservationResponse.fail("재고가 없습니다.");
 //        } else if (position == -1) {
@@ -160,10 +163,16 @@ public class ReservationService {
 //            // 대기 중 상태 리턴
 //            return ReservationResponse.waiting(position);
 //        }
-//    }
-//
+        return ReservationResponse.success("1");
+    }
+
 //    private String generateLockKey(ReservationRequest request) {
 //        return "lock:" + generateQueueKey(request);
 //    }
+
+    private String generateLockValue(ReservationRequest request){
+        return String.format("queue:hotel:%s:room:%s:date:%s",
+                request.getHotelId(), request.getRoomId(), request.getCheckIn());
+    }
 
 }
