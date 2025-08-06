@@ -1,5 +1,9 @@
 package com.beyond.HanSoom.pay.service;
 
+import com.beyond.HanSoom.common.dto.QueueReservationReqDto;
+import com.beyond.HanSoom.common.dto.ReservationDto;
+import com.beyond.HanSoom.common.service.QueueReservationService;
+import com.beyond.HanSoom.common.service.RedisDistributedLock;
 import com.beyond.HanSoom.pay.domain.Payment;
 import com.beyond.HanSoom.pay.dto.PaymentReqDto;
 import com.beyond.HanSoom.pay.dto.PaymentResDto;
@@ -7,8 +11,11 @@ import com.beyond.HanSoom.pay.repository.PaymentRepository;
 import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.reservation.domain.State;
 import com.beyond.HanSoom.reservation.repository.ReservationRepository;
+import com.beyond.HanSoom.user.domain.User;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -16,20 +23,36 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 
+
 @Service
-@RequiredArgsConstructor
 @Transactional
 public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final ReservationRepository reservationRepository;
+    private final RedisDistributedLock distributedLock; // 락
+    private final RedisTemplate<String, String> redisTemplate;
+    private final QueueReservationService queueReservationService;
+
 
     private final WebClient webClient = WebClient.builder()
             .baseUrl("https://api.tosspayments.com/v1")
             .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .build();
+
+    public PaymentService(PaymentRepository paymentRepository, ReservationRepository reservationRepository, RedisDistributedLock distributedLock, @Qualifier("reservationList")RedisTemplate<String, String> redisTemplate, QueueReservationService queueReservationService) {
+        this.paymentRepository = paymentRepository;
+        this.reservationRepository = reservationRepository;
+        this.distributedLock = distributedLock;
+        this.redisTemplate = redisTemplate;
+        this.queueReservationService = queueReservationService;
+    }
 
     public PaymentResDto pay(PaymentReqDto paymentReqDto) {
         String widgetSecretKey = "test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6";
@@ -50,28 +73,94 @@ public class PaymentService {
                 .bodyToMono(Map.class)
                 .block();
 
-        Reservation reservation =  reservationRepository.findById(Long.parseLong(paymentReqDto.getOrderId())).orElseThrow(()->new EntityNotFoundException("존재하지 않는 주문입니다."));
+        Reservation reservation = reservationRepository.findByUuid(paymentReqDto.getOrderId());
+        User user = reservation.getUser();
+        LocalDate start = reservation.getCheckInDate();
+        LocalDate end = reservation.getCheckOutDate();
+        List<String> keys = new ArrayList<>();
+        generateQueueKey(reservation, start,end, keys);
 
+        // 1. Redis에서 모든 날짜 상태 조회 및 PROCESSING인지 확인
+        for (LocalDate date = start; date.isBefore(end); date = date.plusDays(1)) {
+            String statusKey = String.format("status:hotel:%s:room:%s:date:%s",
+                    reservation.getHotel().getId(),
+                    reservation.getRoom().getId(),
+                    date);
 
-
-        if ("DONE".equals(response.get("status")) && reservation.getState()==State.PENDING) {
-            reservation.changeState(State.SUCCESS);
-            paymentRepository.save(Payment.builder()
-                            .reservation(reservation)
-                            .paymentType(response.get("method").toString())
-                            .price(response.get("totalAmount").toString())
-                            .state(State.SUCCESS)
-                    .build());
-            return PaymentResDto.builder().response(response).isSuccess(true).build();
-        } else {
-            reservation.changeState(State.FAIL);
-            paymentRepository.save(Payment.builder()
-                    .reservation(reservation)
-                    .paymentType(response.get("method").toString())
-                    .price(response.get("totalAmount").toString())
-                    .state(State.FAIL)
-                    .build());
+            String redisStatus = (String) redisTemplate.opsForHash().get(statusKey, user.getId() );
+            if (!"PROCESSING".equals(redisStatus)) {
+                return PaymentResDto.builder()
+                        .response(response)
+                        .isSuccess(false)
+                        .message("예약 상태가 PROCESSING이 아닙니다.")
+                        .build();
+            }
         }
-        return PaymentResDto.builder().response(null).build();
+
+        boolean isSuccess = "DONE".equals(response.get("status"));
+
+        if (isSuccess) {
+            if (reservation.getState() == State.PENDING) {
+                reservation.changeState(State.SUCCESS);
+
+                paymentRepository.save(Payment.builder()
+                        .reservation(reservation)
+                        .paymentType(response.get("method").toString())
+                        .price(response.get("totalAmount").toString())
+                        .state(State.SUCCESS)
+                        .build());
+
+                // 상태 CONFIRMED로 변경
+
+                for(int i=0; i<keys.size(); i++){
+
+                queueReservationService.updateStatus(keys.get(i), user.getId().toString(), "PROCESSING",  "CONFIRMED");
+                }
+            }
+        } else {
+            // 결제 실패시 상태 FAIL로 변경
+
+            for(int i=0; i<keys.size(); i++){
+
+                queueReservationService.updateStatus(keys.get(i), user.getId().toString(), "PROCESSING",  "FAIL");
+            }
+        }
+
+        String lockKey = generateLockKey(reservation);
+        String lockValue = generateLockValue(user.getId());
+
+        distributedLock.releaseLock(lockKey, lockValue);
+        queueReservationService.processNextInQueue(lockKey + ":queue", lockKey, lockValue, 30000);
+
+        // 5. 결과 반환
+        return PaymentResDto.builder()
+                .response(isSuccess ? response : null)
+                .isSuccess(isSuccess)
+                .message(isSuccess ? "결제 성공" : "결제 실패")
+                .build();
     }
+
+
+    public static void generateQueueKey(Reservation reservation, LocalDate start, LocalDate end, List<String> keys) {
+        for (LocalDate date = start; date.isBefore(end); date = date.plusDays(1)) {
+            keys.add(String.format(
+                    "queue:hotel:%s:room:%s:date:%s",
+                    reservation.getHotel().getId(),
+                    reservation.getRoom().getId(),
+                    date
+            ));
+        }
+    }
+
+    private String generateLockKey(Reservation reservation) {
+        return String.format("lock:queue:hotel:%s:room:%s:date:%s",
+                reservation.getHotel().getId(),
+                reservation.getRoom().getId(),
+                reservation.getCheckInDate());
+    }
+
+    private String generateLockValue(Long userId) {
+        return "user:" + userId;
+    }
+
 }

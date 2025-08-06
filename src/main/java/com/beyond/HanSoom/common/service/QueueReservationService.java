@@ -101,24 +101,15 @@ public class QueueReservationService {
 
                     "return {1, userId}";
 
-    public List<Object> addToQueue(QueueReservationReqDto dto) {
+    public List<Long> addToQueue(QueueReservationReqDto dto) {
         List<String> keys = new ArrayList<>();
-        System.out.println(dto.getCheckIn());
-        System.out.println(dto.getCheckOut());
         LocalDate start = LocalDate.parse(dto.getCheckIn().toString());
         LocalDate end = LocalDate.parse(dto.getCheckOut().toString());
 
-        for (LocalDate date = start; date.isBefore(end); date = date.plusDays(1)) {
-            keys.add(String.format(
-                    "queue:hotel:%s:room:%s:date:%s",
-                    dto.getHotelId(),
-                    dto.getRoomId(),
-                    date
-            ));
-        }
+        generateQueueKey(dto, start, end, keys);
 
         try{
-            List<Object> list = redisTemplate.execute(
+            List<Long> list = redisTemplate.execute(
                     new DefaultRedisScript<>(ADD_TO_QUEUE_SCRIPT, List.class),
                     keys,
                     dto.getUserId(),
@@ -137,6 +128,17 @@ public class QueueReservationService {
 
 
 
+    }
+
+    public void generateQueueKey(QueueReservationReqDto dto, LocalDate start, LocalDate end, List<String> keys) {
+        for (LocalDate date = start; date.isBefore(end); date = date.plusDays(1)) {
+            keys.add(String.format(
+                    "queue:hotel:%s:room:%s:date:%s",
+                    dto.getHotelId(),
+                    dto.getRoomId(),
+                    date
+            ));
+        }
     }
 
     /**

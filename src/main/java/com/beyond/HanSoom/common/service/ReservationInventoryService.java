@@ -27,7 +27,7 @@ public class ReservationInventoryService {
         String key = buildKey(dto.getHotelId(), dto.getRoomId());
 
         //입력된 모든 날짜를 체크인~체크아웃+1전까지 List에 추가함
-        List<String> fields = getFields(dto.getStartDate(), dto.getEndDate().minusDays(1));
+        List<String> fields = getFields(dto.getCheckIn(), dto.getCheckOut().minusDays(1));
 
         // multiGet안에 Collection을 넣으면 알아서 반복문을 돌려준다.
         List<Object> values = redisTemplate.opsForHash().multiGet(key, fields.stream().collect(Collectors.toList()));
@@ -64,7 +64,7 @@ public class ReservationInventoryService {
             throw new IllegalStateException("재고가 부족합니다.");
         }
         // 예약 추가
-        List<String> fields = getFields(dto.getStartDate(), dto.getEndDate());
+        List<String> fields = getFields(dto.getCheckIn(), dto.getCheckOut());
         List<Object> values = redisTemplate.opsForHash().multiGet(key, fields.stream().collect(Collectors.toList()));
 
         // redis 재고 증가
