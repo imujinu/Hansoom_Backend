@@ -10,7 +10,10 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+import java.io.Serializable;
 
 @Configuration
 public class RedisConfig {
@@ -70,4 +73,23 @@ public class RedisConfig {
         return new StringRedisTemplate(factory);
     }
 
+    @Bean
+    @Qualifier("rateLimiter")
+    public RedisConnectionFactory rateLimiterInventory(){
+        RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
+        configuration.setHostName(host);
+        configuration.setPort(port);
+        configuration.setDatabase(9);
+        return new LettuceConnectionFactory(configuration);
+    }
+
+    @Bean
+    @Qualifier("rateLimiter")
+    public RedisTemplate<String, Serializable> rateLimiterTemplate( @Qualifier("rateLimiter") RedisConnectionFactory redisConnectionFactory){
+        RedisTemplate<String, Serializable> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(new JdkSerializationRedisSerializer());
+        redisTemplate.setConnectionFactory(redisConnectionFactory);
+        return redisTemplate;
+    }
 }

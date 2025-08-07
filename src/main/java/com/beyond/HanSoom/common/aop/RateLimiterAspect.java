@@ -21,11 +21,11 @@ import java.util.Objects;
 public class RateLimiterAspect {
     private final RateLimiter rateLimiter;
 
-    public RateLimiterAspect(@Qualifier("RedisRateLimiter") RateLimiter rateLimiter) {
+    public RateLimiterAspect(@Qualifier("rateLimiter") RateLimiter rateLimiter) {
         this.rateLimiter = rateLimiter;
     }
 
-    @Around("execution(* com.example.component.*.*(..)))")
+    @Around("execution(* com.beyond.HanSoom.reservation.Reservation.confirm(..))")
     public void interceptor(ProceedingJoinPoint joinPoint) throws  Throwable{
         LimitRequestPerTime limitRequestPerTime = getLimitRequestPerTimeAnnotationFromMethod(joinPoint);
         if(Objects.isNull(limitRequestPerTime)){
