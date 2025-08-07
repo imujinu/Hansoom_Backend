@@ -28,3 +28,9 @@
 
 ## 📄 예시 페이지
 [PREVIEW LINK](https://readdy.link/preview/d972ce86-2686-4d95-91a4-ea112118bf7e/1293925)
+
+## 📄 다이어그램
+<details>
+  <summary>결제 다이어그램</summary>
+  
+</details>
