@@ -48,8 +48,13 @@ public class RedisWithLuaScriptRateLimiter implements RateLimiter{
 
     @Override
     public void tryApiCall(String key, LimitRequestPerTime limitRequestPerTime, ProceedingJoinPoint joinPoint) throws Throwable {
+        // KEYS[1] = key luascript에 key값은 무조건 List형태로 전달해야한다. 근데 여기서 key값은 하나 이기 때문에 singletonList로 감싸준 것이다.
+        // ARGV[1] = 요청 제한 횟수 ex ) 100번
+        // ARGV[2] = 요청 제한 시간 ex ) 1분 ( 시간 , 단위) 를 입력 받아 초 단위로 컨버트
+
        Long callCounter = redisTemplate.execute(rateLimitScript(), Collections.singletonList(key), limitRequestPerTime.count(), TimeUnit.SECONDS.convert(limitRequestPerTime.ttl(), limitRequestPerTime.ttlTimeUnit()));
 
+       // script return 결과가 if문을 탔다면 요청을 받았던 로직을 수행한다.
        if(callCounter == null){
            log.error("호출수 조회 실패");
            joinPoint.proceed();
