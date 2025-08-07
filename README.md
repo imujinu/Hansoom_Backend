@@ -32,5 +32,5 @@
 ## 📄 다이어그램
 <details>
   <summary>결제 다이어그램</summary>
-    ![결제 다이어 그램]<img width="821" height="921" alt="결제 시퀀스 다이어그램 drawio" src="https://github.com/user-attachments/assets/235dda84-72db-4949-a9cd-339d1632b023" />
+    ![결제 다이어 그램]<img width="822" height="922" alt="결제 시퀀스 다이어그램 drawio (1)" src="https://github.com/user-attachments/assets/7d5760a4-8e72-4fb5-a195-3b8eb46b1c6d" />
 </details>
