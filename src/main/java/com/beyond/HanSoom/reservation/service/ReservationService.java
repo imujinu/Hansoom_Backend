@@ -11,6 +11,7 @@ import com.beyond.HanSoom.pay.domain.Payment;
 import com.beyond.HanSoom.pay.repository.PaymentRepository;
 import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.reservation.domain.State;
+import com.beyond.HanSoom.reservation.dto.req.ReservationCompleteReqDto;
 import com.beyond.HanSoom.reservation.dto.req.ReservationReqDto;
 import com.beyond.HanSoom.reservation.dto.req.ReservationRequest;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResDto;
@@ -32,12 +33,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static com.beyond.HanSoom.pay.service.PaymentService.generateQueueKey;
 import static java.time.DayOfWeek.SATURDAY;
 import static java.time.DayOfWeek.SUNDAY;
 
@@ -102,9 +105,9 @@ public class ReservationService {
 
         ReservationDto reservationDto = new ReservationDto().makeDto(hotel, room,user, dto.getCheckIn(), dto.getCheckOut(), room.getRoomCount());
 //        reservationInventoryService.increaseInventory(reservationDto);
-        makeReservation(reservationDto);
-        String reservationId = reservationRepository.save(dto.toEntity(totalPrice,user,hotel, room)).getUuid();
-        return ReservationResponse.success(reservationId);
+        ReservationResponse response = makeReservation(reservationDto);
+        reservationRepository.save(dto.toEntity(totalPrice,user,hotel, room));
+        return response;
 
     }
 
@@ -116,7 +119,6 @@ public class ReservationService {
     }
 
 
-
     public String cancel(Long reservationId){
         User user = getUser();
         Reservation reservation = reservationRepository.findByIdAndUser(reservationId,user);
@@ -124,17 +126,25 @@ public class ReservationService {
         return reservation.getUuid();
     }
 
-    public String complete(Long orderId) {
-        Reservation reservation = reservationRepository.findById(orderId).orElseThrow(()->new EntityNotFoundException("존재하지 않는 예약 내역 입니다."));
+    public String complete(ReservationCompleteReqDto dto) {
+        Reservation reservation = reservationRepository.findById(dto.getReservationId()).orElseThrow(()->new EntityNotFoundException("존재하지 않는 예약 내역 입니다."));
         Payment payment = paymentRepository.findByReservationId(reservation.getId());
         User user = getUser();
         ReservationDto reservationDto = new ReservationDto().makeDto(reservation.getHotel(), reservation.getRoom(), user,  reservation.getCheckInDate(), reservation.getCheckOutDate(), reservation.getRoom().getRoomCount());
+        List<String> keys = new ArrayList<>();
+        generateQueueKey(reservation, reservation.getCheckInDate(), reservation.getCheckOutDate(), keys);
 
-        if(reservation.getState() == State.SUCCESS){
+        if(reservation.getState() == State.SUCCESS && payment.getReservation().getId().equals(reservation.getId())){
+            for(int i=0; i<keys.size(); i++){
+            queueReservationService.updateStatus(keys.get(i), String.valueOf(user.getId()), "SUCCESS", "RESERVED");
+            }
             reservation.changeState(State.RESERVED);
-            reservationInventoryService.increaseInventory(reservationDto);
             return reservation.getUuid();
         }else{
+            for(int i=0; i<keys.size(); i++){
+                queueReservationService.updateStatus(keys.get(i), String.valueOf(user.getId()), "SUCCESS", "VALIDATION_FAILED");
+            }
+            reservation.changeState(State.VALIDATION_FAILED);
             throw new IllegalStateException("결제가 완료되지 않은 주문 입니다.");
         }
     }
@@ -148,6 +158,7 @@ public class ReservationService {
     public ReservationResponse makeReservation(ReservationDto request) {
         // 1. 대기열 등록 시도
         List<Long> queueResult = queueReservationService.addToQueue(new QueueReservationReqDto().makeDto(request));
+        User user = getUser();
         long position = queueResult.get(0);
         if (position == -2) {
             return ReservationResponse.fail("재고가 없습니다.");
@@ -158,30 +169,27 @@ public class ReservationService {
         if (position == 1) {
             // 바로 예약 처리 시도 (대기열 맨 앞)
             String lockKey = generateLockKey(request);
-            String lockValue = generateLockValue(request.getUserId());
+            String lockValue = generateLockValue(user.getId());
 
             if (distributedLock.tryLock(lockKey, lockValue, 30000)) {
-                try {
                     // 예약 실제 처리 (DB 등)
 
                     LocalDate start = request.getCheckIn();
                     LocalDate end = request.getCheckOut();
 
                     for (LocalDate date = start; date.isBefore(end); date = date.plusDays(1)) {
-                        String statusKey = String.format("status:hotel:%s:room:%s:date:%s",
+                        String statusKey = String.format("queue:hotel:%s:room:%s:date:%s",
                                 request.getHotelId(),
                                 request.getRoomId(),
                                 date
                         );
-                        redisTemplate.opsForHash().put(statusKey, String.valueOf(request.getUserId()), "PROCESSING");
+//                        redisTemplate.opsForHash().put(statusKey, String.valueOf(request.getUserId()), "PROCESSING");
+                        queueReservationService.updateStatus(statusKey, String.valueOf(user.getId()),"PENDING", "PROCESSING");
                         redisTemplate.expire(statusKey, 15, TimeUnit.SECONDS);  // TTL 설정
                     }
                     // 2. 바로 성공 리턴 → 프론트에서 결제 화면으로 이동
                     return ReservationResponse.success("PROCESSING");
-                } finally {
-                    distributedLock.releaseLock(lockKey, lockValue);
-                    queueReservationService.processNextInQueue(lockKey + ":queue", lockKey, lockValue, 30000);
-                }
+
             } else {
                 // 락 못 얻으면 대기열에서 대기
                 return ReservationResponse.waiting(position);
