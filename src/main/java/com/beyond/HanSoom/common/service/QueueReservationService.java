@@ -43,20 +43,23 @@ public class QueueReservationService {
                     "  end " +
                     "end " +
 
+                    "  local now = tonumber(ARGV[2]) or 0 " +
+                    "local maxWaitMillis = (tonumber(ARGV[3]) or 0) * 1000 " +
+                    "local expireAt = now + maxWaitMillis " +
+
                     "for i = 1, #KEYS do " +
                     "  local exist = redis.call('ZSCORE', KEYS[i], ARGV[1] .. ':' .. ARGV[5]) " +
                     "  if exist ~= false and exist ~= nil then " +
                     "    local existNum = tonumber(exist) " +
-                    "    local now = tonumber(ARGV[2]) " +
                     "    if existNum ~= nil and existNum > now then " +
+                    " local pos = redis.call('ZRANK', KEYS[i], ARGV[1] .. ':' .. ARGV[5]) " +
+                    " if pos == 0 then " +
+                    "   return {1, redis.call('ZCARD', KEYS[i]) } " +
+                    " end " +
                     "      return {-1, exist} " +
-                    "    end " +
-                    "  end " +
+                    "       end " +
+                    "   end " +
                     "end " +
-
-                    "local now = tonumber(ARGV[2]) or 0 " +
-                    "local maxWaitMillis = (tonumber(ARGV[3]) or 0) * 1000 " +
-                    "local expireAt = now + maxWaitMillis " +
 
                     "for i = 1, #KEYS do " +
                     "  redis.call('ZADD', KEYS[i], expireAt, ARGV[1] .. ':' .. ARGV[5]) " +
@@ -130,7 +133,7 @@ public class QueueReservationService {
 
     }
 
-    public void generateQueueKey(QueueReservationReqDto dto, LocalDate start, LocalDate end, List<String> keys) {
+    public static void generateQueueKey(QueueReservationReqDto dto, LocalDate start, LocalDate end, List<String> keys) {
         for (LocalDate date = start; date.isBefore(end); date = date.plusDays(1)) {
             keys.add(String.format(
                     "queue:hotel:%s:room:%s:date:%s",

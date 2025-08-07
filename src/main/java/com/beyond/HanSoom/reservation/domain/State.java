@@ -7,5 +7,6 @@ public enum State {
     FAIL,       // 결제 실패
     RESERVED,   // 최종 예약 완료
     EXPIRED,    // 시간 초과로 만료
-    CANCELLED   // 사용자 취소
+    CANCELLED,   // 사용자 취소
+    VALIDATION_FAILED
 }
