@@ -10,10 +10,10 @@ import com.beyond.HanSoom.hotel.repository.HotelRepository;
 import com.beyond.HanSoom.room.domain.Room;
 import com.beyond.HanSoom.room.dto.RoomDetailResponseDto;
 import com.beyond.HanSoom.room.dto.RoomUpdateDto;
+import com.beyond.HanSoom.room.repository.RoomRepository;
 import com.beyond.HanSoom.roomImage.domain.RoomImage;
 import com.beyond.HanSoom.roomImage.dto.RoomImageResponseDto;
 import com.beyond.HanSoom.user.domain.User;
-import com.beyond.HanSoom.user.domain.UserRole;
 import com.beyond.HanSoom.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +27,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -41,6 +43,7 @@ public class HotelService {
     private final S3Uploader s3Uploader;
     private final GeocoderService geocoderService;
     private final ReservationInventoryService reservationInventoryService;
+    private final RoomRepository roomRepository;
 
     public void registerHotel(HotelRegisterRequsetDto dto, MultipartFile hotelImage, List<MultipartFile> roomImages) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -329,27 +332,116 @@ public class HotelService {
     }
 
 //    고객 조회
+@Transactional(readOnly = true)
+public Page<HotelListResponseDto> findAll(Pageable pageable, HotelListSearchDto searchDto) {
+    Specification<Hotel> spec = HotelSpecification.withSearchConditions(searchDto);
+    Page<Hotel> hotelPage = hotelRepository.findAll(spec, pageable);
+
+    List<HotelListResponseDto> result = hotelPage.getContent().stream()
+            .filter(hotel -> hotel.getRooms().stream().anyMatch(room -> {
+                if (room.getState() == HotelState.REMOVE) return false;
+                if (room.getMaximumPeople() < searchDto.getPeople()) return false;
+
+                ReservationDto dto = ReservationDto.builder()
+                        .hotelId(hotel.getId())
+                        .roomId(room.getId())
+                        .startDate(searchDto.getCheckIn())
+                        .endDate(searchDto.getCheckOut())
+                        .maxStock(room.getRoomCount())
+                        .build();
+
+                int available = reservationInventoryService.getInventory(dto);
+                return available > 0;
+            }))
+            .map(hotel -> {
+                // 조건에 맞는 객실들 중 평균가가 가장 저렴한 객실 찾기
+                OptionalInt minAvgPrice = hotel.getRooms().stream()
+                        .filter(room -> room.getState() != HotelState.REMOVE)
+                        .filter(room -> room.getMaximumPeople() >= searchDto.getPeople())
+                        .filter(room -> {
+                            ReservationDto dto = ReservationDto.builder()
+                                    .hotelId(hotel.getId())
+                                    .roomId(room.getId())
+                                    .startDate(searchDto.getCheckIn())
+                                    .endDate(searchDto.getCheckOut())
+                                    .maxStock(room.getRoomCount())
+                                    .build();
+                            return reservationInventoryService.getInventory(dto) > 0;
+                        })
+                        .mapToInt(room -> calculateAveragePrice(room, searchDto.getCheckIn(), searchDto.getCheckOut()))
+                        .min();
+
+                return HotelListResponseDto.fromEntity(hotel, minAvgPrice.orElse(0));
+            })
+            .toList();
+
+    return new PageImpl<>(result, pageable, result.size());
+}
+
     @Transactional(readOnly = true)
-    public Page<HotelListResponseDto> findAll(Pageable pageable, HotelListSearchDto searchDto) {
-        Specification<Hotel> spec = HotelSpecification.withSearchConditions(searchDto);
-        Page<Hotel> hotelPage = hotelRepository.findAll(spec, pageable);
+    public Page<HotelLocationListResponseDto> findNearbyHotels(LocationHotelSearchDto dto, Pageable pageable) {
+        List<Object[]> results = hotelRepository.findNearbyHotelsWithDistance(
+                dto.getLatitude(), dto.getLongitude(), 5, pageable);
 
-        List<HotelListResponseDto> result = hotelPage.getContent().stream()
-                .filter(hotel -> hotel.getRooms().stream().anyMatch(room -> {
-                    ReservationDto dto = ReservationDto.builder()
-                            .hotelId(hotel.getId())
-                            .roomId(room.getId())
-                            .startDate(searchDto.getCheckIn())
-                            .endDate(searchDto.getCheckOut())
-                            .maxStock(room.getRoomCount())
-                            .build();
+        List<HotelLocationListResponseDto> filtered = new ArrayList<>();
 
-                    int available = reservationInventoryService.getInventory(dto);
-                    return available > 0;
-                }))
-                .map(HotelListResponseDto::fromEntity)
-                .toList();
+        for (Object[] row : results) {
+            Long id = ((Number) row[4]).longValue();  // hotel.id
+            String hotelName = (String) row[9];
+            String address = (String) row[7];
+            String image = (String) row[10];
+            double rawDistance = ((Number) row[14]).doubleValue();
+            double distance = Math.round(rawDistance * 100.0) / 100.0;
 
-        return new PageImpl<>(result, pageable, result.size());
+            List<Room> availableRooms = roomRepository.findByHotelId(id).stream()
+                    .filter(room -> room.getState() != HotelState.REMOVE)
+                    .filter(room -> room.getMaximumPeople() >= dto.getPeople())
+                    .filter(room -> {
+                        ReservationDto reservationDto = ReservationDto.builder()
+                                .hotelId(id)
+                                .roomId(room.getId())
+                                .startDate(dto.getCheckIn())
+                                .endDate(dto.getCheckOut())
+                                .maxStock(room.getRoomCount())
+                                .build();
+                        int remaining = reservationInventoryService.getInventory(reservationDto);
+                        return remaining > 0;
+                    })
+                    .toList();
+
+            if (!availableRooms.isEmpty()) {
+                // 조건에 맞는 방 중 1박 평균 가격 가장 낮은 방 찾기
+                int minAvgPrice = availableRooms.stream()
+                        .mapToInt(room -> calculateAveragePrice(room, dto.getCheckIn(), dto.getCheckOut()))
+                        .min()
+                        .orElse(0);
+
+                filtered.add(HotelLocationListResponseDto.builder()
+                        .id(id)
+                        .hotelName(hotelName)
+                        .address(address)
+                        .image(image)
+                        .distance(distance)
+                        .price(minAvgPrice)
+                        .build());
+            }
+        }
+        return new PageImpl<>(filtered, pageable, filtered.size());
+    }
+
+    private int calculateAveragePrice(Room room, LocalDate checkIn, LocalDate checkOut) {
+        int totalPrice = 0;
+        int dayCount = 0;
+
+        for (LocalDate date = checkIn; date.isBefore(checkOut); date = date.plusDays(1)) {
+            DayOfWeek dayOfWeek = date.getDayOfWeek();
+            boolean isWeekend = (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY);
+
+            totalPrice += isWeekend ? room.getWeekendPrice() : room.getWeekPrice();
+            dayCount++;
+        }
+
+        if (dayCount == 0) return 0; // 방어 코드
+        return totalPrice / dayCount;
     }
 }
