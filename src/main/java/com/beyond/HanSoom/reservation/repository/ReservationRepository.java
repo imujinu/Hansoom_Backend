@@ -48,4 +48,5 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     Reservation findByIdAndUser(Long reservationId, User user);
 
+    Reservation findByUuid(String orderId);
 }

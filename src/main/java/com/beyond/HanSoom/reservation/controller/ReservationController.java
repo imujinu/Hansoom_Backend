@@ -1,7 +1,7 @@
 package com.beyond.HanSoom.reservation.controller;
 
-import com.beyond.HanSoom.reservation.domain.Reservation;
-import com.beyond.HanSoom.reservation.dto.req.ReservationCompleResDto;
+import com.beyond.HanSoom.common.annotation.LimitRequestPerTime;
+import com.beyond.HanSoom.reservation.dto.req.ReservationCompleteReqDto;
 import com.beyond.HanSoom.reservation.dto.req.ReservationReqDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResponse;
@@ -10,10 +10,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/reservation")
@@ -23,17 +23,18 @@ public class ReservationController {
     private final ReservationService reservationService;
 
     //예약 신청
+    @LimitRequestPerTime(prefix = "1", count = 10, ttlTimeUnit = TimeUnit.SECONDS, ttl = 30)
     @PostMapping("/confirm")
     public ResponseEntity<?> reservation(@RequestBody ReservationReqDto dto){
-        ReservationResponse uuId = reservationService.confirm(dto);
+        ReservationResponse response = reservationService.confirm(dto);
 
-        return new ResponseEntity<>(uuId.getPosition(), HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     //예약 확정
     @PostMapping("/complete")
-    public ResponseEntity<?> complete(@RequestBody ReservationCompleResDto resDto){
-        String uuid = reservationService.complete(resDto.getOrderId());
+    public ResponseEntity<?> complete(@RequestBody ReservationCompleteReqDto dto){
+        String uuid = reservationService.complete(dto);
         return new ResponseEntity<>(uuid, HttpStatus.OK);
     }
     //예약 전체 조회

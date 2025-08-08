@@ -345,8 +345,8 @@ public Page<HotelListResponseDto> findAll(Pageable pageable, HotelListSearchDto 
                 ReservationDto dto = ReservationDto.builder()
                         .hotelId(hotel.getId())
                         .roomId(room.getId())
-                        .startDate(searchDto.getCheckIn())
-                        .endDate(searchDto.getCheckOut())
+                        .checkIn(searchDto.getCheckIn())
+                        .checkOut(searchDto.getCheckOut())
                         .maxStock(room.getRoomCount())
                         .build();
 

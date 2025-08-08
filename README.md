@@ -28,3 +28,9 @@
 
 ## 📄 예시 페이지
 [PREVIEW LINK](https://readdy.link/preview/d972ce86-2686-4d95-91a4-ea112118bf7e/1293925)
+
+## 📄 다이어그램
+<details>
+  <summary>결제 다이어그램</summary>
+    ![결제 다이어 그램]<img width="822" height="922" alt="결제 시퀀스 다이어그램 drawio (1)" src="https://github.com/user-attachments/assets/7d5760a4-8e72-4fb5-a195-3b8eb46b1c6d" />
+</details>

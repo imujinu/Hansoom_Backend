@@ -43,20 +43,23 @@ public class QueueReservationService {
                     "  end " +
                     "end " +
 
+                    "  local now = tonumber(ARGV[2]) or 0 " +
+                    "local maxWaitMillis = (tonumber(ARGV[3]) or 0) * 1000 " +
+                    "local expireAt = now + maxWaitMillis " +
+
                     "for i = 1, #KEYS do " +
                     "  local exist = redis.call('ZSCORE', KEYS[i], ARGV[1] .. ':' .. ARGV[5]) " +
                     "  if exist ~= false and exist ~= nil then " +
                     "    local existNum = tonumber(exist) " +
-                    "    local now = tonumber(ARGV[2]) " +
                     "    if existNum ~= nil and existNum > now then " +
+                    " local pos = redis.call('ZRANK', KEYS[i], ARGV[1] .. ':' .. ARGV[5]) " +
+                    " if pos == 0 then " +
+                    "   return {1, redis.call('ZCARD', KEYS[i]) } " +
+                    " end " +
                     "      return {-1, exist} " +
-                    "    end " +
-                    "  end " +
+                    "       end " +
+                    "   end " +
                     "end " +
-
-                    "local now = tonumber(ARGV[2]) or 0 " +
-                    "local maxWaitMillis = (tonumber(ARGV[3]) or 0) * 1000 " +
-                    "local expireAt = now + maxWaitMillis " +
 
                     "for i = 1, #KEYS do " +
                     "  redis.call('ZADD', KEYS[i], expireAt, ARGV[1] .. ':' .. ARGV[5]) " +
@@ -77,22 +80,23 @@ public class QueueReservationService {
     private static final String PROCESS_NEXT_IN_QUEUE_SCRIPT =
             // 맨 앞 사람 꺼냄
 
-
-
-
             "local nextUser = redis.call('ZRANGE', KEYS[1], 0, 0)[1] " +
                     "if not nextUser then " +
                     "    return {0, nil} " +
                     "end " +
 
                     // 락 상태 확인
-                    "local lockOwner = redis.call('GET', KEYS[2]) " +
+                    "for i=2, #KEYS do " +
+                    "local lockOwner = redis.call('GET', KEYS[i]) " +
                     "if lockOwner and lockOwner ~= ARGV[1] then " +
                     "    return {-1, nextUser} " +
                     "end " +
+                    "end " +
 
                     // 락 설정
-                    "redis.call('SET', KEYS[2], ARGV[1], 'PX', ARGV[2]) " +
+                    "for i = 2, #KEYS do " +
+                    "redis.call('SET', KEYS[i], ARGV[1], 'PX', ARGV[2]) " +
+                    " end " +
 
                     // PENDING을 PROCESSING으로 변경
                     "local userId = string.match(nextUser, '^([^:]+):') " +
@@ -101,24 +105,15 @@ public class QueueReservationService {
 
                     "return {1, userId}";
 
-    public List<Object> addToQueue(QueueReservationReqDto dto) {
+    public List<Long> addToQueue(QueueReservationReqDto dto) {
         List<String> keys = new ArrayList<>();
-        System.out.println(dto.getCheckIn());
-        System.out.println(dto.getCheckOut());
         LocalDate start = LocalDate.parse(dto.getCheckIn().toString());
         LocalDate end = LocalDate.parse(dto.getCheckOut().toString());
 
-        for (LocalDate date = start; date.isBefore(end); date = date.plusDays(1)) {
-            keys.add(String.format(
-                    "queue:hotel:%s:room:%s:date:%s",
-                    dto.getHotelId(),
-                    dto.getRoomId(),
-                    date
-            ));
-        }
+        generateQueueKey(dto, start, end, keys);
 
         try{
-            List<Object> list = redisTemplate.execute(
+            List<Long> list = redisTemplate.execute(
                     new DefaultRedisScript<>(ADD_TO_QUEUE_SCRIPT, List.class),
                     keys,
                     dto.getUserId(),
@@ -139,17 +134,41 @@ public class QueueReservationService {
 
     }
 
+    public static void generateQueueKey(QueueReservationReqDto dto, LocalDate start, LocalDate end, List<String> keys) {
+        for (LocalDate date = start; date.isBefore(end); date = date.plusDays(1)) {
+            keys.add(String.format(
+                    "queue:hotel:%s:room:%s:date:%s",
+                    dto.getHotelId(),
+                    dto.getRoomId(),
+                    date
+            ));
+        }
+    }
+
     /**
      * 대기열에서 다음 사용자 처리
      */
-    public List<Object> processNextInQueue(String queueKey, String lockKey, String myLockValue, long lockTtlMillis) {
-        return redisTemplate.execute(
-                new DefaultRedisScript<>(PROCESS_NEXT_IN_QUEUE_SCRIPT, List.class),
-                List.of(queueKey, lockKey),
-                myLockValue,
-                String.valueOf(lockTtlMillis),
-                String.valueOf(System.currentTimeMillis()) // PROCESSING 상태의 새로운 스코어
-        );
+    public List<Object> processNextInQueue(String queueKey, List<String> lockKey, String myLockValue, long lockTtlMillis) {
+        List<String> keys = new ArrayList<>();
+        keys.add(queueKey);
+        keys.addAll(lockKey); // flatten
+        try{
+            List<Object> result = redisTemplate.execute(
+                    new DefaultRedisScript<>(PROCESS_NEXT_IN_QUEUE_SCRIPT, List.class),
+                    keys,  // ✅ flat한 keys 리스트
+                    myLockValue,
+                    String.valueOf(lockTtlMillis),
+                    String.valueOf(System.currentTimeMillis())
+            );
+
+            System.out.println(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+
+        return null;
     }
 
     /**
