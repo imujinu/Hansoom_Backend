@@ -126,7 +126,7 @@ public class PaymentService {
             }
         }
 
-        String lockKey = generateLockKey(reservation);
+        List<String> lockKey = generateLockKey(reservation);
         String lockValue = generateLockValue(user.getId());
 
         distributedLock.releaseLock(lockKey, lockValue);
@@ -152,11 +152,17 @@ public class PaymentService {
         }
     }
 
-    private String generateLockKey(Reservation reservation) {
-        return String.format("lock:queue:hotel:%s:room:%s:date:%s",
+    private List<String> generateLockKey(Reservation reservation) {
+        List<String> lockKeys = new ArrayList<>();
+        for(LocalDate date = reservation.getCheckInDate(); date.isBefore(reservation.getCheckOutDate()); date= date.plusDays(1)){
+
+        String lockKey = String.format("lock:queue:hotel:%s:room:%s:date:%s",
                 reservation.getHotel().getId(),
                 reservation.getRoom().getId(),
-                reservation.getCheckInDate());
+                date);
+        lockKeys.add(lockKey);
+        }
+        return lockKeys;
     }
 
     private String generateLockValue(Long userId) {

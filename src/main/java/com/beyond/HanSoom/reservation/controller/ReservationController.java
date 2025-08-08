@@ -1,5 +1,6 @@
 package com.beyond.HanSoom.reservation.controller;
 
+import com.beyond.HanSoom.common.annotation.LimitRequestPerTime;
 import com.beyond.HanSoom.reservation.dto.req.ReservationCompleteReqDto;
 import com.beyond.HanSoom.reservation.dto.req.ReservationReqDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResDto;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/reservation")
@@ -21,6 +23,7 @@ public class ReservationController {
     private final ReservationService reservationService;
 
     //예약 신청
+    @LimitRequestPerTime(prefix = "1", count = 10, ttlTimeUnit = TimeUnit.SECONDS, ttl = 30)
     @PostMapping("/confirm")
     public ResponseEntity<?> reservation(@RequestBody ReservationReqDto dto){
         ReservationResponse response = reservationService.confirm(dto);
