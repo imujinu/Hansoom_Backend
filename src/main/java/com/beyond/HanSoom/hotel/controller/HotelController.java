@@ -6,6 +6,7 @@ import com.beyond.HanSoom.hotel.service.HotelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -138,6 +139,22 @@ public class HotelController {
                         .result(dto)
                         .status_code(HttpStatus.OK.value())
                         .status_message("호텔 리스트 조회")
+                        .build(),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/nearby")
+    public ResponseEntity<?> findNearbyHotels( @PageableDefault(size = 10) Pageable pageable,
+                                               LocationHotelSearchDto searchDto
+    ) {
+
+        Page<HotelLocationListResponseDto> result = hotelService.findNearbyHotels(searchDto, pageable);
+        return new ResponseEntity<>(
+                CommonSuccessDto.builder()
+                        .result(result)
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("가까운 호텔 리스트 조회")
                         .build(),
                 HttpStatus.OK
         );

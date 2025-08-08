@@ -10,20 +10,22 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Builder
-public class HotelListResponseDto {
+public class HotelLocationListResponseDto {
     private Long id;
     private String hotelName;
     private String address;
     private String image;
     private int price;
+    private double distance;
 
-    public static HotelListResponseDto fromEntity(Hotel hotel, int price) {
-        return HotelListResponseDto.builder()
+    public static HotelLocationListResponseDto fromEntity(Hotel hotel, double distance) {
+        return HotelLocationListResponseDto.builder()
                 .id(hotel.getId())
                 .hotelName(hotel.getHotelName())
                 .address(hotel.getAddress())
                 .image(hotel.getImage())
-                .price(price)
+//                .price()
+                .distance(distance)
                 .build();
     }
 }
