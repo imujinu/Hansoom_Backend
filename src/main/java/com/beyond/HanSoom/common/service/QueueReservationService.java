@@ -80,22 +80,23 @@ public class QueueReservationService {
     private static final String PROCESS_NEXT_IN_QUEUE_SCRIPT =
             // 맨 앞 사람 꺼냄
 
-
-
-
             "local nextUser = redis.call('ZRANGE', KEYS[1], 0, 0)[1] " +
                     "if not nextUser then " +
                     "    return {0, nil} " +
                     "end " +
 
                     // 락 상태 확인
-                    "local lockOwner = redis.call('GET', KEYS[2]) " +
+                    "for i=2, #KEYS do " +
+                    "local lockOwner = redis.call('GET', KEYS[i]) " +
                     "if lockOwner and lockOwner ~= ARGV[1] then " +
                     "    return {-1, nextUser} " +
                     "end " +
+                    "end " +
 
                     // 락 설정
-                    "redis.call('SET', KEYS[2], ARGV[1], 'PX', ARGV[2]) " +
+                    "for i = 2, #KEYS do " +
+                    "redis.call('SET', KEYS[i], ARGV[1], 'PX', ARGV[2]) " +
+                    " end " +
 
                     // PENDING을 PROCESSING으로 변경
                     "local userId = string.match(nextUser, '^([^:]+):') " +
@@ -147,14 +148,27 @@ public class QueueReservationService {
     /**
      * 대기열에서 다음 사용자 처리
      */
-    public List<Object> processNextInQueue(String queueKey, String lockKey, String myLockValue, long lockTtlMillis) {
-        return redisTemplate.execute(
-                new DefaultRedisScript<>(PROCESS_NEXT_IN_QUEUE_SCRIPT, List.class),
-                List.of(queueKey, lockKey),
-                myLockValue,
-                String.valueOf(lockTtlMillis),
-                String.valueOf(System.currentTimeMillis()) // PROCESSING 상태의 새로운 스코어
-        );
+    public List<Object> processNextInQueue(String queueKey, List<String> lockKey, String myLockValue, long lockTtlMillis) {
+        List<String> keys = new ArrayList<>();
+        keys.add(queueKey);
+        keys.addAll(lockKey); // flatten
+        try{
+            List<Object> result = redisTemplate.execute(
+                    new DefaultRedisScript<>(PROCESS_NEXT_IN_QUEUE_SCRIPT, List.class),
+                    keys,  // ✅ flat한 keys 리스트
+                    myLockValue,
+                    String.valueOf(lockTtlMillis),
+                    String.valueOf(System.currentTimeMillis())
+            );
+
+            System.out.println(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+
+        return null;
     }
 
     /**

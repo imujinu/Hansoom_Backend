@@ -38,5 +38,13 @@ public class ReservationResponse {
         return response;
     }
 
+    public static ReservationResponse connect(String reservationId) {
+        ReservationResponse response = new ReservationResponse();
+        response.status = "connect";
+        response.reservationId = reservationId;
+        response.message = "실시간 대기열 연결 시작";
+        return response;
+    }
+
     // getters, setters...
 }
