@@ -1,5 +1,5 @@
 package com.beyond.HanSoom.notification.domain;
 
 public enum NotificationState {
-    READ, UNREAD
+    READ, UNREAD, CANCELLED
 }
