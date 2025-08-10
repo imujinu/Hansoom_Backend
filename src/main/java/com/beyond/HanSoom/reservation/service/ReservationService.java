@@ -74,7 +74,8 @@ public class ReservationService {
 
     public ReservationResponse confirm(ReservationReqDto dto) {
         // 값 유효성 검증
-        User user = getUser();
+//        User user = getUser(); // todo : 테스트를 위해 더미 유저 찾아오기 나중에 수정할 것
+        User user = userRepository.findById(1L).orElseThrow(()->new EntityNotFoundException("유저가 없습니다"));
         Hotel hotel = hotelRepository.findById(dto.getHotelId()).orElseThrow(()->new EntityNotFoundException("해당 호텔이 존재하지 않습니다."));;
         Room room = roomRepository.findByIdAndHotel(dto.getRoomId(),hotel).orElseThrow(()-> new EntityNotFoundException("해당 객실이 존재하지 않습니다."));
 
@@ -107,8 +108,9 @@ public class ReservationService {
 
         ReservationDto reservationDto = new ReservationDto().makeDto(hotel, room,user, dto.getCheckIn(), dto.getCheckOut(), room.getRoomCount());
 //        reservationInventoryService.increaseInventory(reservationDto);
-        ReservationResponse response = makeReservation(reservationDto);
-        reservationRepository.save(dto.toEntity(totalPrice,user,hotel, room));
+        Reservation reservation = dto.toEntity(totalPrice,user,hotel, room);
+        ReservationResponse response = makeReservation(reservationDto, reservation);
+
         return response;
 
     }
@@ -157,10 +159,11 @@ public class ReservationService {
         return user;
     }
 
-    public ReservationResponse makeReservation(ReservationDto request) {
+    public ReservationResponse makeReservation(ReservationDto request, Reservation reservation) {
         // 1. 대기열 등록 시도
         List<Long> queueResult = queueReservationService.addToQueue(new QueueReservationReqDto().makeDto(request));
-        User user = getUser();
+//        User user = getUser(); // todo : 추후 수정
+        User user = userRepository.findById(1L).orElseThrow(()->new EntityNotFoundException("유저가 없습니다"));
         long position = queueResult.get(0);
         System.out.println(position);
         if (position == -2) {
@@ -185,10 +188,11 @@ public class ReservationService {
                         String queueKey = "queue:hotel:" + request.getHotelId() + ":room:" + request.getRoomId() + ":date:" + date;
 //                        redisTemplate.opsForHash().put(statusKey, String.valueOf(request.getUserId()), "PROCESSING");
                         queueReservationService.processNextInQueue(queueKey, lockKey, lockValue, 30000);
-                        redisTemplate.expire(statusKey, 15, TimeUnit.SECONDS);  // TTL 설정
+                        redisTemplate.expire(statusKey, 1500, TimeUnit.SECONDS);  // TTL 설정
                     }
+                        Reservation pendingReservation = reservationRepository.save(reservation);
                     // 2. 바로 성공 리턴 → 프론트에서 결제 화면으로 이동
-                    return ReservationResponse.success("PROCESSING");
+                    return ReservationResponse.success("PROCESSING",pendingReservation.getUuid());
 
             } else {
                 // 락 못 얻으면 대기열에서 대기

@@ -11,17 +11,19 @@ import org.springframework.http.*;
 @RestController
 @RequestMapping("/payment")
 @RequiredArgsConstructor
-public class WidgetController {
+public class PaymentController {
     private final PaymentService paymentService;
 
     @PostMapping("/confirm")
     public ResponseEntity<?> confirmPayment(@RequestBody PaymentReqDto paymentReqDto) {
 
+        System.out.println(paymentReqDto);
         PaymentResDto paymentResDto = paymentService.pay(paymentReqDto);
         if(paymentResDto.isSuccess()){
             return new ResponseEntity<>(new CommonSuccessDto(paymentResDto.getResponse(), HttpStatus.OK.value(),"payment is success"), HttpStatus.OK);
 
         }else{
+            System.out.println("결제 실패");
             return new ResponseEntity<>(new CommonSuccessDto(paymentResDto.getResponse(), HttpStatus.BAD_REQUEST.value(),"payment is fail"), HttpStatus.BAD_REQUEST);
         }
     }

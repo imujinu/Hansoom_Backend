@@ -362,8 +362,8 @@ public Page<HotelListResponseDto> findAll(Pageable pageable, HotelListSearchDto 
                             ReservationDto dto = ReservationDto.builder()
                                     .hotelId(hotel.getId())
                                     .roomId(room.getId())
-                                    .startDate(searchDto.getCheckIn())
-                                    .endDate(searchDto.getCheckOut())
+                                    .checkIn(searchDto.getCheckIn())
+                                    .checkOut(searchDto.getCheckOut())
                                     .maxStock(room.getRoomCount())
                                     .build();
                             return reservationInventoryService.getInventory(dto) > 0;
@@ -400,8 +400,8 @@ public Page<HotelListResponseDto> findAll(Pageable pageable, HotelListSearchDto 
                         ReservationDto reservationDto = ReservationDto.builder()
                                 .hotelId(id)
                                 .roomId(room.getId())
-                                .startDate(dto.getCheckIn())
-                                .endDate(dto.getCheckOut())
+                                .checkIn(dto.getCheckIn())
+                                .checkOut(dto.getCheckOut())
                                 .maxStock(room.getRoomCount())
                                 .build();
                         int remaining = reservationInventoryService.getInventory(reservationDto);
