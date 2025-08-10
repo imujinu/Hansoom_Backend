@@ -6,9 +6,7 @@ import com.beyond.HanSoom.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -29,4 +27,10 @@ public class NotificationController {
         return new ResponseEntity<>(new CommonSuccessDto(notificationListResDtoList, HttpStatus.OK.value(), "알림목록 조회 성공"), HttpStatus.OK);
     }
 
+    // 알림 읽음상태 변경
+    @PatchMapping("/updateState/{notiId}")
+    public ResponseEntity<?> updateNotificationState(@PathVariable Long notiId) {
+        notificationService.updateNotificationState(notiId);
+        return new ResponseEntity<>(new CommonSuccessDto(notiId, HttpStatus.OK.value(), "알림상태 읽음으로 수정 성공"), HttpStatus.OK);
+    }
 }

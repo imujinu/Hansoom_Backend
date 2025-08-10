@@ -35,4 +35,8 @@ public class Notification extends BaseTimeEntity {
     @JoinColumn(name = "reservation_id")
     @ManyToOne(fetch = FetchType.LAZY)
     private Reservation reservation;
+
+    public void updatedReadState() {
+        this.state = NotificationState.READ;
+    }
 }

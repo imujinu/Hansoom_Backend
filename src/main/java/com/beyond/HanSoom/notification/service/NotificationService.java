@@ -62,4 +62,12 @@ public class NotificationService {
         return notificationListResDtoList;
     }
 
+    // 알림 읽음상태 변경
+    public void updateNotificationState(Long id) {
+        Notification notification = notificationRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("없는 알림입니다."));
+        notification.updatedReadState();
+        
+        log.info("[HANSOOM][INFO] - NotificationService/updateNotificationState - 알림상태 읽음으로 수정 성공, id={}", id);
+    }
+
 }
