@@ -12,6 +12,7 @@ import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.reservation.domain.State;
 import com.beyond.HanSoom.reservation.repository.ReservationRepository;
 import com.beyond.HanSoom.user.domain.User;
+import com.beyond.HanSoom.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -39,19 +40,20 @@ public class PaymentService {
     private final RedisDistributedLock distributedLock; // 락
     private final RedisTemplate<String, String> redisTemplate;
     private final QueueReservationService queueReservationService;
-
+    private final UserRepository userRepository;
 
     private final WebClient webClient = WebClient.builder()
             .baseUrl("https://api.tosspayments.com/v1")
             .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .build();
 
-    public PaymentService(PaymentRepository paymentRepository, ReservationRepository reservationRepository, RedisDistributedLock distributedLock, @Qualifier("reservationList")RedisTemplate<String, String> redisTemplate, QueueReservationService queueReservationService) {
+    public PaymentService(PaymentRepository paymentRepository, ReservationRepository reservationRepository, RedisDistributedLock distributedLock, @Qualifier("reservationList")RedisTemplate<String, String> redisTemplate, QueueReservationService queueReservationService, UserRepository userRepository) {
         this.paymentRepository = paymentRepository;
         this.reservationRepository = reservationRepository;
         this.distributedLock = distributedLock;
         this.redisTemplate = redisTemplate;
         this.queueReservationService = queueReservationService;
+        this.userRepository = userRepository;
     }
 
     public PaymentResDto pay(PaymentReqDto paymentReqDto) {
@@ -74,8 +76,11 @@ public class PaymentService {
                 .block();
 
         Reservation reservation = reservationRepository.findByUuid(paymentReqDto.getOrderId());
-        User user = reservation.getUser();
+        User user = userRepository.findById(1L).orElseThrow(()->new EntityNotFoundException("유저가 없습니다"));
+//        User user = reservation.getUser();// todo : 추후 수정
+        System.out.println("여기까진 오는중1" );
         LocalDate start = reservation.getCheckInDate();
+        System.out.println("여기까진 오는중2" );
         LocalDate end = reservation.getCheckOutDate();
         List<String> keys = new ArrayList<>();
         generateQueueKey(reservation, start,end, keys);
