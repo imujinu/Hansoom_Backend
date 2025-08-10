@@ -358,6 +358,7 @@ public Page<HotelListResponseDto> findAll(Pageable pageable, HotelListSearchDto 
                 OptionalInt minAvgPrice = hotel.getRooms().stream()
                         .filter(room -> room.getState() != HotelState.REMOVE)
                         .filter(room -> room.getMaximumPeople() >= searchDto.getPeople())
+
                         .filter(room -> {
                             ReservationDto dto = ReservationDto.builder()
                                     .hotelId(hotel.getId())
@@ -368,6 +369,7 @@ public Page<HotelListResponseDto> findAll(Pageable pageable, HotelListSearchDto 
                                     .build();
                             return reservationInventoryService.getInventory(dto) > 0;
                         })
+
                         .mapToInt(room -> calculateAveragePrice(room, searchDto.getCheckIn(), searchDto.getCheckOut()))
                         .min();
 
@@ -396,6 +398,7 @@ public Page<HotelListResponseDto> findAll(Pageable pageable, HotelListSearchDto 
             List<Room> availableRooms = roomRepository.findByHotelId(id).stream()
                     .filter(room -> room.getState() != HotelState.REMOVE)
                     .filter(room -> room.getMaximumPeople() >= dto.getPeople())
+
                     .filter(room -> {
                         ReservationDto reservationDto = ReservationDto.builder()
                                 .hotelId(id)
@@ -407,6 +410,7 @@ public Page<HotelListResponseDto> findAll(Pageable pageable, HotelListSearchDto 
                         int remaining = reservationInventoryService.getInventory(reservationDto);
                         return remaining > 0;
                     })
+
                     .toList();
 
             if (!availableRooms.isEmpty()) {
