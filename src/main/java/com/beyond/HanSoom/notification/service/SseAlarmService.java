@@ -1,6 +1,6 @@
 package com.beyond.HanSoom.notification.service;
 
-import com.beyond.HanSoom.notification.dto.SseMessageDto;
+import com.beyond.HanSoom.notification.dto.SseNotificationCountResDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -23,11 +23,11 @@ public class SseAlarmService implements MessageListener {
 
     // 특정 사용자에게 message 발송
     // productId를 커스텀 할 수 있음
-    public void publishMessage(String receiver, String sender, Long tempId) {
-        SseMessageDto dto = SseMessageDto.builder()
-                .sender(sender)
+    public void publishMessage(String receiver, Long notificationId, int notificationCount) {
+        SseNotificationCountResDto dto = SseNotificationCountResDto.builder()
                 .receiver(receiver)
-                .tempId(tempId)
+                .notificationId(notificationId)
+                .notificationCount(notificationCount)
                 .build();
 
         ObjectMapper objectMapper = new ObjectMapper();
@@ -63,7 +63,7 @@ public class SseAlarmService implements MessageListener {
 
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            SseMessageDto dto = objectMapper.readValue(message.getBody(), SseMessageDto.class);
+            SseNotificationCountResDto dto = objectMapper.readValue(message.getBody(), SseNotificationCountResDto.class);
 
             SseEmitter sseEmitter = sseEmitterRegistry.getEmitter(dto.getReceiver());
             // emitter객체가 현재 서버에 있으면, 직접 알림 발송. 그렇지 않으면, redis에 publish

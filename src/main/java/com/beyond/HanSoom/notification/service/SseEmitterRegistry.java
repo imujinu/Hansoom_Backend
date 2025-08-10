@@ -8,9 +8,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class SseEmitterRegistry {
-
-    // SseEmitter 연결된 사용자 정보(ip, mac address 정보 등)를 의미
-    // ConcurrerntHashMap은  thread safe한 map (동시성 이슈 발생 X)
     private Map<String, SseEmitter> emitterMap = new ConcurrentHashMap<>();
 
     public void addSseEmitter(String email, SseEmitter sseEmitter) {

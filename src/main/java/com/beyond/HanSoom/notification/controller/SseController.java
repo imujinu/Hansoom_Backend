@@ -18,7 +18,7 @@ public class SseController {
 
     @GetMapping("/connect")
     public SseEmitter subscribe() {
-        SseEmitter sseEmitter = new SseEmitter(14400*60*1000L); // 10일정도 emitter 유효기간 설정
+        SseEmitter sseEmitter = new SseEmitter(14400*60*1000L); // 10일정도 emitter 유효기간 설정 // Todo - 시간 줄이기
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
         sseEmitterRegistry.addSseEmitter(email, sseEmitter);

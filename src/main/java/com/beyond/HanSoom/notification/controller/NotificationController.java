@@ -2,6 +2,7 @@ package com.beyond.HanSoom.notification.controller;
 
 import com.beyond.HanSoom.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
