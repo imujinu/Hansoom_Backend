@@ -94,7 +94,7 @@ public class RedisConfig {
     }
 
     @Bean
-    @Qualifier("bookingCacheInventory")
+    @Qualifier("bookingCacheInventoryFactory")
     public RedisConnectionFactory bookingCacheInventory(){
         RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
         configuration.setHostName(host);
@@ -105,11 +105,16 @@ public class RedisConfig {
 
     @Bean
     @Qualifier("bookingCacheInventory")
-    public RedisTemplate<String, Object> bookingCacheTemplate(@Qualifier("bookingCacheInventory") RedisConnectionFactory redisConnectionFactory){
-        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setKeySerializer(new StringRedisSerializer());
-        redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+    public RedisTemplate<String, String> bookingCacheTemplate(@Qualifier("bookingCacheInventoryFactory") RedisConnectionFactory redisConnectionFactory){
+        RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(redisConnectionFactory);
+
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(new StringRedisSerializer());
+        redisTemplate.setHashKeySerializer(new StringRedisSerializer());
+        redisTemplate.setHashValueSerializer(new StringRedisSerializer());
+
+        redisTemplate.afterPropertiesSet();
         return redisTemplate;
     }
 

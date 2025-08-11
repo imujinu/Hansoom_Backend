@@ -1,8 +1,12 @@
 package com.beyond.HanSoom.reservation.controller;
 
 import com.beyond.HanSoom.common.annotation.LimitRequestPerTime;
+import com.beyond.HanSoom.common.dto.CommonSuccessDto;
+import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.reservation.dto.req.ReservationCompleteReqDto;
+import com.beyond.HanSoom.reservation.dto.req.ReservationFindReqDto;
 import com.beyond.HanSoom.reservation.dto.req.ReservationReqDto;
+import com.beyond.HanSoom.reservation.dto.res.ReservationCacheResDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResponse;
 import com.beyond.HanSoom.reservation.service.ReservationService;
@@ -38,10 +42,17 @@ public class ReservationController {
         return new ResponseEntity<>(uuid, HttpStatus.OK);
     }
     //예약 전체 조회
-    @GetMapping("/find")
-    public ResponseEntity<?> find(){
-        List<ReservationResDto> resDtos = reservationService.find();
+    @GetMapping("/findAll")
+    public ResponseEntity<?> findAll(){
+        List<ReservationResDto> resDtos = reservationService.findAll();
         return new ResponseEntity<>(resDtos, HttpStatus.OK);
+    }
+
+    @PostMapping("/find")
+    public ResponseEntity<?> find(@RequestBody ReservationFindReqDto dto){
+        ReservationCacheResDto reservation = reservationService.find(dto.getReservationId());
+
+        return new ResponseEntity<>(reservation, HttpStatus.OK);
     }
 
 

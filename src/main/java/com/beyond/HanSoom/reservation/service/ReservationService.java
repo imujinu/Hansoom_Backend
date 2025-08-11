@@ -4,6 +4,7 @@ import com.beyond.HanSoom.common.dto.QueueReservationReqDto;
 import com.beyond.HanSoom.common.dto.ReservationDto;
 import com.beyond.HanSoom.common.service.QueueReservationService;
 import com.beyond.HanSoom.common.service.RedisDistributedLock;
+import com.beyond.HanSoom.common.service.ReservationCacheService;
 import com.beyond.HanSoom.common.service.ReservationInventoryService;
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.hotel.repository.HotelRepository;
@@ -14,6 +15,7 @@ import com.beyond.HanSoom.reservation.domain.State;
 import com.beyond.HanSoom.reservation.dto.req.ReservationCompleteReqDto;
 import com.beyond.HanSoom.reservation.dto.req.ReservationReqDto;
 import com.beyond.HanSoom.reservation.dto.req.ReservationRequest;
+import com.beyond.HanSoom.reservation.dto.res.ReservationCacheResDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResponse;
 import com.beyond.HanSoom.reservation.repository.ReservationRepository;
@@ -21,9 +23,11 @@ import com.beyond.HanSoom.room.domain.Room;
 import com.beyond.HanSoom.room.repository.RoomRepository;
 import com.beyond.HanSoom.user.domain.User;
 import com.beyond.HanSoom.user.repository.UserRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
@@ -34,10 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -59,7 +60,10 @@ public class ReservationService {
     private final RedisDistributedLock distributedLock; // 락
     private final RedisTemplate<String, String> redisTemplate;
     private final SimpMessageSendingOperations messageTemplates;
-    public ReservationService(ReservationRepository reservationRepository, UserRepository userRepository, RoomRepository roomRepository, HotelRepository hotelRepository, PaymentRepository paymentRepository, ReservationInventoryService reservationInventoryService, QueueReservationService queueReservationService, RedisDistributedLock distributedLock, @Qualifier("reservationList") RedisTemplate<String, String> redisTemplate, SimpMessageSendingOperations messageTemplates) {
+    private final ReservationCacheService reservationCacheService;
+    public ReservationService(ReservationRepository reservationRepository, UserRepository userRepository, RoomRepository roomRepository, HotelRepository hotelRepository,
+                              PaymentRepository paymentRepository, ReservationInventoryService reservationInventoryService, QueueReservationService queueReservationService,
+                              RedisDistributedLock distributedLock, @Qualifier("reservationList") RedisTemplate<String, String> redisTemplate, SimpMessageSendingOperations messageTemplates, ReservationCacheService reservationCacheService) {
         this.reservationRepository = reservationRepository;
         this.userRepository = userRepository;
         this.roomRepository = roomRepository;
@@ -70,6 +74,7 @@ public class ReservationService {
         this.distributedLock = distributedLock;
         this.redisTemplate = redisTemplate;
         this.messageTemplates = messageTemplates;
+        this.reservationCacheService = reservationCacheService;
     }
 
     public ReservationResponse confirm(ReservationReqDto dto) {
@@ -116,10 +121,34 @@ public class ReservationService {
     }
 
 
-    public List<ReservationResDto> find() {
+    public List<ReservationResDto> findAll() {
         User user = getUser();
         List<Reservation> reservation = reservationRepository.findAllByUser(user);
         return reservation.stream().map(a-> new ReservationResDto().fromEntity(a)).collect(Collectors.toList());
+    }
+
+    public ReservationCacheResDto find(Long id) {
+        try {
+            //유저 검증 로직
+            ReservationCacheResDto cacheReservation = reservationCacheService.getCacheReservation(id);
+            System.out.println("디버깅1");
+            if(cacheReservation == null){
+                Reservation reservation = reservationRepository.findById(id).orElseThrow(()->new EntityNotFoundException("예약 내역이 존재하지 않습니다."));
+
+                ReservationCacheResDto cacheResDto = new ReservationCacheResDto().fromEntity(reservation);
+                if(reservation.getState() == State.RESERVED){
+                reservationCacheService.saveCacheReservation(cacheResDto);
+                return cacheResDto;
+                }else{
+                    throw new IllegalStateException("유효하지 않은 예약입니다.");
+                }
+            }else{
+                return cacheReservation;
+            }
+        } catch (JsonProcessingException e) {
+            log.info(e.getMessage());
+            throw new EntityNotFoundException("해당 예약이 존재하지 않습니다.");
+        }
     }
 
 
@@ -138,8 +167,6 @@ public class ReservationService {
         ReservationDto reservationDto = new ReservationDto().makeDto(reservation.getHotel(), reservation.getRoom(), user,  reservation.getCheckInDate(), reservation.getCheckOutDate(), reservation.getRoom().getRoomCount());
         List<String> keys = new ArrayList<>();
         generateQueueKey(reservation, reservation.getCheckInDate(), reservation.getCheckOutDate(), keys);
-        System.out.println("reservID :::: " + reservation.getId());
-        System.out.println("PAYMENTID ::: " + payment.getReservation().getId());
         if(reservation.getState() == State.SUCCEED && payment.getReservation().getId().equals(reservation.getId())){
             for(int i=0; i<keys.size(); i++){
             queueReservationService.updateStatus(keys.get(i), String.valueOf(user.getId()), "SUCCEED", "RESERVED");
@@ -238,5 +265,6 @@ public class ReservationService {
     private String generateLockValue(Long userId) {
         return "user:" + userId;
     }
+
 
 }
