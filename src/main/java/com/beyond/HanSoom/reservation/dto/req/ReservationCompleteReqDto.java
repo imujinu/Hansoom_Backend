@@ -12,5 +12,5 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class ReservationCompleteReqDto {
-    private Long reservationId;
+    private String reservationId;
 }
