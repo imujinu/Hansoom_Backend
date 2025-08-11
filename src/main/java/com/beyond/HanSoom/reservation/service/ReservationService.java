@@ -131,22 +131,24 @@ public class ReservationService {
     }
 
     public String complete(ReservationCompleteReqDto dto) {
-        Reservation reservation = reservationRepository.findById(dto.getReservationId()).orElseThrow(()->new EntityNotFoundException("존재하지 않는 예약 내역 입니다."));
+        Reservation reservation = reservationRepository.findByUuid(dto.getReservationId()).orElseThrow(()->new EntityNotFoundException("존재하지 않는 예약 내역 입니다."));
         Payment payment = paymentRepository.findByReservationId(reservation.getId());
-        User user = getUser();
+//        User user = getUser(); //todo : 추후 수정
+        User user = userRepository.findById(1L).orElseThrow(()->new EntityNotFoundException("유저가 없습니다"));
         ReservationDto reservationDto = new ReservationDto().makeDto(reservation.getHotel(), reservation.getRoom(), user,  reservation.getCheckInDate(), reservation.getCheckOutDate(), reservation.getRoom().getRoomCount());
         List<String> keys = new ArrayList<>();
         generateQueueKey(reservation, reservation.getCheckInDate(), reservation.getCheckOutDate(), keys);
-
-        if(reservation.getState() == State.SUCCESS && payment.getReservation().getId().equals(reservation.getId())){
+        System.out.println("reservID :::: " + reservation.getId());
+        System.out.println("PAYMENTID ::: " + payment.getReservation().getId());
+        if(reservation.getState() == State.SUCCEED && payment.getReservation().getId().equals(reservation.getId())){
             for(int i=0; i<keys.size(); i++){
-            queueReservationService.updateStatus(keys.get(i), String.valueOf(user.getId()), "SUCCESS", "RESERVED");
+            queueReservationService.updateStatus(keys.get(i), String.valueOf(user.getId()), "SUCCEED", "RESERVED");
             }
             reservation.changeState(State.RESERVED);
             return reservation.getUuid();
         }else{
             for(int i=0; i<keys.size(); i++){
-                queueReservationService.updateStatus(keys.get(i), String.valueOf(user.getId()), "SUCCESS", "VALIDATION_FAILED");
+                queueReservationService.updateStatus(keys.get(i), String.valueOf(user.getId()), "FAILED", "VALIDATION_FAILED");
             }
             reservation.changeState(State.VALIDATION_FAILED);
             throw new IllegalStateException("결제가 완료되지 않은 주문 입니다.");

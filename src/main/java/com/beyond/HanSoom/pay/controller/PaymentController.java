@@ -19,6 +19,7 @@ public class PaymentController {
 
         System.out.println(paymentReqDto);
         PaymentResDto paymentResDto = paymentService.pay(paymentReqDto);
+        System.out.println("paymentResDto.isSuccess()"+paymentResDto.isSuccess());
         if(paymentResDto.isSuccess()){
             return new ResponseEntity<>(new CommonSuccessDto(paymentResDto.getResponse(), HttpStatus.OK.value(),"payment is success"), HttpStatus.OK);
 

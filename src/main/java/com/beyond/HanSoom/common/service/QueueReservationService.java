@@ -155,7 +155,7 @@ public class QueueReservationService {
         try{
             List<Object> result = redisTemplate.execute(
                     new DefaultRedisScript<>(PROCESS_NEXT_IN_QUEUE_SCRIPT, List.class),
-                    keys,  // ✅ flat한 keys 리스트
+                    keys,  //
                     myLockValue,
                     String.valueOf(lockTtlMillis),
                     String.valueOf(System.currentTimeMillis())
