@@ -1,8 +1,10 @@
 package com.beyond.HanSoom.common.service;
 
 import com.beyond.HanSoom.reservation.domain.Reservation;
+import com.beyond.HanSoom.reservation.dto.res.ReservationCacheResDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -13,28 +15,22 @@ import java.util.Optional;
 @Component
 
 public class ReservationCacheService {
-    private final RedisTemplate<String, Object> redisTemplate;
-
-    public ReservationCacheService(@Qualifier("bookingCacheInventory") RedisTemplate<String, Object> redisTemplate) {
+    private final RedisTemplate<String, String> redisTemplate;
+    private final ObjectMapper objectMapper;
+    public ReservationCacheService(@Qualifier("bookingCacheInventory") RedisTemplate<String, String> redisTemplate, ObjectMapper objectMapper) {
         this.redisTemplate = redisTemplate;
+        this.objectMapper = objectMapper;
+        objectMapper.registerModule(new JavaTimeModule());
     }
 
-    public Optional<Reservation> getCacheReservation(Long reservationId) throws JsonProcessingException {
+    public ReservationCacheResDto getCacheReservation(Long reservationId) throws JsonProcessingException {
+        String cacheReservation = redisTemplate.opsForValue().get(String.valueOf(reservationId));
+        if (cacheReservation == null) return null;
 
-        Object cacheReservation = redisTemplate.opsForValue().get(reservationId);
-        if(cacheReservation==null){
-            return Optional.empty();
-        }else{
-
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        Reservation reservation1 = objectMapper.readValue(cacheReservation.toString(), Reservation.class);
-        return Optional.of(reservation1);
-        }
+        return objectMapper.readValue(cacheReservation, ReservationCacheResDto.class);
     }
 
-    public void saveCacheReservation(Reservation reservation) throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
+    public void saveCacheReservation(ReservationCacheResDto reservation) throws JsonProcessingException {
         String cacheReservation = objectMapper.writeValueAsString(reservation);
         redisTemplate.opsForValue().set(String.valueOf(reservation.getId()), cacheReservation);
     }
