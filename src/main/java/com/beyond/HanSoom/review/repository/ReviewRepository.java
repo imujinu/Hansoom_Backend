@@ -9,6 +9,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 
@@ -17,4 +19,8 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     // 호텔의 모든 리뷰목록 (Hotel)
     Page<Review> findByHotelAndState(Pageable pageable, Hotel hotel, ReviewState state);
+
+    Review findByHotel(Hotel hotel);
+
+    List<Review> findAllByHotel(Hotel hotel);
 }

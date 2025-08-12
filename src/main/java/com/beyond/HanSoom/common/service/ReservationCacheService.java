@@ -15,23 +15,23 @@ import java.util.Optional;
 @Component
 
 public class ReservationCacheService {
-    private final RedisTemplate<String, String> redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
-    public ReservationCacheService(@Qualifier("bookingCacheInventory") RedisTemplate<String, String> redisTemplate, ObjectMapper objectMapper) {
+    public ReservationCacheService(@Qualifier("bookingCacheInventory") RedisTemplate<String, Object> redisTemplate, ObjectMapper objectMapper) {
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
         objectMapper.registerModule(new JavaTimeModule());
     }
 
     public ReservationCacheResDto getCacheReservation(Long reservationId) throws JsonProcessingException {
-        String cacheReservation = redisTemplate.opsForValue().get(String.valueOf(reservationId));
+        Object cacheReservation = redisTemplate.opsForValue().get(String.valueOf(reservationId));
         if (cacheReservation == null) return null;
 
-        return objectMapper.readValue(cacheReservation, ReservationCacheResDto.class);
+        return objectMapper.readValue(cacheReservation.toString(), ReservationCacheResDto.class);
     }
 
     public void saveCacheReservation(ReservationCacheResDto reservation) throws JsonProcessingException {
         String cacheReservation = objectMapper.writeValueAsString(reservation);
-        redisTemplate.opsForValue().set(String.valueOf(reservation.getId()), cacheReservation);
+        redisTemplate.opsForValue().set(String.valueOf(reservation.getReservationId()), cacheReservation);
     }
 }
