@@ -19,6 +19,8 @@ import com.beyond.HanSoom.reservation.dto.res.ReservationCacheResDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResponse;
 import com.beyond.HanSoom.reservation.repository.ReservationRepository;
+import com.beyond.HanSoom.review.domain.Review;
+import com.beyond.HanSoom.review.repository.ReviewRepository;
 import com.beyond.HanSoom.room.domain.Room;
 import com.beyond.HanSoom.room.repository.RoomRepository;
 import com.beyond.HanSoom.user.domain.User;
@@ -35,6 +37,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -61,9 +64,10 @@ public class ReservationService {
     private final RedisTemplate<String, String> redisTemplate;
     private final SimpMessageSendingOperations messageTemplates;
     private final ReservationCacheService reservationCacheService;
+    private final ReviewRepository reviewRepository;
     public ReservationService(ReservationRepository reservationRepository, UserRepository userRepository, RoomRepository roomRepository, HotelRepository hotelRepository,
                               PaymentRepository paymentRepository, ReservationInventoryService reservationInventoryService, QueueReservationService queueReservationService,
-                              RedisDistributedLock distributedLock, @Qualifier("reservationList") RedisTemplate<String, String> redisTemplate, SimpMessageSendingOperations messageTemplates, ReservationCacheService reservationCacheService) {
+                              RedisDistributedLock distributedLock, @Qualifier("reservationList") RedisTemplate<String, String> redisTemplate, SimpMessageSendingOperations messageTemplates, ReservationCacheService reservationCacheService, ReviewRepository reviewRepository) {
         this.reservationRepository = reservationRepository;
         this.userRepository = userRepository;
         this.roomRepository = roomRepository;
@@ -75,6 +79,7 @@ public class ReservationService {
         this.redisTemplate = redisTemplate;
         this.messageTemplates = messageTemplates;
         this.reservationCacheService = reservationCacheService;
+        this.reviewRepository = reviewRepository;
     }
 
     public ReservationResponse confirm(ReservationReqDto dto) {
@@ -122,20 +127,47 @@ public class ReservationService {
 
 
     public List<ReservationResDto> findAll() {
-        User user = getUser();
+//        User user = getUser(); //todo : 추후 수정
+        User user = userRepository.findById(1L).orElseThrow(()->new EntityNotFoundException("유저가 없습니다"));
+
         List<Reservation> reservation = reservationRepository.findAllByUser(user);
-        return reservation.stream().map(a-> new ReservationResDto().fromEntity(a)).collect(Collectors.toList());
+        List<ReservationResDto> reservationList = new ArrayList<>();
+        LocalDate now = LocalDate.now();
+        for(Reservation r : reservation){
+//            BigDecimal hotelRating = reviewRepository.findByHotel(r.getHotel()).getRating(); // todo : 리뷰없어서 에러 뜸
+            String status = getStatus(r, now);
+
+
+            reservationList.add(new ReservationResDto().fromEntity(r, BigDecimal.valueOf(4.5), status));
+        }
+        return reservationList;
+    }
+
+    private static String getStatus(Reservation r, LocalDate now) {
+        String status = "";
+        if(r.getCheckOutDate().isAfter(now)){
+            status = "upcoming";
+        }else{
+            status = "completed";
+        }
+
+        if(r.getState() == State.CANCELLED){
+            status = "canceled";
+        }
+        return status;
     }
 
     public ReservationCacheResDto find(Long id) {
         try {
             //유저 검증 로직
             ReservationCacheResDto cacheReservation = reservationCacheService.getCacheReservation(id);
-            System.out.println("디버깅1");
+
             if(cacheReservation == null){
                 Reservation reservation = reservationRepository.findById(id).orElseThrow(()->new EntityNotFoundException("예약 내역이 존재하지 않습니다."));
-
-                ReservationCacheResDto cacheResDto = new ReservationCacheResDto().fromEntity(reservation);
+                List<Review> reviewList = reviewRepository.findAllByHotel(reservation.getHotel());
+                LocalDate now = LocalDate.now();
+                String state = getStatus(reservation,now);
+                ReservationCacheResDto cacheResDto = new ReservationCacheResDto().fromEntity(reservation,state  ,reviewList);
                 if(reservation.getState() == State.RESERVED){
                 reservationCacheService.saveCacheReservation(cacheResDto);
                 return cacheResDto;
