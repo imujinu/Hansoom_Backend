@@ -60,7 +60,7 @@ public class Reservation {
     private State state = State.PENDING;
 
     public void cancel(){
-        this.state = State.CANCELD;
+        this.state = State.CANCELLED;
     }
     public void reserve(){this.state = State.RESERVED;}
 
@@ -76,4 +76,10 @@ public class Reservation {
         this.state = state;
     }
 
+    public void updateCacheSet(User user, Hotel hotel , Room room){
+        this.user= user;
+        this.hotel =hotel;
+        this.room =room;
+
+    }
 }

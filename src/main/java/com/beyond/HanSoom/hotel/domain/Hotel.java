@@ -1,6 +1,8 @@
 package com.beyond.HanSoom.hotel.domain;
 
+import com.beyond.HanSoom.common.domain.BaseTimeEntity;
 import com.beyond.HanSoom.room.domain.Room;
+import com.beyond.HanSoom.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +18,7 @@ import java.util.List;
 @Getter
 @Builder
 @Entity
-public class Hotel {
+public class Hotel extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -33,6 +35,10 @@ public class Hotel {
     private LocalDateTime answerTime;
     private double latitude;
     private double longitude;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @Builder.Default
     @OneToMany(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.ALL)

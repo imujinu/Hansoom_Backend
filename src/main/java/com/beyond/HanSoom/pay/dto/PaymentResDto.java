@@ -14,5 +14,5 @@ import java.util.Map;
 public class PaymentResDto {
     private Map<String,Object> response;
     private boolean isSuccess;
-
+    private String message;
 }
