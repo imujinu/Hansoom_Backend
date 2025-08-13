@@ -73,7 +73,7 @@ public class ReviewService {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("없는 사용자입니다."));
         Page<Review> reviewPage = reviewRepository.findByUserAndState(pageable, user, ReviewState.NORMAL);
-        Page<ReviewListResDto> reviewListResDtoPage = reviewPage.map(a -> ReviewListResDto.fromEntity(a));
+        Page<ReviewListResDto> reviewListResDtoPage = reviewPage.map(a -> ReviewListResDto.fromEntity(a, a.getReservation()));
         
         log.info("[HANSOOM][INFO] - ReviewService/getUserReviews - 사용자 리뷰목록 출력 성공, email={}", email);
         
@@ -84,7 +84,8 @@ public class ReviewService {
     public Page<ReviewListResDto> getHotelReviews(Pageable pageable, Long hotelId) {
         Hotel hotel = hotelRepository.findById(hotelId).orElseThrow(() -> new EntityNotFoundException("없는 호텔입니다."));
         Page<Review> reviewPage = reviewRepository.findByHotelAndState(pageable, hotel, ReviewState.NORMAL);
-        Page<ReviewListResDto> reviewListResDtoPage = reviewPage.map(a -> ReviewListResDto.fromEntity(a));
+
+        Page<ReviewListResDto> reviewListResDtoPage = reviewPage.map(a -> ReviewListResDto.fromEntity(a, a.getReservation()));
 
         log.info("[HANSOOM][INFO] - ReviewService/getHotelReviews - 호텔 리뷰목록 출력 성공, hotelId={}", hotelId);
 
