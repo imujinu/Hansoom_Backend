@@ -16,17 +16,12 @@ public class ChatController {
     private final ChatService chatService;
     private final SimpMessageSendingOperations messageTemplate;
 
+
+
     @PostMapping("/room/group/create")
     public ResponseEntity<?> createGroupRoom (@RequestParam String roomName){
         chatService.createGroupRoom(roomName);
         return ResponseEntity.ok().build();
-    }
-
-
-    @MessageMapping("/{roomId}")
-    public void sendMessage(@DestinationVariable Long roomId, ChatMessageDto chatMessageDto){
-        System.out.println(chatMessageDto.getMessage());
-        messageTemplate.convertAndSend("/topic/"+roomId, chatMessageDto);
     }
 
     @PostMapping("/room/{roomId}/read")
@@ -34,5 +29,7 @@ public class ChatController {
         chatService.messageRead(roomId);
         return ResponseEntity.ok().build();
     }
+
+
 
 }
