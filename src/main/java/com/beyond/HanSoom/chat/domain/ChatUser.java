@@ -1,5 +1,6 @@
 package com.beyond.HanSoom.chat.domain;
 
+import com.beyond.HanSoom.common.domain.BaseTimeEntity;
 import com.beyond.HanSoom.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -12,7 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ChatUser {
+public class ChatUser extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;

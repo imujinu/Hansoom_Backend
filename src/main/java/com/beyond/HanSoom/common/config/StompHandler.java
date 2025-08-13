@@ -23,11 +23,13 @@ public class StompHandler implements ChannelInterceptor {
     private String secretKey;
 
 
+    //connect, subscribe, disconnect 요청 시에 presend 메서드가 실행됨
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         //Stomp안에 변수값에 쉽게 접근하기 위해 message를 감싸준다.
         final StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
 
+        //요청이 무엇인지 getCommand에 담겨있음
         if(StompCommand.CONNECT == accessor.getCommand()){
             String bearerToken = accessor.getFirstNativeHeader("Authorization");
             String token = bearerToken.substring(7);
