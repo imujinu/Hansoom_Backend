@@ -1,5 +1,6 @@
 package com.beyond.HanSoom.chat.domain;
 
+import com.beyond.HanSoom.common.domain.BaseTimeEntity;
 import com.beyond.HanSoom.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -15,22 +16,23 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ChatMessage {
+public class ChatMessage extends BaseTimeEntity {
     @Id
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_id")
-    private User user;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "chat_room_id")
+    @JoinColumn(name="chat_room_id", nullable = false)
     private ChatRoom chatRoom;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false )
+    private User user;
+
+    @Column(nullable = false, length = 500)
     private String content;
 
-    @OneToMany(mappedBy = "chatMessage", cascade = CascadeType.PERSIST)
+    @OneToMany(mappedBy = "chatMessage", cascade = CascadeType.REMOVE, orphanRemoval = true)
     @Builder.Default
-    private List<ChatReadStatus> chatReadStatusList = new ArrayList<>();
+    private List<ChatReadStatus> readStatusList = new ArrayList<>();
 }
