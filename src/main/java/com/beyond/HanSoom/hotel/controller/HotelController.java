@@ -47,11 +47,14 @@ public class HotelController {
 
     @PutMapping("/myhotel")
     @PreAuthorize("hasRole('HOST')")
-    public ResponseEntity<?> updateHotel(@RequestPart(name = "hotelUpdateDto") HotelUpdateDto dto,
-                                         @RequestPart(name = "hotelImage") MultipartFile hotelImage,
-                                         @RequestPart(name = "roomImages") List<MultipartFile> roomImages)
-    {
-        hotelService.updateHotel(dto, hotelImage, roomImages);
+    public ResponseEntity<?> updateHotel(
+            @RequestPart(name = "hotelUpdateDto") HotelUpdateDto dto,
+            @RequestPart(name = "hotelImage", required = false) MultipartFile hotelImage,
+            @RequestPart(name = "roomImages", required = false) List<MultipartFile> roomImages,
+            @RequestPart(name = "imageUrls", required = false) List<ImageDto> imageUrls) {
+
+        hotelService.updateHotelWithUrls(dto, hotelImage, roomImages, imageUrls);
+
         return new ResponseEntity<>(
                 CommonSuccessDto.builder()
                         .result("OK")
@@ -78,7 +81,7 @@ public class HotelController {
 
     @GetMapping("/detail/{id}")
     public ResponseEntity<?> findById(@PathVariable Long id, HotelDetailSearchDto searchDto) {
-        HotelDetailResponseDto dto = hotelService.findById(id, searchDto);
+        HotelDetailSearchResponseDto dto = hotelService.findById(id, searchDto);
         return new ResponseEntity<>(
                 CommonSuccessDto.builder()
                         .result(dto)
