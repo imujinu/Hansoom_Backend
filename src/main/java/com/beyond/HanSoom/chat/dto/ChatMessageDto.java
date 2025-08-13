@@ -1,16 +1,15 @@
-package com.beyond.HanSoom.reservation.dto.req;
+package com.beyond.HanSoom.chat.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ReservationCompleteReqDto {
-    private String reservationId;
+public class ChatMessageDto {
+    private String name;
+    private String message;
 }

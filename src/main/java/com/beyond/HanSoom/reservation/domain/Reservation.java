@@ -76,4 +76,10 @@ public class Reservation {
         this.state = state;
     }
 
+    public void updateCacheSet(User user, Hotel hotel , Room room){
+        this.user= user;
+        this.hotel =hotel;
+        this.room =room;
+
+    }
 }

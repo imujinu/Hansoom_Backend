@@ -92,4 +92,28 @@ public class RedisConfig {
         redisTemplate.setConnectionFactory(redisConnectionFactory);
         return redisTemplate;
     }
+
+    @Bean
+    @Qualifier("bookingCacheInventoryFactory")
+    public RedisConnectionFactory bookingCacheInventory(){
+        RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
+        configuration.setHostName(host);
+        configuration.setPort(port);
+        configuration.setDatabase(9);
+        return new LettuceConnectionFactory(configuration);
+    }
+
+    @Bean
+    @Qualifier("bookingCacheInventory")
+    public RedisTemplate<String, Object> bookingCacheTemplate(@Qualifier("bookingCacheInventoryFactory") RedisConnectionFactory redisConnectionFactory){
+        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(redisConnectionFactory);
+
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+
+        redisTemplate.afterPropertiesSet();
+        return redisTemplate;
+    }
+
 }

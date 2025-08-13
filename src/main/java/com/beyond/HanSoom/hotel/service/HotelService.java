@@ -410,16 +410,18 @@ public Page<HotelListResponseDto> findAll(Pageable pageable, HotelListSearchDto 
                 OptionalInt minAvgPrice = hotel.getRooms().stream()
                         .filter(room -> room.getState() != HotelState.REMOVE)
                         .filter(room -> room.getMaximumPeople() >= searchDto.getPeople())
-//                        .filter(room -> {
-//                            ReservationDto dto = ReservationDto.builder()
-//                                    .hotelId(hotel.getId())
-//                                    .roomId(room.getId())
-//                                    .startDate(searchDto.getCheckIn())
-//                                    .endDate(searchDto.getCheckOut())
-//                                    .maxStock(room.getRoomCount())
-//                                    .build();
-//                            return reservationInventoryService.getInventory(dto) > 0;
-//                        })
+
+                        .filter(room -> {
+                            ReservationDto dto = ReservationDto.builder()
+                                    .hotelId(hotel.getId())
+                                    .roomId(room.getId())
+                                    .checkIn(searchDto.getCheckIn())
+                                    .checkOut(searchDto.getCheckOut())
+                                    .maxStock(room.getRoomCount())
+                                    .build();
+                            return reservationInventoryService.getInventory(dto) > 0;
+                        })
+
                         .mapToInt(room -> calculateAveragePrice(room, searchDto.getCheckIn(), searchDto.getCheckOut()))
                         .min();
 
@@ -448,17 +450,19 @@ public Page<HotelListResponseDto> findAll(Pageable pageable, HotelListSearchDto 
             List<Room> availableRooms = roomRepository.findByHotelId(id).stream()
                     .filter(room -> room.getState() != HotelState.REMOVE)
                     .filter(room -> room.getMaximumPeople() >= dto.getPeople())
-//                    .filter(room -> {
-//                        ReservationDto reservationDto = ReservationDto.builder()
-//                                .hotelId(id)
-//                                .roomId(room.getId())
-//                                .startDate(dto.getCheckIn())
-//                                .endDate(dto.getCheckOut())
-//                                .maxStock(room.getRoomCount())
-//                                .build();
-//                        int remaining = reservationInventoryService.getInventory(reservationDto);
-//                        return remaining > 0;
-//                    })
+
+                    .filter(room -> {
+                        ReservationDto reservationDto = ReservationDto.builder()
+                                .hotelId(id)
+                                .roomId(room.getId())
+                                .checkIn(dto.getCheckIn())
+                                .checkOut(dto.getCheckOut())
+                                .maxStock(room.getRoomCount())
+                                .build();
+                        int remaining = reservationInventoryService.getInventory(reservationDto);
+                        return remaining > 0;
+                    })
+
                     .toList();
 
             if (!availableRooms.isEmpty()) {
