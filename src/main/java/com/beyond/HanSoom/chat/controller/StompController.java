@@ -21,4 +21,7 @@ public class StompController {
         messageTemplate.convertAndSend("/topic/"+roomId, chatMessageDto);
         chatService.saveMessage(roomId, chatMessageDto);
     }
+
+
+
 }
