@@ -7,8 +7,9 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+@RestController
 @RequiredArgsConstructor
 public class StompController {
     private final ChatService chatService;
@@ -21,6 +22,8 @@ public class StompController {
         messageTemplate.convertAndSend("/topic/"+roomId, chatMessageDto);
         chatService.saveMessage(roomId, chatMessageDto);
     }
+
+
 
 
 
