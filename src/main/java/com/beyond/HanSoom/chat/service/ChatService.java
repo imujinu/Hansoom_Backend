@@ -35,36 +35,33 @@ public class ChatService {
      private final ChatRoomRepository chatRoomRepository;
      private final ChatParticipantRepository chatParticipantRepository;
      private final UserRepository userRepository;
-     private final StringRedisTemplate stringRedisTemplate;
 
-    public ChatService(ChatMessageRepository chatMessageRepository, ChatReadStatusRepository chatReadStatusRepository, ChatRoomRepository chatRoomRepository, ChatParticipantRepository chatParticipantRepository, UserRepository userRepository, @Qualifier("redisStream") StringRedisTemplate stringRedisTemplate) {
+    public ChatService(ChatMessageRepository chatMessageRepository, ChatReadStatusRepository chatReadStatusRepository, ChatRoomRepository chatRoomRepository, ChatParticipantRepository chatParticipantRepository, UserRepository userRepository) {
         this.chatMessageRepository = chatMessageRepository;
         this.chatReadStatusRepository = chatReadStatusRepository;
         this.chatRoomRepository = chatRoomRepository;
         this.chatParticipantRepository = chatParticipantRepository;
         this.userRepository = userRepository;
-        this.stringRedisTemplate = stringRedisTemplate;
     }
 
-    public void publishMessage(ChatMessageDto chatMessageDto) {
-          String streamKey = "chat:room:" + chatMessageDto.getRoomId();
-         ObjectMapper objectMapper = new ObjectMapper();
-        String json = null;
-        try {
-            json = objectMapper.writeValueAsString(chatMessageDto);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-        ObjectRecord<String, String> record = StreamRecords.newRecord()
-                  .ofObject(json)
-                  .withStreamKey(streamKey);
-          try{
-          RecordId recordId = stringRedisTemplate.opsForStream().add(record);
-          } catch (Exception e) {
-               throw new RuntimeException("메시지 발행에 실패했습니다.");
-          }
-
-     }
+//    public void publishMessage(ChatMessageDto chatMessageDto) {
+//          String streamKey = "chat:room:" + chatMessageDto.getRoomId();
+//         ObjectMapper objectMapper = new ObjectMapper();
+//        String json = null;
+//        try {
+//            json = objectMapper.writeValueAsString(chatMessageDto);
+//        } catch (JsonProcessingException e) {
+//            throw new RuntimeException(e);
+//        }
+//        ObjectRecord<String, String> record = StreamRecords.newRecord()
+//                  .ofObject(json)
+//                  .withStreamKey(streamKey);
+//          try{
+//          } catch (Exception e) {
+//               throw new RuntimeException("메시지 발행에 실패했습니다.");
+//          }
+//
+//     }
 
 
 
@@ -73,7 +70,7 @@ public class ChatService {
           ChatRoom chatRoom = chatRoomRepository.findById(roomId).orElseThrow(()->new EntityNotFoundException("채팅방이 존재하지 않습니다."));
 
           // 보낸 사람 조회
-          User user = userRepository.findByName(dto.getName()).orElseThrow(()->new EntityNotFoundException("존재하지 않는 유저 입니다."));
+          User user = userRepository.findById(dto.getSenderId()).orElseThrow(()->new EntityNotFoundException("존재하지 않는 유저 입니다."));
 
           // 메시지 저장
           ChatMessage chatMessage = ChatMessage.builder()

@@ -1,5 +1,6 @@
 package com.beyond.HanSoom.chat.domain;
 
+import com.beyond.HanSoom.chat.dto.ChatMessageDto;
 import com.beyond.HanSoom.common.domain.BaseTimeEntity;
 import com.beyond.HanSoom.user.domain.User;
 import jakarta.persistence.*;
@@ -35,4 +36,12 @@ public class ChatMessage extends BaseTimeEntity {
     @OneToMany(mappedBy = "chatMessage", cascade = CascadeType.REMOVE, orphanRemoval = true)
     @Builder.Default
     private List<ChatReadStatus> readStatusList = new ArrayList<>();
+
+    public ChatMessage toEntity(ChatMessageDto dto, ChatRoom chatRoom, User user){
+        return ChatMessage.builder()
+                .chatRoom(chatRoom)
+                .user(user)
+                .content(dto.getMessage())
+                .build();
+    }
 }
