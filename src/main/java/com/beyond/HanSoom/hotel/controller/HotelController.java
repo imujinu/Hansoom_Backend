@@ -134,6 +134,20 @@ public class HotelController {
         );
     }
 
+    @GetMapping("/admin/waitlist")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> findWait(Pageable pageable) {
+        Page<HotelListAdminResponseDto> dto = hotelService.findWait(pageable);
+        return new ResponseEntity<>(
+                CommonSuccessDto.builder()
+                        .result(dto)
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("관리자 호텔 리스트 조회")
+                        .build(),
+                HttpStatus.OK
+        );
+    }
+
     @GetMapping("/list")
     public ResponseEntity<?> findAll(Pageable pageable, HotelListSearchDto searchDto) {
         Page<HotelListResponseDto> dto = hotelService.findAll(pageable, searchDto);
