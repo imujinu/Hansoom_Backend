@@ -382,55 +382,60 @@ public class HotelService {
         Page<Hotel> hotels = hotelRepository.findAll(pageable);
         return hotels.map(HotelListAdminResponseDto::fromEntity);
     }
+//    Admin 조회(WAIT상태만)
+    public Page<HotelListAdminResponseDto> findWait(Pageable pageable) {
+        Page<Hotel> hotels = hotelRepository.findByState(pageable, HotelState.WAIT);
+        return hotels.map(HotelListAdminResponseDto::fromEntity);
+    }
 
 //    고객 조회
-@Transactional(readOnly = true)
-public Page<HotelListResponseDto> findAll(Pageable pageable, HotelListSearchDto searchDto) {
-    Specification<Hotel> spec = HotelSpecification.withSearchConditions(searchDto);
-    Page<Hotel> hotelPage = hotelRepository.findAll(spec, pageable);
+    @Transactional(readOnly = true)
+    public Page<HotelListResponseDto> findAll(Pageable pageable, HotelListSearchDto searchDto) {
+        Specification<Hotel> spec = HotelSpecification.withSearchConditions(searchDto);
+        Page<Hotel> hotelPage = hotelRepository.findAll(spec, pageable);
 
-    List<HotelListResponseDto> result = hotelPage.getContent().stream()
-            .filter(hotel -> hotel.getRooms().stream().anyMatch(room -> {
-                if (room.getState() == HotelState.REMOVE) return false;
-                if (room.getMaximumPeople() < searchDto.getPeople()) return false;
+        List<HotelListResponseDto> result = hotelPage.getContent().stream()
+                .filter(hotel -> hotel.getRooms().stream().anyMatch(room -> {
+                    if (room.getState() == HotelState.REMOVE) return false;
+                    if (room.getMaximumPeople() < searchDto.getPeople()) return false;
 
-                ReservationDto dto = ReservationDto.builder()
-                        .hotelId(hotel.getId())
-                        .roomId(room.getId())
-                        .checkIn(searchDto.getCheckIn())
-                        .checkOut(searchDto.getCheckOut())
-                        .maxStock(room.getRoomCount())
-                        .build();
+                    ReservationDto dto = ReservationDto.builder()
+                            .hotelId(hotel.getId())
+                            .roomId(room.getId())
+                            .checkIn(searchDto.getCheckIn())
+                            .checkOut(searchDto.getCheckOut())
+                            .maxStock(room.getRoomCount())
+                            .build();
 
-                int available = reservationInventoryService.getInventory(dto);
-                return available > 0;
-            }))
-            .map(hotel -> {
-                // 조건에 맞는 객실들 중 평균가가 가장 저렴한 객실 찾기
-                OptionalInt minAvgPrice = hotel.getRooms().stream()
-                        .filter(room -> room.getState() != HotelState.REMOVE)
-                        .filter(room -> room.getMaximumPeople() >= searchDto.getPeople())
+                    int available = reservationInventoryService.getInventory(dto);
+                    return available > 0;
+                }))
+                .map(hotel -> {
+                    // 조건에 맞는 객실들 중 평균가가 가장 저렴한 객실 찾기
+                    OptionalInt minAvgPrice = hotel.getRooms().stream()
+                            .filter(room -> room.getState() != HotelState.REMOVE)
+                            .filter(room -> room.getMaximumPeople() >= searchDto.getPeople())
 
-                        .filter(room -> {
-                            ReservationDto dto = ReservationDto.builder()
-                                    .hotelId(hotel.getId())
-                                    .roomId(room.getId())
-                                    .checkIn(searchDto.getCheckIn())
-                                    .checkOut(searchDto.getCheckOut())
-                                    .maxStock(room.getRoomCount())
-                                    .build();
-                            return reservationInventoryService.getInventory(dto) > 0;
-                        })
+                            .filter(room -> {
+                                ReservationDto dto = ReservationDto.builder()
+                                        .hotelId(hotel.getId())
+                                        .roomId(room.getId())
+                                        .checkIn(searchDto.getCheckIn())
+                                        .checkOut(searchDto.getCheckOut())
+                                        .maxStock(room.getRoomCount())
+                                        .build();
+                                return reservationInventoryService.getInventory(dto) > 0;
+                            })
 
-                        .mapToInt(room -> calculateAveragePrice(room, searchDto.getCheckIn(), searchDto.getCheckOut()))
-                        .min();
+                            .mapToInt(room -> calculateAveragePrice(room, searchDto.getCheckIn(), searchDto.getCheckOut()))
+                            .min();
 
-                return HotelListResponseDto.fromEntity(hotel, minAvgPrice.orElse(0));
-            })
-            .toList();
+                    return HotelListResponseDto.fromEntity(hotel, minAvgPrice.orElse(0));
+                })
+                .toList();
 
-    return new PageImpl<>(result, pageable, result.size());
-}
+        return new PageImpl<>(result, pageable, result.size());
+    }
 
     @Transactional(readOnly = true)
     public Page<HotelLocationListResponseDto> findNearbyHotels(LocationHotelSearchDto dto, Pageable pageable) {
