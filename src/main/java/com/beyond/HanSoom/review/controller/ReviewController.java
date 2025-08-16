@@ -1,13 +1,11 @@
 package com.beyond.HanSoom.review.controller;
 
 import com.beyond.HanSoom.common.dto.CommonSuccessDto;
-import com.beyond.HanSoom.review.dto.ReviewCreateReqDto;
-import com.beyond.HanSoom.review.dto.ReviewDetailResDto;
-import com.beyond.HanSoom.review.dto.ReviewListResDto;
-import com.beyond.HanSoom.review.dto.ReviewUpdateReqDto;
+import com.beyond.HanSoom.review.dto.*;
 import com.beyond.HanSoom.review.service.ReviewService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.json.HTTP;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -63,5 +61,13 @@ public class ReviewController {
     public ResponseEntity<?> deleteReview(@PathVariable Long inputId) {
         reviewService.deleteReview(inputId);
         return new ResponseEntity<>(new CommonSuccessDto(inputId, HttpStatus.OK.value(), "리뷰삭제 성공"), HttpStatus.OK);
+    }
+
+    // HotelReviewSummary
+    // 리뷰 평균 및 개수 반환
+    @GetMapping("/ratings/{inputId}")
+    public ResponseEntity<?> getReviewRatings(@PathVariable Long inputId) {
+        ReviewRatingsResDto resDto = reviewService.getReviewRatings(inputId);
+        return new ResponseEntity<>(new CommonSuccessDto(resDto, HttpStatus.OK.value(), "리뷰 합산데이터 조회 성공"), HttpStatus.OK);
     }
 }
