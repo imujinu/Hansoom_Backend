@@ -50,6 +50,31 @@ public class NotificationService {
         return notification.getId();
     }
 
+    // 알림 등록
+    // BOOKING_CONFIRMED
+    public Long createNotiBookingConfirmed(User user, Reservation reservation) {
+        // title
+        String hotelName = reservation.getHotel().getHotelName();
+        String title = "[" + hotelName + "] 예약이 완료되었습니다.";
+        // body
+        String userName = user.getName();
+        String body = "예약자: " + userName +", 체크인: " + reservation.getCheckInDate() + ", 체크아웃: " + reservation.getCheckOutDate();
+
+        Notification notification = Notification.builder()
+                .title(title)
+                .body(body)
+                .type(NotificationType.NEW_BOOKING_FOR_HOST)
+                .user(user)
+                .reservation(reservation)
+                .build();
+
+        notificationRepository.save(notification);
+
+        log.info("[HANSOOM][INFO] - NotificationService/createNotiBookingConfirmed - 알림 생성 성공, id={}", notification.getId());
+
+        return notification.getId();
+    }
+
     // 알림 목록 (UNREAD)
     public List<NotificationListResDto> getNotificationList() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
