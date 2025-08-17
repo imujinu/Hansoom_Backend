@@ -2,6 +2,7 @@ package com.beyond.HanSoom.review.domain;
 
 import com.beyond.HanSoom.common.domain.BaseTimeEntity;
 import com.beyond.HanSoom.hotel.domain.Hotel;
+import com.beyond.HanSoom.reply.domain.Reply;
 import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.review.dto.ReviewImageResDto;
 import com.beyond.HanSoom.reviewImage.domain.ReviewImage;
@@ -47,6 +48,8 @@ public class Review extends BaseTimeEntity {
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ReviewImage> reviewImageList = new ArrayList<>();
+    @OneToOne(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Reply reply;
 
     public void updateReview(BigDecimal rating, String contents) {
         this.rating = rating;

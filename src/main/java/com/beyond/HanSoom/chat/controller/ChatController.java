@@ -1,18 +1,48 @@
 package com.beyond.HanSoom.chat.controller;
 
+import com.beyond.HanSoom.chat.dto.ChatMessageDto;
+import com.beyond.HanSoom.chat.service.ChatPublishService;
 import com.beyond.HanSoom.chat.service.ChatService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/chat")
 @RequiredArgsConstructor
 public class ChatController {
     private final ChatService chatService;
-    private final SimpMessageSendingOperations simpMessageSendingOperations;
+    private final ChatPublishService producer;
+    private final SimpMessageSendingOperations messageTemplate;
+
+    @PostMapping("/send")
+    public void sendMessage(@RequestBody ChatMessageDto message) {
+        // 서버 수신 시각 기준으로 timestamp 보정
+        System.out.println(message);
+       producer.publish(message);
+    }
+    @PostMapping("/room/group/create")
+    public ResponseEntity<?> createGroupRoom (@RequestParam String roomName){
+        chatService.createGroupRoom(roomName);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/room/{roomId}/read")
+    public ResponseEntity<?> messageRead(@PathVariable Long roomId){
+        chatService.messageRead(roomId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/room/private/create")
+    public ResponseEntity<?> getOrCreatePrivateRoom(@RequestParam Long otherMemberId){
+        Long roomId = chatService.getOrCreatePrivateRoom(otherMemberId);
+        return new ResponseEntity<>(roomId, HttpStatus.OK);
+    }
+
+
+
 
 
 }

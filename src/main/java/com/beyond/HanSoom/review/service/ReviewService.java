@@ -5,12 +5,11 @@ import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.hotel.repository.HotelRepository;
 import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.reservation.repository.ReservationRepository;
+import com.beyond.HanSoom.review.domain.HotelReviewSummary;
 import com.beyond.HanSoom.review.domain.Review;
 import com.beyond.HanSoom.review.domain.ReviewState;
-import com.beyond.HanSoom.review.dto.ReviewCreateReqDto;
-import com.beyond.HanSoom.review.dto.ReviewDetailResDto;
-import com.beyond.HanSoom.review.dto.ReviewListResDto;
-import com.beyond.HanSoom.review.dto.ReviewUpdateReqDto;
+import com.beyond.HanSoom.review.dto.*;
+import com.beyond.HanSoom.review.repository.HotelReviewSummaryRepository;
 import com.beyond.HanSoom.review.repository.ReviewRepository;
 import com.beyond.HanSoom.reviewImage.domain.ReviewImage;
 import com.beyond.HanSoom.user.domain.User;
@@ -38,6 +37,7 @@ public class ReviewService {
     private final HotelRepository hotelRepository;
     private final ReservationRepository reservationRepository;
     private final S3Uploader s3Uploader;
+    private final HotelReviewSummaryRepository hotelReviewSummaryRepository;
 
     // 리뷰작성
     public Long createReview(ReviewCreateReqDto dto) {
@@ -59,6 +59,9 @@ public class ReviewService {
             }
         }
         reviewRepository.save(review);
+        // 리뷰 rating 합산
+        HotelReviewSummary hotelReviewSummary = hotelReviewSummaryRepository.findByHotel(hotel);
+        hotelReviewSummary.addReviewRating(dto.getRating());
 
         log.info("[HANSOOM][INFO] - ReviewService/createReview - 리뷰작성 성공, id={}", review.getId());
 
@@ -70,7 +73,7 @@ public class ReviewService {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("없는 사용자입니다."));
         Page<Review> reviewPage = reviewRepository.findByUserAndState(pageable, user, ReviewState.NORMAL);
-        Page<ReviewListResDto> reviewListResDtoPage = reviewPage.map(a -> ReviewListResDto.fromEntity(a));
+        Page<ReviewListResDto> reviewListResDtoPage = reviewPage.map(a -> ReviewListResDto.fromEntity(a, a.getReservation()));
         
         log.info("[HANSOOM][INFO] - ReviewService/getUserReviews - 사용자 리뷰목록 출력 성공, email={}", email);
         
@@ -81,7 +84,8 @@ public class ReviewService {
     public Page<ReviewListResDto> getHotelReviews(Pageable pageable, Long hotelId) {
         Hotel hotel = hotelRepository.findById(hotelId).orElseThrow(() -> new EntityNotFoundException("없는 호텔입니다."));
         Page<Review> reviewPage = reviewRepository.findByHotelAndState(pageable, hotel, ReviewState.NORMAL);
-        Page<ReviewListResDto> reviewListResDtoPage = reviewPage.map(a -> ReviewListResDto.fromEntity(a));
+
+        Page<ReviewListResDto> reviewListResDtoPage = reviewPage.map(a -> ReviewListResDto.fromEntity(a, a.getReservation()));
 
         log.info("[HANSOOM][INFO] - ReviewService/getHotelReviews - 호텔 리뷰목록 출력 성공, hotelId={}", hotelId);
 
@@ -139,4 +143,15 @@ public class ReviewService {
         log.info("[HANSOOM][INFO] - ReviewService/deleteReview - 리뷰삭제 성공, id={}", id);
     }
 
+    // HotelReviewSummary
+    // 리뷰 평균 및 개수 반환
+    public ReviewRatingsResDto getReviewRatings(Long hotelId) {
+        Hotel hotel = hotelRepository.findById(hotelId).orElseThrow(() -> new EntityNotFoundException("없는 호텔입니다."));
+        HotelReviewSummary hotelReviewSummary = hotelReviewSummaryRepository.findByHotel(hotel);
+        ReviewRatingsResDto resDto = ReviewRatingsResDto.fromEntity(hotelReviewSummary);
+
+        log.info("[HANSOOM][INFO] - ReviewService/getReviewRatings - 리뷰 합산데이터 조회 성공, hotelId={}", hotelId);
+        
+        return resDto;
+    }
 }

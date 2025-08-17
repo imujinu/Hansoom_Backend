@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class ReservationResponse {
+    private String orderId;
     private String status;
     private String message;
     private Long position;
@@ -30,8 +31,9 @@ public class ReservationResponse {
         return response;
     }
 
-    public static ReservationResponse success(String reservationId) {
+    public static ReservationResponse success(String reservationId, String orderId) {
         ReservationResponse response = new ReservationResponse();
+        response.orderId = orderId;
         response.status = "SUCCESS";
         response.reservationId = reservationId;
         response.message = "예약이 완료되었습니다.";

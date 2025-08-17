@@ -1,6 +1,7 @@
 package com.beyond.HanSoom.hotel.domain;
 
 import com.beyond.HanSoom.common.domain.BaseTimeEntity;
+import com.beyond.HanSoom.review.domain.HotelReviewSummary;
 import com.beyond.HanSoom.room.domain.Room;
 import com.beyond.HanSoom.user.domain.User;
 import jakarta.persistence.*;
@@ -43,6 +44,19 @@ public class Hotel extends BaseTimeEntity {
     @Builder.Default
     @OneToMany(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Room> rooms = new ArrayList<>();
+
+    @OneToOne(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private HotelReviewSummary hotelReviewSummary;
+
+    @PrePersist
+    private void ensureSummary() {
+        if (this.hotelReviewSummary == null) {
+            HotelReviewSummary summary = new HotelReviewSummary();
+            summary.setHotel(this);
+            this.hotelReviewSummary = summary;
+        }
+    }
+
 
     public void updateState(HotelState state) {
         this.state = state;
