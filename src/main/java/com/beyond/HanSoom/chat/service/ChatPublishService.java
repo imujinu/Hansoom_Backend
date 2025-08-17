@@ -5,12 +5,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.connection.stream.ObjectRecord;
-import org.springframework.data.redis.connection.stream.RecordId;
-import org.springframework.data.redis.connection.stream.StreamRecords;
-import org.springframework.data.redis.connection.stream.StringRecord;
+import org.springframework.data.redis.connection.stream.*;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class ChatPublishService {
@@ -24,17 +24,15 @@ public class ChatPublishService {
         this.redisTemplate = redisTemplate;
     }
 
-    public RecordId publish(ChatMessageDto dto){
-        ObjectMapper objectMapper = new ObjectMapper();
-        String json = null;
-        try {
-            json = objectMapper.writeValueAsString(dto);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-        ObjectRecord<String, String> record = StreamRecords
+    public RecordId publish(ChatMessageDto dto) {
+        Map<String, String> messageMap = new HashMap<>();
+        messageMap.put("roomId", String.valueOf(dto.getRoomId()));        // 채팅방 구분
+        messageMap.put("senderId", String.valueOf(dto.getSenderId()));     // 발신자 ID
+        messageMap.put("message", dto.getMessage()); // 실제 메시지 내용
+        messageMap.put("timestamp", String.valueOf(dto.getTimestamp())); // 선택적: 시간
+        MapRecord<String, String, String> record = StreamRecords
                 .newRecord()
-                .ofObject(json)
+                .ofMap(messageMap)
                 .withStreamKey(streamKey);
 
         return redisTemplate.opsForStream().add(record);

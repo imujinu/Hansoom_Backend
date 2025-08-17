@@ -32,43 +32,61 @@ public class QueueReservationService {
     // 최대재고
     // 상태
     private static final String ADD_TO_QUEUE_SCRIPT =
-
-
             // 1. 재고 체크 (tonumber(ARGV[4]) or 0)
             "local maxStock = tonumber(ARGV[4]) or 50 " +
-            "for i = 1, #KEYS do " +
+                    "for i = 1, #KEYS do " +
                     "  local count = redis.call('ZCARD', KEYS[i]) " +
                     "  if tonumber(count or 0) >= maxStock then " +
                     "    return {-2, i} " +
                     "  end " +
                     "end " +
 
-                    "  local now = tonumber(ARGV[2]) or 0 " +
+                    "local now = tonumber(ARGV[2]) or 0 " +
                     "local maxWaitMillis = (tonumber(ARGV[3]) or 0) * 1000 " +
                     "local expireAt = now + maxWaitMillis " +
 
+                    // 이미 존재하는 PENDING/PROCESSING 체크
                     "for i = 1, #KEYS do " +
                     "  local exist = redis.call('ZSCORE', KEYS[i], ARGV[1] .. ':' .. ARGV[5]) " +
                     "  if exist ~= false and exist ~= nil then " +
                     "    local existNum = tonumber(exist) " +
                     "    if existNum ~= nil and existNum > now then " +
-                    " local pos = redis.call('ZRANK', KEYS[i], ARGV[1] .. ':' .. ARGV[5]) " +
-                    " if pos == 0 then " +
-                    "   return {1, redis.call('ZCARD', KEYS[i]) } " +
-                    " end " +
+                    "      local pos = redis.call('ZRANK', KEYS[i], ARGV[1] .. ':' .. ARGV[5]) " +
+                    "      if pos == 0 then " +
+                    "        return {1, redis.call('ZCARD', KEYS[i]) } " +
+                    "      end " +
                     "      return {-1, exist} " +
-                    "       end " +
-                    "   end " +
+                    "    end " +
+                    "  end " +
                     "end " +
 
+                    // 새 멤버 추가
                     "for i = 1, #KEYS do " +
                     "  redis.call('ZADD', KEYS[i], expireAt, ARGV[1] .. ':' .. ARGV[5]) " +
                     "end " +
 
-                    "local position = redis.call('ZRANK', KEYS[1], ARGV[1] .. ':' .. ARGV[5]) " +
-                    "if not position then position = -1 end " +
-                    "local totalCount = redis.call('ZCARD', KEYS[1]) " +
-                    "return {position + 1, totalCount}";
+                    // RESERVED 제외한 순위 계산
+                    "local members = redis.call('ZRANGE', KEYS[1], 0, -1) " +
+                    "local position = -1 " +
+                    "local idx = 0 " +
+                    "for i, member in ipairs(members) do " +
+                    "  if not string.match(member, ':RESERVED$') then " +
+                    "    idx = idx + 1 " +
+                    "    if member == ARGV[1] .. ':' .. ARGV[5] then " +
+                    "      position = idx " +
+                    "      break " +
+                    "    end " +
+                    "  end " +
+                    "end " +
+
+                    "local totalCount = 0 " +
+                    "for i, member in ipairs(members) do " +
+                    "  if not string.match(member, ':RESERVED$') then " +
+                    "    totalCount = totalCount + 1 " +
+                    "  end " +
+                    "end " +
+
+                    "return {position, totalCount}";
 
 
     /**
@@ -110,7 +128,7 @@ public class QueueReservationService {
         LocalDate start = LocalDate.parse(dto.getCheckIn().toString());
         LocalDate end = LocalDate.parse(dto.getCheckOut().toString());
 
-        generateQueueKey(dto, start, end, keys);
+        generateQueueKey(dto, keys);
 
         try{
             List<Long> list = redisTemplate.execute(
@@ -134,8 +152,8 @@ public class QueueReservationService {
 
     }
 
-    public static void generateQueueKey(QueueReservationReqDto dto, LocalDate start, LocalDate end, List<String> keys) {
-        for (LocalDate date = start; date.isBefore(end); date = date.plusDays(1)) {
+    public static void generateQueueKey(QueueReservationReqDto dto, List<String> keys) {
+        for (LocalDate date = dto.getCheckIn(); date.isBefore(dto.getCheckOut()); date = date.plusDays(1)) {
             keys.add(String.format(
                     "queue:hotel:%s:room:%s:date:%s",
                     dto.getHotelId(),

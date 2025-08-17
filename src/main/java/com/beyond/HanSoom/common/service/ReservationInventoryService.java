@@ -1,16 +1,16 @@
 package com.beyond.HanSoom.common.service;
 
 import com.beyond.HanSoom.common.dto.ReservationDto;
+import com.beyond.HanSoom.reservation.domain.Reservation;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.beyond.HanSoom.pay.service.PaymentService.generateQueueKey;
 
 @Component
 public class ReservationInventoryService {
@@ -23,37 +23,34 @@ public class ReservationInventoryService {
 
     public int getInventory(ReservationDto dto) {
 
-        //redis 키값을 호텔 + 객실타입으로 조회
-        String key = buildKey(dto.getHotelId(), dto.getRoomId());
+        List<String> keys = new ArrayList<>();
+        generateQueueKey(dto, keys);
 
-        //입력된 모든 날짜를 체크인~체크아웃+1전까지 List에 추가함
-        List<String> fields = getFields(dto.getCheckIn(), dto.getCheckOut().minusDays(1));
+        int minStock = Integer.MAX_VALUE;
+        int maxStock =  dto.getMaxStock();
 
-        // multiGet안에 Collection을 넣으면 알아서 반복문을 돌려준다.
-        List<Object> values = redisTemplate.opsForHash().multiGet(key, fields.stream().collect(Collectors.toList()));
-
-        boolean hasExceeded = values.stream()
-                .map(obj -> obj == null ? 0L : Integer.parseInt(obj.toString()))  // Object → int 변환
-                .anyMatch(stock -> stock >= dto.getMaxStock());
-
-        if (hasExceeded) {
-            return 0;
+        for(String s : keys){
+        Set<String> members = redisTemplate.opsForZSet().range(s, 0, -1);
+            long reservedCount = members.stream()
+                    .filter(m -> m.endsWith(":RESERVED"))
+                    .count();
+            minStock = Math.min(minStock, maxStock-(int)reservedCount);
         }
 
-        int minStock = dto.getMaxStock();
-        for (int i = 0; i < fields.size(); i++) {
-            String strVal = values.get(i) != null ? values.get(i).toString() : null;
-            if (strVal != null) {
-                int used = Integer.parseInt(strVal);
-                int stock = dto.getMaxStock() - used;
-                minStock = Integer.min(stock, minStock);
-            }
-        }
 
         return minStock;
     }
 
-
+    public static void generateQueueKey(ReservationDto dto,  List<String> keys) {
+        for (LocalDate date = dto.getCheckIn(); date.isBefore(dto.getCheckOut()); date = date.plusDays(1)) {
+            keys.add(String.format(
+                    "queue:hotel:%s:room:%s:date:%s",
+                    dto.getHotelId(),
+                    dto.getRoomId(),
+                    date
+            ));
+        }
+    }
 
     public void increaseInventory(ReservationDto dto) {
 

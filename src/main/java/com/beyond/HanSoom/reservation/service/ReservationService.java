@@ -118,11 +118,12 @@ public class ReservationService {
 
         ReservationDto reservationDto = new ReservationDto().makeDto(hotel, room,user, dto.getCheckIn(), dto.getCheckOut(), room.getRoomCount());
 //        reservationInventoryService.increaseInventory(reservationDto);
+
+        System.out.println("inventory" + reservationInventoryService.getInventory(reservationDto));
         Reservation reservation = dto.toEntity(totalPrice,user,hotel, room);
         ReservationResponse response = makeReservation(reservationDto, reservation);
-
+        System.out.println(response.getReservationId());
         return response;
-
     }
 
 
@@ -246,14 +247,19 @@ public class ReservationService {
                                 request.getRoomId(),
                                 date
                         );
+                        System.out.println("여기서 터짐:1 ");
                         String queueKey = "queue:hotel:" + request.getHotelId() + ":room:" + request.getRoomId() + ":date:" + date;
+                        System.out.println("여기서 터짐:2 ");
 //                        redisTemplate.opsForHash().put(statusKey, String.valueOf(request.getUserId()), "PROCESSING");
+//                        redisTemplate.opsForHash().put(statusKey, String.valueOf(request.getUserId()), "PROCESSING");
+                        System.out.println("여기서 터짐 : 3");
                         queueReservationService.processNextInQueue(queueKey, lockKey, lockValue, 30000);
+                        System.out.println("여기서 터짐 : 4");
                         redisTemplate.expire(statusKey, 1500, TimeUnit.SECONDS);  // TTL 설정
                     }
                         Reservation pendingReservation = reservationRepository.save(reservation);
                     // 2. 바로 성공 리턴 → 프론트에서 결제 화면으로 이동
-                    return ReservationResponse.success("PROCESSING",pendingReservation.getUuid());
+                    return ReservationResponse.success(pendingReservation.getUuid());
 
             } else {
                 // 락 못 얻으면 대기열에서 대기

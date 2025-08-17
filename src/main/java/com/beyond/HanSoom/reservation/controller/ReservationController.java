@@ -30,9 +30,11 @@ public class ReservationController {
     @LimitRequestPerTime(prefix = "1", count = 10, ttlTimeUnit = TimeUnit.SECONDS, ttl = 30)
     @PostMapping("/confirm")
     public ResponseEntity<?> reservation(@RequestBody ReservationReqDto dto){
-        ReservationResponse response = reservationService.confirm(dto);
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        ReservationResponse result = reservationService.confirm(dto);
+        System.out.println("=============");
+        System.out.println(result.getStatus());
+        System.out.println("response :::::::: " + result.getReservationId());
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     //예약 확정
