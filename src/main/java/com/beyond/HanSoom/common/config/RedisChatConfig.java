@@ -37,13 +37,11 @@ public class RedisChatConfig {
     @Qualifier("redisStream")
     public RedisTemplate<String, String> redisStreamTemplate(
             @Qualifier("redisStreamFactory") RedisConnectionFactory connectionFactory) {
-            RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
-            redisTemplate.setConnectionFactory(connectionFactory);
-            redisTemplate.setKeySerializer(new StringRedisSerializer());
-            redisTemplate.setValueSerializer(new StringRedisSerializer());
-
-
-            return redisTemplate;
+        RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(connectionFactory);
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(new StringRedisSerializer());
+        return redisTemplate;
     }
 }
 

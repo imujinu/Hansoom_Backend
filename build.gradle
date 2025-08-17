@@ -66,6 +66,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 	//redis LocalDate 저장 의존성
 	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
 }
 
 tasks.named('test') {
