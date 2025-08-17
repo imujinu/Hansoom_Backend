@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class NotificationListResDto {
+    private Long reservationId;
     private LocalDateTime createdTime;
     private String title;
     private String body;
@@ -20,6 +21,7 @@ public class NotificationListResDto {
     public static NotificationListResDto fromEntity(Notification notification) {
         return NotificationListResDto
                 .builder()
+                .reservationId(notification.getId())
                 .createdTime(notification.getCreatedTime())
                 .title(notification.getTitle())
                 .body(notification.getBody())
