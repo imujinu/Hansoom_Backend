@@ -24,18 +24,29 @@ public class ChatPublishService {
         this.redisTemplate = redisTemplate;
     }
 
-    public RecordId publish(ChatMessageDto dto) {
-        Map<String, String> messageMap = new HashMap<>();
-        messageMap.put("roomId", String.valueOf(dto.getRoomId()));        // 채팅방 구분
-        messageMap.put("senderId", String.valueOf(dto.getSenderId()));     // 발신자 ID
-        messageMap.put("message", dto.getMessage()); // 실제 메시지 내용
-        messageMap.put("timestamp", String.valueOf(dto.getTimestamp())); // 선택적: 시간
-        MapRecord<String, String, String> record = StreamRecords
+    public RecordId publish(Map<String, String> payload) {
+        // payload를 JSON 문자열로 변환
+        String json = null;
+        try {
+            json = new ObjectMapper().writeValueAsString(payload);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+        // ObjectRecord 생성
+        ObjectRecord<String, String> record = StreamRecords
                 .newRecord()
-                .ofMap(messageMap)
+                .ofObject(json)        // JSON 문자열을 value로
                 .withStreamKey(streamKey);
 
-        return redisTemplate.opsForStream().add(record);
+        // Redis Stream에 추가
+        RecordId recordId = redisTemplate.opsForStream().add(record);
+
+        if (recordId == null) {
+            throw new RuntimeException("Redis Stream record 처리 실패");
+        }
+
+        return recordId;
     }
 }
 
