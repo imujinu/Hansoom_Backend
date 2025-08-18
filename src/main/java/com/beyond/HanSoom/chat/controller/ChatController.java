@@ -1,8 +1,10 @@
 package com.beyond.HanSoom.chat.controller;
 
 import com.beyond.HanSoom.chat.dto.ChatMessageDto;
+import com.beyond.HanSoom.chat.dto.ChatMyChatroomResDto;
 import com.beyond.HanSoom.chat.service.ChatPublishService;
 import com.beyond.HanSoom.chat.service.ChatService;
+import com.beyond.HanSoom.common.dto.CommonSuccessDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +12,8 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/chat")
@@ -43,6 +47,12 @@ public class ChatController {
         return new ResponseEntity<>(roomId, HttpStatus.OK);
     }
 
+    //나의 채팅 방 조회
+    @GetMapping("/room/list")
+    public ResponseEntity<?> getMyChatRooms(){
+        List<ChatMyChatroomResDto> dtos = chatService.getMyChatRoom();
+        return new ResponseEntity<>(new CommonSuccessDto(dtos, HttpStatus.OK.value(), "채팅방 조회완료"), HttpStatus.OK);
+    }
 
 
 
