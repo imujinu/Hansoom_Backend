@@ -111,7 +111,6 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
         String stream = message.getStream();
         String recordId = message.getId().getValue();
 
-        System.out.println("메시지가 들어옵니다.");
         System.out.println("isMessage! connected");
         String value = message.getValue(); // 스트림에 저장된 문자열
         System.out.println("Raw message: " + value);
@@ -128,7 +127,7 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
         String roomId = node.get("roomId").asText();
         System.out.println(sendMessage);
         this.redisTemplate.opsForStream().acknowledge(streamKey, consumerGroupName, recordId);
-        messagingTemplate.convertAndSend("/topic" + roomId, sendMessage);
+        messagingTemplate.convertAndSend("/topic/" + roomId, sendMessage);
     }
 
 }
