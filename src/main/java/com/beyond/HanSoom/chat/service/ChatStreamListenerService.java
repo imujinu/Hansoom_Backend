@@ -1,31 +1,25 @@
 package com.beyond.HanSoom.chat.service;
 
-import io.lettuce.core.cluster.api.async.RedisClusterAsyncCommands;
-import io.lettuce.core.codec.StringCodec;
-import io.lettuce.core.output.StatusOutput;
-import io.lettuce.core.protocol.CommandArgs;
-import io.lettuce.core.protocol.CommandKeyword;
-import io.lettuce.core.protocol.CommandType;
-import jakarta.annotation.PostConstruct;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.connection.Message;
-import org.springframework.data.redis.connection.ReactiveSubscription;
 import org.springframework.data.redis.connection.stream.*;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.stream.StreamListener;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 import org.springframework.data.redis.stream.Subscription;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Map;
 
-public class ChatStreamListenerService  implements InitializingBean, StreamListener<String, ObjectRecord<String, Map>> {
+@Service
+public class ChatStreamListenerService  implements InitializingBean, StreamListener<String, ObjectRecord<String, String>> {
     private final RedisTemplate<String,String> redisTemplate;
     @Value("${chat.stream-key}")
     private String streamKey;
@@ -34,7 +28,7 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
     @Value("${chat.consumer-name}")
     private String consumerName;
     private final SimpMessagingTemplate messagingTemplate;
-    private StreamMessageListenerContainer<String, ObjectRecord<String, Map>> listenerContainer;
+    private StreamMessageListenerContainer<String, ObjectRecord<String, String>> listenerContainer;
 
     private Subscription subscription;
 
@@ -47,21 +41,29 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
     public void afterPropertiesSet() throws Exception {
         createStreamConsumerGroup(streamKey, consumerGroupName);
 
-        this.listenerContainer = StreamMessageListenerContainer.create(
+        listenerContainer = StreamMessageListenerContainer.create(
                 redisTemplate.getConnectionFactory(),
                 StreamMessageListenerContainer.StreamMessageListenerContainerOptions.builder()
-                        .targetType(Map.class)
-                        .pollTimeout(Duration.ofSeconds(2))
+                        .targetType(String.class)
+                        .pollTimeout(Duration.ofSeconds(1))
                         .build()
         );
+        System.out.println("=========listener 객체 확인 ========");
+        System.out.println("Listener Container isRunning: " + listenerContainer.isRunning());
 
-        this.subscription = this.listenerContainer.receive(
-                Consumer.from(this.consumerGroupName, consumerName),
+
+        subscription = listenerContainer.receive(
+                Consumer.from(consumerGroupName, consumerName),
                 StreamOffset.create(streamKey, ReadOffset.lastConsumed()),
                 this
         );
 
-        this.listenerContainer.start();
+        System.out.println("=========subscription 객체 확인 ========");
+
+        listenerContainer.start();
+        System.out.println("Subscription active:  "+subscription.isActive());
+        System.out.println("컨테이너 시작됨");
+
     }
 
 
@@ -69,7 +71,11 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
         try {
             // 스트림 키가 없으면 먼저 메시지를 하나 추가해서 스트림 생성
             if (!redisTemplate.hasKey(streamKey)) {
-                redisTemplate.opsForValue().set(streamKey, "init"); // 임시 값 추가
+                redisTemplate.opsForStream().add(
+                        StreamRecords.newRecord()
+                                .ofMap(Map.of("init", "0"))
+                                .withStreamKey(streamKey)
+                );
             }
 
             // Consumer Group 존재 여부 확인 후 없으면 생성
@@ -99,12 +105,31 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
         return false;
     }
 
+
     @Override
-    public void onMessage(ObjectRecord<String, Map> message) {
-        Map<String, String> body = message.getValue();
-        String roomId = body.get("roomId");
-        String sendMessage = body.get("message");
-        messagingTemplate.convertAndSend("/topic/chat/" + roomId, sendMessage);
+    public void onMessage(ObjectRecord<String, String> message) {
+        String stream = message.getStream();
+        String recordId = message.getId().getValue();
+
+        System.out.println("메시지가 들어옵니다.");
+        System.out.println("isMessage! connected");
+        String value = message.getValue(); // 스트림에 저장된 문자열
+        System.out.println("Raw message: " + value);
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode node = null;
+        try {
+            node = mapper.readTree(value);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+        String sendMessage = node.get("message").asText();
+        String roomId = node.get("roomId").asText();
+        System.out.println(sendMessage);
+        this.redisTemplate.opsForStream().acknowledge(streamKey, consumerGroupName, recordId);
+        messagingTemplate.convertAndSend("/topic" + roomId, sendMessage);
     }
+
 }
 

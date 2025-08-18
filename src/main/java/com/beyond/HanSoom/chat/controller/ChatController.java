@@ -6,6 +6,8 @@ import com.beyond.HanSoom.chat.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,12 +19,12 @@ public class ChatController {
     private final ChatPublishService producer;
     private final SimpMessageSendingOperations messageTemplate;
 
-    @PostMapping("/send")
-    public void sendMessage(@RequestBody ChatMessageDto message) {
-        // 서버 수신 시각 기준으로 timestamp 보정
-        System.out.println(message);
-       producer.publish(message);
-    }
+//    @MessageMapping("/{roomId}")
+//    public void sendMessage(ChatMessageDto message) {
+//        // 서버 수신 시각 기준으로 timestamp 보정
+//        System.out.println(message);
+//       producer.publish(message);
+//    }
     @PostMapping("/room/group/create")
     public ResponseEntity<?> createGroupRoom (@RequestParam String roomName){
         chatService.createGroupRoom(roomName);
