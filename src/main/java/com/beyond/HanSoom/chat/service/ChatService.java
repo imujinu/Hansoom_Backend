@@ -188,7 +188,7 @@ public class ChatService {
         List<ChatMyChatroomResDto> dtos = chatParticipants.stream().map(cp->{
             ChatRoom chatRoom = cp.getChatRoom();
             Hotel hotel = chatRoom.getHotel();
-            Long unReadCount = chatReadStatusRepository.findByChatRoomAndUserAndIsFalse(user,chatRoom);
+            Long unReadCount = chatReadStatusRepository.findByChatRoomAndUserAndIsReadFalse(user,chatRoom);
             return ChatMyChatroomResDto.builder()
                     .roomId(chatRoom.getId())
                     .hotelName(hotel.getHotelName())
