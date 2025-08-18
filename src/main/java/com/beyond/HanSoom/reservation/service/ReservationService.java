@@ -192,7 +192,7 @@ public class ReservationService {
         return reservation.getUuid();
     }
 
-    public String complete(ReservationCompleteReqDto dto) {
+    public Long complete(ReservationCompleteReqDto dto) {
         Reservation reservation = reservationRepository.findByUuid(dto.getReservationId()).orElseThrow(()->new EntityNotFoundException("존재하지 않는 예약 내역 입니다."));
         Payment payment = paymentRepository.findByReservationId(reservation.getId());
 //        User user = getUser(); //todo : 추후 수정
@@ -205,7 +205,7 @@ public class ReservationService {
             queueReservationService.updateStatus(keys.get(i), String.valueOf(user.getId()), "SUCCEED", "RESERVED");
             }
             reservation.changeState(State.RESERVED);
-            return reservation.getUuid();
+            return reservation.getId();
         }else{
             for(int i=0; i<keys.size(); i++){
                 queueReservationService.updateStatus(keys.get(i), String.valueOf(user.getId()), "FAILED", "VALIDATION_FAILED");

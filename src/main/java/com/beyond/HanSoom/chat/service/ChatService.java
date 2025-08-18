@@ -5,10 +5,12 @@ import com.beyond.HanSoom.chat.domain.ChatReadStatus;
 import com.beyond.HanSoom.chat.domain.ChatRoom;
 import com.beyond.HanSoom.chat.domain.ChatParticipant;
 import com.beyond.HanSoom.chat.dto.ChatMessageDto;
+import com.beyond.HanSoom.chat.dto.ChatMyChatroomResDto;
 import com.beyond.HanSoom.chat.repository.ChatMessageRepository;
 import com.beyond.HanSoom.chat.repository.ChatParticipantRepository;
 import com.beyond.HanSoom.chat.repository.ChatReadStatusRepository;
 import com.beyond.HanSoom.chat.repository.ChatRoomRepository;
+import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.user.domain.User;
 import com.beyond.HanSoom.user.repository.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -24,8 +26,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -176,7 +180,30 @@ public class ChatService {
           return newRoom.getId();
      }
 
-     private User getUser() {
-          return userRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName()).orElseThrow(() -> new EntityNotFoundException("존재하지 않는 유저입니다."));
-     }
+
+    public List<ChatMyChatroomResDto> getMyChatRoom() {
+        //1. 유저 조회 -> 2. chatParticipant 조회 -> 3. 채팅방 조회 -> 4. dto 조립해서 리턴
+        User user = getUser();
+        List<ChatParticipant> chatParticipants = chatParticipantRepository.findAllByUser(user);
+        List<ChatMyChatroomResDto> dtos = chatParticipants.stream().map(cp->{
+            ChatRoom chatRoom = cp.getChatRoom();
+            Hotel hotel = chatRoom.getHotel();
+            Long unReadCount = chatReadStatusRepository.findByChatRoomAndUserAndIsFalse(user,chatRoom);
+            return ChatMyChatroomResDto.builder()
+                    .roomId(chatRoom.getId())
+                    .hotelName(hotel.getHotelName())
+                    .isGroupChat(chatRoom.getIsGroupChat())
+                    .ueReadCount(unReadCount)
+                    .build();
+
+        }).collect(Collectors.toList());
+
+
+        return dtos;
+    }
+
+    private User getUser() {
+        return userRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName()).orElseThrow(() -> new EntityNotFoundException("존재하지 않는 유저입니다."));
+    }
+
 }

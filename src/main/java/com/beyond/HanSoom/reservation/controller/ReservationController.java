@@ -40,8 +40,8 @@ public class ReservationController {
     //예약 확정
     @PostMapping("/complete")
     public ResponseEntity<?> complete(@RequestBody ReservationCompleteReqDto dto){
-        String uuid = reservationService.complete(dto);
-        return new ResponseEntity<>(uuid, HttpStatus.OK);
+        Long reservationId = reservationService.complete(dto);
+        return new ResponseEntity<>(new CommonSuccessDto(reservationId, HttpStatus.ACCEPTED.value(), "예약에 성공하였습니다."), HttpStatus.ACCEPTED);
     }
     //예약 전체 조회
     @GetMapping("/findAll")
