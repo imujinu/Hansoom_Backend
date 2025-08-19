@@ -221,6 +221,8 @@ public class ReservationService {
             // 사용자, 호스트 알림 저장 (전송은 호스트만)
             notificationService.createNotiNewBookingForHost(user, reservation);
             notificationService.createNotiBookingConfirmed(user, reservation);
+            notificationService.createNotiStayReminderD1(user, reservation);
+            notificationService.createNotiReviewRequest(user, reservation);
             sseAlarmService.publishMessage(reservation.getHotel().getUser().getEmail());
 
             return reservation.getId();

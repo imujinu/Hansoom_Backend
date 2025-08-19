@@ -27,11 +27,11 @@ public class Notification extends BaseTimeEntity {
     @Builder.Default
     @Enumerated(EnumType.STRING)
     private NotificationState state = NotificationState.UNREAD;
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     @Enumerated(EnumType.STRING)
     private NotificationType type;
     @Column(nullable = false)
-    private LocalDateTime shotAtTime;
+    private LocalDateTime showAtTime;
     @Column(nullable = false)
     private LocalDateTime expiresAtTime;
 

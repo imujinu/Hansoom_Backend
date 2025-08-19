@@ -17,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+import static java.time.LocalDateTime.now;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -41,6 +43,8 @@ public class NotificationService {
                 .type(NotificationType.NEW_BOOKING_FOR_HOST)
                 .user(reservation.getHotel().getUser())
                 .reservation(reservation)
+                .showAtTime(now())
+                .expiresAtTime(now().plusDays(30))
                 .build();
 
         notificationRepository.save(notification);
@@ -63,9 +67,11 @@ public class NotificationService {
         Notification notification = Notification.builder()
                 .title(title)
                 .body(body)
-                .type(NotificationType.NEW_BOOKING_FOR_HOST)
+                .type(NotificationType.BOOKING_CONFIRMED)
                 .user(user)
                 .reservation(reservation)
+                .showAtTime(now())
+                .expiresAtTime(now().plusDays(30))
                 .build();
 
         notificationRepository.save(notification);
@@ -75,12 +81,76 @@ public class NotificationService {
         return notification.getId();
     }
 
+    // 알림 등록
+    // STAY_REMINDER_D1
+    public Long createNotiStayReminderD1(User user, Reservation reservation) {
+        // title
+        String hotelName = reservation.getHotel().getHotelName();
+        String title = "[" + hotelName + "] 입실이 하루남았습니다.";
+        // body
+        String userName = user.getName();
+        String body = "예약자: " + userName +", 체크인: " + reservation.getCheckInDate() + ", 체크아웃: " + reservation.getCheckOutDate();
+
+        Notification notification = Notification.builder()
+                .title(title)
+                .body(body)
+                .type(NotificationType.STAY_REMINDER_D1)
+                .user(user)
+                .reservation(reservation)
+                .showAtTime(reservation.getCheckInDate()
+                        .minusDays(1)
+                        .atStartOfDay())
+                .expiresAtTime(reservation.getCheckInDate()
+                        .atTime(12, 0))
+                .build();
+
+        notificationRepository.save(notification);
+
+        log.info("[HANSOOM][INFO] - NotificationService/createNotiStayReminderD1 - 알림 생성 성공, id={}", notification.getId());
+
+        return notification.getId();
+    }
+
+    // 알림 등록
+    // REVIEW_REQUEST
+    public Long createNotiReviewRequest(User user, Reservation reservation) {
+        // title
+        String hotelName = reservation.getHotel().getHotelName();
+        String title = "[" + hotelName + "] 만족스러우셨다면 리뷰를 남겨주세요!";
+        // body
+        String userName = user.getName();
+        String body = "리뷰 남기러가기 👉";
+
+        Notification notification = Notification.builder()
+                .title(title)
+                .body(body)
+                .type(NotificationType.REVIEW_REQUEST)
+                .user(user)
+                .reservation(reservation)
+                .showAtTime(reservation.getCheckOutDate()
+                        .plusDays(1)
+                        .atStartOfDay())
+                .expiresAtTime(reservation.getCheckOutDate()
+                        .plusDays(30)
+                        .atStartOfDay())
+                .build();
+
+        notificationRepository.save(notification);
+
+        log.info("[HANSOOM][INFO] - NotificationService/createNotiReviewRequest - 알림 생성 성공, id={}", notification.getId());
+
+        return notification.getId();
+    }
+
     // 알림 목록 (UNREAD)
     public List<NotificationListResDto> getNotificationList() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("없는 회원입니다."));
+//        List<NotificationListResDto> notificationListResDtoList
+//                = notificationRepository.findAllByUserAndState(user, NotificationState.UNREAD).stream().map(a -> NotificationListResDto.fromEntity(a)).toList();
+
         List<NotificationListResDto> notificationListResDtoList
-                = notificationRepository.findAllByUserAndState(user, NotificationState.UNREAD).stream().map(a -> NotificationListResDto.fromEntity(a)).toList();
+                = notificationRepository.findVisibleByUserAndStateAt(user, NotificationState.UNREAD, now()).stream().map(NotificationListResDto::fromEntity).toList();
 
         log.info("[HANSOOM][INFO] - NotificationService/getNotificationList - 알림목록 조회 성공");
 
