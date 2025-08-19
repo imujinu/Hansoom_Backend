@@ -513,4 +513,6 @@ public class HotelService {
         if (dayCount == 0) return 0; // 방어 코드
         return totalPrice / dayCount;
     }
+
+
 }
