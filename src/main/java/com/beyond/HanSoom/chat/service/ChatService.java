@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -57,7 +58,7 @@ public class ChatService {
                   .user(user)
                   .build();
           chatMessageRepository.save(chatMessage);
-
+          chatRoom.addMessage(chatMessage);
           // 사용자 별로 읽음 여부 저장
 
           List<ChatParticipant> participantList = chatParticipantRepository.findByChatRoom(chatRoom);
@@ -233,7 +234,7 @@ public class ChatService {
 
              //
              Hotel hotel = r.getHotel();
-             ChatRoom chatRoom = chatRoomRepository.findByHotelAndIsGroupChatTrue(hotel);
+             ChatRoom chatRoom = chatRoomRepository.findByHotelAndIsGroupChat(hotel,"Y");
              if(chatRoom!=null){
 
              Long unReadCount = chatReadStatusRepository.findByChatRoomAndUserAndIsReadFalse(chatRoom,user);
@@ -267,7 +268,9 @@ public class ChatService {
 
     public ChatHostGroupChatRoomResDto getHostGroupChatRoom(Long hotelId) {
          Hotel hotel = hotelRepository.findById(hotelId).orElseThrow(()->new EntityNotFoundException("존재하지 않는 호텔 입니다."));
-         ChatRoom chatRoom = chatRoomRepository.findByHotelAndIsGroupChatTrue(hotel);
+         ChatRoom chatRoom = chatRoomRepository.findByHotelAndIsGroupChat(hotel, "Y");
+        System.out.println("hotl Chatroom=================");
+        System.out.println(chatRoom);
          if(chatRoom==null){
              return null;
          }
@@ -278,5 +281,31 @@ public class ChatService {
 
         }
         return new ChatHostGroupChatRoomResDto().fromEntity(chatRoom, message);
+    }
+
+    public ChatHostGroupChatRoomResDto createHostGroupChat(Long hotelId) {
+        Hotel hotel = hotelRepository.findById(hotelId).orElseThrow(()->new EntityNotFoundException("존재하지 않는 호텔 입니다."));
+        User host = getUser();
+
+        ChatRoom chatRoom = ChatRoom.builder()
+                .isGroupChat("Y")
+                .hotel(hotel)
+                .build();
+
+        chatRoomRepository.save(chatRoom);
+        addParticipantToGroupChat(chatRoom.getId());
+
+        ChatMessageResDto dto = ChatMessageResDto.builder()
+                .roomId(chatRoom.getId())
+                .content("채팅방 생성이 완료되었습니다.")
+                .timestamp(String.valueOf(LocalDateTime.now()))
+                .senderEmail(host.getEmail())
+                .senderName(host.getName())
+                .build();
+
+        saveMessage(dto);
+        ChatMessage chatMessage = chatRoom.getChatMessageList().get(chatRoom.getChatMessageList().size()-1);
+        return new ChatHostGroupChatRoomResDto().fromEntity(chatRoom,chatMessage);
+
     }
 }
