@@ -1,6 +1,6 @@
 package com.beyond.HanSoom.chat.controller;
 
-import com.beyond.HanSoom.chat.dto.ChatMessageDto;
+import com.beyond.HanSoom.chat.dto.ChatMessageResDto;
 import com.beyond.HanSoom.chat.dto.ChatMyChatroomResDto;
 import com.beyond.HanSoom.chat.service.ChatPublishService;
 import com.beyond.HanSoom.chat.service.ChatService;
@@ -8,8 +8,6 @@ import com.beyond.HanSoom.common.dto.CommonSuccessDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.handler.annotation.DestinationVariable;
-import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,6 +27,12 @@ public class ChatController {
 //        System.out.println(message);
 //       producer.publish(message);
 //    }
+    @PostMapping("/room/create/{reservationId}")
+    public ResponseEntity<?> createChatRoom(@PathVariable Long reservationId){
+        Long chatRoomId = chatService.createChatRoom(reservationId);
+        return new ResponseEntity<>(new CommonSuccessDto(chatRoomId, HttpStatus.CREATED.value(), "채팅방 생성 완료"), HttpStatus.CREATED);
+    }
+
     @PostMapping("/room/group/create")
     public ResponseEntity<?> createGroupRoom (@RequestParam String roomName){
         chatService.createGroupRoom(roomName);
@@ -52,6 +56,13 @@ public class ChatController {
     public ResponseEntity<?> getMyChatRooms(){
         List<ChatMyChatroomResDto> dtos = chatService.getMyChatRoom();
         return new ResponseEntity<>(new CommonSuccessDto(dtos, HttpStatus.OK.value(), "채팅방 조회완료"), HttpStatus.OK);
+    }
+
+    //채팅 내역 조회
+    @GetMapping("/history/{roomId}")
+    public ResponseEntity<?> getChatHistory(@PathVariable Long roomId) {
+        List<ChatMessageResDto> chatMessageDtos = chatService.getChatHistory(roomId);
+        return new ResponseEntity<>(chatMessageDtos, HttpStatus.OK);
     }
 
 
