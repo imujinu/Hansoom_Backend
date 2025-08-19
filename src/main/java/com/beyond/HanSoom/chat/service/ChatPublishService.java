@@ -1,5 +1,6 @@
 package com.beyond.HanSoom.chat.service;
 
+import com.beyond.HanSoom.chat.dto.ChatMessageReqDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -22,11 +23,11 @@ public class ChatPublishService {
         this.redisTemplate = redisTemplate;
     }
 
-    public RecordId publish(Map<String, String> payload) {
+    public RecordId publish(ChatMessageReqDto dto) {
         // payload를 JSON 문자열로 변환
         String json = null;
         try {
-            json = new ObjectMapper().writeValueAsString(payload);
+            json = new ObjectMapper().writeValueAsString(dto);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

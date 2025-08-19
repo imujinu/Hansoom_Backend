@@ -21,6 +21,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -82,7 +83,7 @@ public class ChatService {
                 .build();
         addParticipantChatRoom(newRoom, host);
         addParticipantChatRoom(newRoom, guest);
-
+        chatRoomRepository.save(newRoom);
         return newRoom.getId();
     }
 
@@ -173,7 +174,7 @@ public class ChatService {
         List<ChatMyChatroomResDto> dtos = chatParticipants.stream().map(cp->{
             ChatRoom chatRoom = cp.getChatRoom();
             Hotel hotel = chatRoom.getHotel();
-            Long unReadCount = chatReadStatusRepository.findByChatRoomAndUserAndIsReadFalse(user,chatRoom);
+            Long unReadCount = chatReadStatusRepository.findByChatRoomAndUserAndIsReadFalse(chatRoom,user);
             return ChatMyChatroomResDto.builder()
                     .roomId(chatRoom.getId())
                     .hotelName(hotel.getHotelName())
@@ -204,6 +205,8 @@ public class ChatService {
         List<ChatMessageResDto> chatMessageDtos = new ArrayList<>();
         for(ChatMessage c : chatMessages){
             ChatMessageResDto chatMessageDto = ChatMessageResDto.builder()
+                    .roomId(chatRoom.getId())
+                    .timestamp(String.valueOf(c.getCreatedTime()))
                     .content(c.getContent())
                     .senderEmail(user.getEmail())
                     .build();
@@ -212,9 +215,31 @@ public class ChatService {
         return chatMessageDtos;
     }
 
+
+
+
+    public List<ChatMyChatroomResDto> getMyGroupChatRoom() {
+         User user = getUser();
+         List<ChatMyChatroomResDto> chatRooms = new ArrayList<>();
+         List<Reservation> reservations = reservationRepository.findAllByUser(user);
+        LocalDate now = LocalDate.now();
+         for(Reservation r : reservations){
+             // 예약 날짜가 체크인-1 < now < 체크아웃+1 사이에 있을 때만 보여주기
+             if(!r.getCheckInDate().minusDays(1).isAfter(now) && !r.getCheckOutDate().isBefore(now)){
+
+             //
+             Hotel hotel = r.getHotel();
+             ChatRoom chatRoom = chatRoomRepository.findByHotelAndIsGroupChatTrue(hotel).orElseThrow(()-> new EntityNotFoundException("단체 채팅방이 존재하지 않습니다."));
+             Long unReadCount = chatReadStatusRepository.findByChatRoomAndUserAndIsReadFalse(chatRoom,user);
+             chatRooms.add(new ChatMyChatroomResDto().fromEntity(chatRoom,unReadCount));
+             }
+
+         }
+
+         return chatRooms;
+    }
+
     private User getUser() {
         return userRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName()).orElseThrow(() -> new EntityNotFoundException("존재하지 않는 유저입니다."));
     }
-
-
 }

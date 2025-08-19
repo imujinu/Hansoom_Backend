@@ -5,13 +5,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ChatMessageRedisDto {
+public class ChatMessageReqDto {
     private String roomId;
-    private Long senderId;
-    private String message;
-    private long timestamp;
+    private String senderEmail;
+    private String content;
+    private String timestamp;
 }

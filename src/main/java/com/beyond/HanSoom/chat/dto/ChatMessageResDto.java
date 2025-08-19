@@ -2,6 +2,9 @@ package com.beyond.HanSoom.chat.dto;
 
 import lombok.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -9,7 +12,7 @@ import lombok.*;
 public class ChatMessageResDto {
     private Long roomId;
     private String content;
-    private Long timestamp;
+    private String timestamp;
     private String senderEmail;
     private String senderName;
 }
