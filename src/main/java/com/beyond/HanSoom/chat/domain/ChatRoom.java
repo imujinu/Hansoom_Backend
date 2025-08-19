@@ -1,6 +1,7 @@
 package com.beyond.HanSoom.chat.domain;
 
 import com.beyond.HanSoom.common.domain.BaseTimeEntity;
+import com.beyond.HanSoom.hotel.domain.Hotel;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,10 +20,12 @@ public class ChatRoom extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(nullable = false)
-    private String name;
     @Builder.Default
     private String isGroupChat="N";
+
+    @ManyToOne
+    @JoinColumn(name = "hotel_id")
+    private Hotel hotel;
 
     //하나의 채팅방에는 다수의 참여자
     // 다수의 메세지가 있음

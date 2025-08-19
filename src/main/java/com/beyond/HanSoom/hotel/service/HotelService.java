@@ -331,20 +331,24 @@ public class HotelService {
     public HotelDetailSearchResponseDto findById(Long id, HotelDetailSearchDto searchDto) {
         Hotel hotel = hotelRepository.findByIdAndState(id, HotelState.APPLY).orElseThrow(() -> new EntityNotFoundException("호텔 정보가 없습니다."));
         List<RoomDetailSearchResponseDto> roomDto = new ArrayList<>();
-//        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-//        User user = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("등록된 사용자가 없습니다."));
         for(Room r : hotel.getRooms()) {
             if(r.getState()==HotelState.REMOVE) continue;
             if(searchDto.getPeople() > r.getMaximumPeople()) continue;
 
-//            ReservationDto reservationDto = new ReservationDto().makeDto(hotel, r, user, searchDto.getCheckIn(), searchDto.getCheckOut(), r.getRoomCount());
-//            int remainRoom = reservationInventoryService.getInventory(reservationDto);
-//            if(remainRoom == 0) continue;
+            ReservationDto reservationDto = ReservationDto.builder()
+                    .hotelId(hotel.getId())
+                    .roomId(r.getId())
+                    .checkIn(searchDto.getCheckIn())
+                    .checkOut(searchDto.getCheckOut())
+                    .maxStock(r.getRoomCount())
+                    .build();
+            int remainRoom = reservationInventoryService.getInventory(reservationDto);
+            if(remainRoom == 0) continue;
 
             List<RoomImageResponseDto> roomImages = r.getRoomImages().stream().map(a -> RoomImageResponseDto.fromEntity(a)).toList();
 //            roomDto.add(RoomDetailSearchResponseDto.fromEntity(r, roomImages, remainRoom));
             int price = calculateAveragePrice(r, searchDto.getCheckIn(), searchDto.getCheckOut());
-            roomDto.add(RoomDetailSearchResponseDto.fromEntity(r, roomImages, r.getRoomCount(), price));
+            roomDto.add(RoomDetailSearchResponseDto.fromEntity(r, roomImages, remainRoom, price));
         }
         return HotelDetailSearchResponseDto.fromEntity(hotel, roomDto);
     }
@@ -449,6 +453,8 @@ public class HotelService {
             String hotelName = (String) row[9];
             String address = (String) row[7];
             String image = (String) row[10];
+            double latitude = ((Number) row[0]).doubleValue();
+            double longitude = ((Number) row[1]).doubleValue();
             double rawDistance = ((Number) row[14]).doubleValue();
             double distance = Math.round(rawDistance * 100.0) / 100.0;
 
@@ -482,6 +488,8 @@ public class HotelService {
                         .hotelName(hotelName)
                         .address(address)
                         .image(image)
+                        .latitude(latitude)
+                        .longitude(longitude)
                         .distance(distance)
                         .price(minAvgPrice)
                         .build());

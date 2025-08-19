@@ -1,16 +1,14 @@
 package com.beyond.HanSoom.chat.service;
 
-import com.beyond.HanSoom.chat.dto.ChatMessageDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.connection.stream.ObjectRecord;
-import org.springframework.data.redis.connection.stream.RecordId;
-import org.springframework.data.redis.connection.stream.StreamRecords;
-import org.springframework.data.redis.connection.stream.StringRecord;
+import org.springframework.data.redis.connection.stream.*;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
 
 @Service
 public class ChatPublishService {
@@ -24,20 +22,29 @@ public class ChatPublishService {
         this.redisTemplate = redisTemplate;
     }
 
-    public RecordId publish(ChatMessageDto dto){
-        ObjectMapper objectMapper = new ObjectMapper();
+    public RecordId publish(Map<String, String> payload) {
+        // payload를 JSON 문자열로 변환
         String json = null;
         try {
-            json = objectMapper.writeValueAsString(dto);
+            json = new ObjectMapper().writeValueAsString(payload);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+
+        // ObjectRecord 생성
         ObjectRecord<String, String> record = StreamRecords
                 .newRecord()
-                .ofObject(json)
+                .ofObject(json)        // JSON 문자열을 value로
                 .withStreamKey(streamKey);
 
-        return redisTemplate.opsForStream().add(record);
+        // Redis Stream에 추가
+        RecordId recordId = redisTemplate.opsForStream().add(record);
+
+        if (recordId == null) {
+            throw new RuntimeException("Redis Stream record 처리 실패");
+        }
+
+        return recordId;
     }
 }
 
