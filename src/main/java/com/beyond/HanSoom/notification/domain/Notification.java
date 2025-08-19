@@ -31,7 +31,7 @@ public class Notification extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private NotificationType type;
     @Column(nullable = false)
-    private LocalDateTime shotAtTIme;
+    private LocalDateTime shotAtTime;
     @Column(nullable = false)
     private LocalDateTime expiresAtTime;
 
