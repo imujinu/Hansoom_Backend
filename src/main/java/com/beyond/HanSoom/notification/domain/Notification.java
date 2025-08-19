@@ -9,6 +9,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Entity
 @NoArgsConstructor
@@ -28,6 +30,10 @@ public class Notification extends BaseTimeEntity {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private NotificationType type;
+    @Column(nullable = false)
+    private LocalDateTime shotAtTIme;
+    @Column(nullable = false)
+    private LocalDateTime expiresAtTime;
 
     @JoinColumn(name = "user_id")
     @ManyToOne(fetch = FetchType.LAZY)
