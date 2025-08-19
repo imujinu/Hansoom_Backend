@@ -2,15 +2,14 @@ package com.beyond.HanSoom.chat.dto;
 
 import lombok.*;
 
-import java.time.LocalDateTime;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ChatMessageDto {
+public class ChatMessageResDto {
     private Long roomId;
-    private Long senderId;
-    private String message;
+    private String content;
     private Long timestamp;
+    private String senderEmail;
+    private String senderName;
 }

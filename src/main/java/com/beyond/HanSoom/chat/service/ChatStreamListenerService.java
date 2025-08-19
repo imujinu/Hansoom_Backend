@@ -1,5 +1,7 @@
 package com.beyond.HanSoom.chat.service;
 
+import com.beyond.HanSoom.chat.dto.ChatMessageResDto;
+import com.beyond.HanSoom.chat.repository.ChatMessageRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -29,12 +31,12 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
     private String consumerName;
     private final SimpMessagingTemplate messagingTemplate;
     private StreamMessageListenerContainer<String, ObjectRecord<String, String>> listenerContainer;
-
     private Subscription subscription;
-
-    public ChatStreamListenerService(@Qualifier("redisStream") RedisTemplate<String, String> redisTemplate, SimpMessagingTemplate messagingTemplate) {
+    private final ChatService chatService;
+    public ChatStreamListenerService(@Qualifier("redisStream") RedisTemplate<String, String> redisTemplate, SimpMessagingTemplate messagingTemplate, ChatService chatService) {
         this.redisTemplate = redisTemplate;
         this.messagingTemplate = messagingTemplate;
+        this.chatService = chatService;
     }
 
     @Override
@@ -108,26 +110,19 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
 
     @Override
     public void onMessage(ObjectRecord<String, String> message) {
-        String stream = message.getStream();
         String recordId = message.getId().getValue();
-
-        System.out.println("isMessage! connected");
-        String value = message.getValue(); // 스트림에 저장된 문자열
-        System.out.println("Raw message: " + value);
-
         ObjectMapper mapper = new ObjectMapper();
-        JsonNode node = null;
+        ChatMessageResDto dto= null;
         try {
-            node = mapper.readTree(value);
+           dto = mapper.readValue(message.getValue(), ChatMessageResDto.class);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+        System.out.println(dto);
+        redisTemplate.opsForStream().acknowledge(streamKey, consumerGroupName, recordId);
+        messagingTemplate.convertAndSend("/topic/" + dto.getRoomId(), dto);
+        chatService.saveMessage(dto);
 
-        String sendMessage = node.get("message").asText();
-        String roomId = node.get("roomId").asText();
-        System.out.println(sendMessage);
-        this.redisTemplate.opsForStream().acknowledge(streamKey, consumerGroupName, recordId);
-        messagingTemplate.convertAndSend("/topic/" + roomId, sendMessage);
     }
 
 }

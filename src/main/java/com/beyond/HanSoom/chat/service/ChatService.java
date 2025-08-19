@@ -4,24 +4,19 @@ import com.beyond.HanSoom.chat.domain.ChatMessage;
 import com.beyond.HanSoom.chat.domain.ChatReadStatus;
 import com.beyond.HanSoom.chat.domain.ChatRoom;
 import com.beyond.HanSoom.chat.domain.ChatParticipant;
-import com.beyond.HanSoom.chat.dto.ChatMessageDto;
+import com.beyond.HanSoom.chat.dto.ChatMessageResDto;
 import com.beyond.HanSoom.chat.dto.ChatMyChatroomResDto;
 import com.beyond.HanSoom.chat.repository.ChatMessageRepository;
 import com.beyond.HanSoom.chat.repository.ChatParticipantRepository;
 import com.beyond.HanSoom.chat.repository.ChatReadStatusRepository;
 import com.beyond.HanSoom.chat.repository.ChatRoomRepository;
 import com.beyond.HanSoom.hotel.domain.Hotel;
+import com.beyond.HanSoom.reservation.domain.Reservation;
+import com.beyond.HanSoom.reservation.repository.ReservationRepository;
 import com.beyond.HanSoom.user.domain.User;
 import com.beyond.HanSoom.user.repository.UserRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.redis.connection.stream.ObjectRecord;
-import org.springframework.data.redis.connection.stream.RecordId;
-import org.springframework.data.redis.connection.stream.StreamRecords;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,53 +28,27 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class ChatService {
      private final ChatMessageRepository chatMessageRepository;
      private final ChatReadStatusRepository chatReadStatusRepository;
      private final ChatRoomRepository chatRoomRepository;
      private final ChatParticipantRepository chatParticipantRepository;
      private final UserRepository userRepository;
-
-    public ChatService(ChatMessageRepository chatMessageRepository, ChatReadStatusRepository chatReadStatusRepository, ChatRoomRepository chatRoomRepository, ChatParticipantRepository chatParticipantRepository, UserRepository userRepository) {
-        this.chatMessageRepository = chatMessageRepository;
-        this.chatReadStatusRepository = chatReadStatusRepository;
-        this.chatRoomRepository = chatRoomRepository;
-        this.chatParticipantRepository = chatParticipantRepository;
-        this.userRepository = userRepository;
-    }
-
-//    public void publishMessage(ChatMessageDto chatMessageDto) {
-//          String streamKey = "chat:room:" + chatMessageDto.getRoomId();
-//         ObjectMapper objectMapper = new ObjectMapper();
-//        String json = null;
-//        try {
-//            json = objectMapper.writeValueAsString(chatMessageDto);
-//        } catch (JsonProcessingException e) {
-//            throw new RuntimeException(e);
-//        }
-//        ObjectRecord<String, String> record = StreamRecords.newRecord()
-//                  .ofObject(json)
-//                  .withStreamKey(streamKey);
-//          try{
-//          } catch (Exception e) {
-//               throw new RuntimeException("메시지 발행에 실패했습니다.");
-//          }
-//
-//     }
+     private final ReservationRepository reservationRepository;
 
 
-
-     public void saveMessage(Long roomId, ChatMessageDto dto) {
+     public void saveMessage(ChatMessageResDto dto) {
           // 채팅방 조회
-          ChatRoom chatRoom = chatRoomRepository.findById(roomId).orElseThrow(()->new EntityNotFoundException("채팅방이 존재하지 않습니다."));
+          ChatRoom chatRoom = chatRoomRepository.findById(dto.getRoomId()).orElseThrow(()->new EntityNotFoundException("채팅방이 존재하지 않습니다."));
 
           // 보낸 사람 조회
-          User user = userRepository.findById(dto.getSenderId()).orElseThrow(()->new EntityNotFoundException("존재하지 않는 유저 입니다."));
+          User user = userRepository.findByEmail(dto.getSenderEmail()).orElseThrow(()->new EntityNotFoundException("존재하지 않는 유저 입니다."));
 
           // 메시지 저장
           ChatMessage chatMessage = ChatMessage.builder()
                   .chatRoom(chatRoom)
-                  .content(dto.getMessage())
+                  .content(dto.getContent())
                   .user(user)
                   .build();
           chatMessageRepository.save(chatMessage);
@@ -99,12 +68,29 @@ public class ChatService {
           }
 
      }
+    public Long createChatRoom(Long reservationId) {
+        Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(()->new EntityNotFoundException("예약 내역이 존재하지 않습니다."));
+        User host = reservation.getHotel().getUser();
+        User guest = getUser();
+        Optional<ChatRoom> chatRoom = chatParticipantRepository.findExistingChatRoom(guest.getId(), host.getId());
+
+        if(chatRoom.isPresent()){
+            return chatRoom.get().getId();
+        }
+        ChatRoom newRoom = ChatRoom.builder()
+                .hotel(reservation.getHotel())
+                .build();
+        addParticipantChatRoom(newRoom, host);
+        addParticipantChatRoom(newRoom, guest);
+
+        return newRoom.getId();
+    }
+
 
      public void createGroupRoom(String roomName) {
           User user = getUser();
 
           ChatRoom chatRoom = ChatRoom.builder()
-                  .name(roomName)
                   .isGroupChat("Y")
                   .build();
 
@@ -173,7 +159,6 @@ public class ChatService {
 
                ChatRoom newRoom = ChatRoom.builder()
                        .isGroupChat("N")
-                       .name(user.getName() + "-" + other.getName())
                        .build();
                addParticipantChatRoom(newRoom,user);
                addParticipantChatRoom(newRoom,other);
@@ -202,8 +187,34 @@ public class ChatService {
         return dtos;
     }
 
+    public List<ChatMessageResDto> getChatHistory(Long roomId) {
+        // 내가 해당 채팅방의 참여자가 아닐 경우 에러
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId).orElseThrow(()->new EntityNotFoundException(""));
+        User user = getUser();
+        List<ChatParticipant> chatParticipants = chatParticipantRepository.findByChatRoom(chatRoom);
+        boolean check = false;
+        for(ChatParticipant c : chatParticipants){
+            if(c.getUser().equals(user)){
+                check=true;
+            }
+        }
+        if(!check)throw new IllegalStateException("본인이 속하지 않은 채팅방입니다.");
+        // 특정 room 에대한 message
+        List<ChatMessage> chatMessages = chatMessageRepository.findByChatRoomOrderByCreatedTimeAsc(chatRoom);
+        List<ChatMessageResDto> chatMessageDtos = new ArrayList<>();
+        for(ChatMessage c : chatMessages){
+            ChatMessageResDto chatMessageDto = ChatMessageResDto.builder()
+                    .content(c.getContent())
+                    .senderEmail(user.getEmail())
+                    .build();
+            chatMessageDtos.add(chatMessageDto);
+        }
+        return chatMessageDtos;
+    }
+
     private User getUser() {
         return userRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName()).orElseThrow(() -> new EntityNotFoundException("존재하지 않는 유저입니다."));
     }
+
 
 }
