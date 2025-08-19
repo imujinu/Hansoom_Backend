@@ -4,6 +4,8 @@ import com.beyond.HanSoom.chat.domain.ChatMessage;
 import com.beyond.HanSoom.chat.domain.ChatReadStatus;
 import com.beyond.HanSoom.chat.domain.ChatRoom;
 import com.beyond.HanSoom.chat.domain.ChatParticipant;
+import com.beyond.HanSoom.chat.dto.ChatHostGroupChatRoomResDto;
+import com.beyond.HanSoom.chat.dto.ChatHotelResDto;
 import com.beyond.HanSoom.chat.dto.ChatMessageResDto;
 import com.beyond.HanSoom.chat.dto.ChatMyChatroomResDto;
 import com.beyond.HanSoom.chat.repository.ChatMessageRepository;
@@ -11,6 +13,7 @@ import com.beyond.HanSoom.chat.repository.ChatParticipantRepository;
 import com.beyond.HanSoom.chat.repository.ChatReadStatusRepository;
 import com.beyond.HanSoom.chat.repository.ChatRoomRepository;
 import com.beyond.HanSoom.hotel.domain.Hotel;
+import com.beyond.HanSoom.hotel.repository.HotelRepository;
 import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.reservation.repository.ReservationRepository;
 import com.beyond.HanSoom.user.domain.User;
@@ -37,6 +40,7 @@ public class ChatService {
      private final ChatParticipantRepository chatParticipantRepository;
      private final UserRepository userRepository;
      private final ReservationRepository reservationRepository;
+     private final HotelRepository hotelRepository;
 
 
      public void saveMessage(ChatMessageResDto dto) {
@@ -88,7 +92,7 @@ public class ChatService {
     }
 
 
-     public void createGroupRoom(String roomName) {
+     public void createGroupRoom() {
           User user = getUser();
 
           ChatRoom chatRoom = ChatRoom.builder()
@@ -229,9 +233,12 @@ public class ChatService {
 
              //
              Hotel hotel = r.getHotel();
-             ChatRoom chatRoom = chatRoomRepository.findByHotelAndIsGroupChatTrue(hotel).orElseThrow(()-> new EntityNotFoundException("단체 채팅방이 존재하지 않습니다."));
+             ChatRoom chatRoom = chatRoomRepository.findByHotelAndIsGroupChatTrue(hotel);
+             if(chatRoom!=null){
+
              Long unReadCount = chatReadStatusRepository.findByChatRoomAndUserAndIsReadFalse(chatRoom,user);
              chatRooms.add(new ChatMyChatroomResDto().fromEntity(chatRoom,unReadCount));
+             }
              }
 
          }
@@ -239,7 +246,37 @@ public class ChatService {
          return chatRooms;
     }
 
+    public List<ChatHotelResDto> getHostHotelList() {
+        User host =getUser();
+        List<Hotel> hotels = hotelRepository.findAllByUser(host);
+        List<ChatHotelResDto> resDtoList = new ArrayList<>();
+        for(Hotel h : hotels){
+            ChatHotelResDto dto = ChatHotelResDto.builder()
+                    .hotelId(h.getId())
+                    .name(h.getHotelName())
+                    .build();
+            resDtoList.add(dto);
+        }
+        return resDtoList;
+    }
+
     private User getUser() {
         return userRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName()).orElseThrow(() -> new EntityNotFoundException("존재하지 않는 유저입니다."));
+    }
+
+
+    public ChatHostGroupChatRoomResDto getHostGroupChatRoom(Long hotelId) {
+         Hotel hotel = hotelRepository.findById(hotelId).orElseThrow(()->new EntityNotFoundException("존재하지 않는 호텔 입니다."));
+         ChatRoom chatRoom = chatRoomRepository.findByHotelAndIsGroupChatTrue(hotel);
+         if(chatRoom==null){
+             return null;
+         }
+         ChatMessage message = null;
+        if (!chatRoom.getChatMessageList().isEmpty()) {
+            message = chatRoom.getChatMessageList()
+                    .get(chatRoom.getChatMessageList().size() - 1);
+
+        }
+        return new ChatHostGroupChatRoomResDto().fromEntity(chatRoom, message);
     }
 }
