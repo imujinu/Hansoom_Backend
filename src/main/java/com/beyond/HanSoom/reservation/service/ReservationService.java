@@ -8,6 +8,10 @@ import com.beyond.HanSoom.common.service.ReservationCacheService;
 import com.beyond.HanSoom.common.service.ReservationInventoryService;
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.hotel.repository.HotelRepository;
+import com.beyond.HanSoom.notification.domain.NotificationState;
+import com.beyond.HanSoom.notification.repository.NotificationRepository;
+import com.beyond.HanSoom.notification.service.NotificationService;
+import com.beyond.HanSoom.notification.service.SseAlarmService;
 import com.beyond.HanSoom.pay.domain.Payment;
 import com.beyond.HanSoom.pay.repository.PaymentRepository;
 import com.beyond.HanSoom.reservation.domain.Reservation;
@@ -65,9 +69,14 @@ public class ReservationService {
     private final SimpMessageSendingOperations messageTemplates;
     private final ReservationCacheService reservationCacheService;
     private final ReviewRepository reviewRepository;
+    private final NotificationService notificationService;
+    private final SseAlarmService sseAlarmService;
+    private final NotificationRepository notificationRepository;
+
+
     public ReservationService(ReservationRepository reservationRepository, UserRepository userRepository, RoomRepository roomRepository, HotelRepository hotelRepository,
                               PaymentRepository paymentRepository, ReservationInventoryService reservationInventoryService, QueueReservationService queueReservationService,
-                              RedisDistributedLock distributedLock, @Qualifier("reservationList") RedisTemplate<String, String> redisTemplate, SimpMessageSendingOperations messageTemplates, ReservationCacheService reservationCacheService, ReviewRepository reviewRepository) {
+                              RedisDistributedLock distributedLock, @Qualifier("reservationList") RedisTemplate<String, String> redisTemplate, SimpMessageSendingOperations messageTemplates, ReservationCacheService reservationCacheService, ReviewRepository reviewRepository, NotificationService notificationService, SseAlarmService sseAlarmService, NotificationRepository notificationRepository) {
         this.reservationRepository = reservationRepository;
         this.userRepository = userRepository;
         this.roomRepository = roomRepository;
@@ -80,6 +89,9 @@ public class ReservationService {
         this.messageTemplates = messageTemplates;
         this.reservationCacheService = reservationCacheService;
         this.reviewRepository = reviewRepository;
+        this.notificationService = notificationService;
+        this.sseAlarmService = sseAlarmService;
+        this.notificationRepository = notificationRepository;
     }
 
     public ReservationResponse confirm(ReservationReqDto dto) {
@@ -205,6 +217,14 @@ public class ReservationService {
             queueReservationService.updateStatus(keys.get(i), String.valueOf(user.getId()), "SUCCEED", "RESERVED");
             }
             reservation.changeState(State.RESERVED);
+
+            // 사용자, 호스트 알림 저장 (전송은 호스트만)
+            notificationService.createNotiNewBookingForHost(user, reservation);
+            notificationService.createNotiBookingConfirmed(user, reservation);
+            notificationService.createNotiStayReminderD1(user, reservation);
+            notificationService.createNotiReviewRequest(user, reservation);
+            sseAlarmService.publishMessage(reservation.getHotel().getUser().getEmail());
+
             return reservation.getId();
         }else{
             for(int i=0; i<keys.size(); i++){
