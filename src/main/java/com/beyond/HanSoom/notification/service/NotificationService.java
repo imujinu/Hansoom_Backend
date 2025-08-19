@@ -27,7 +27,7 @@ public class NotificationService {
 
     // 알림 등록
     // NEW_BOOKING_FOR_HOST
-    public Long createNotiNewBookingForHost(User user, User host, Reservation reservation) {
+    public Long createNotiNewBookingForHost(User user, Reservation reservation) {
         // title
         String hotelName = reservation.getHotel().getHotelName();
         String title = "[" + hotelName + "] 새로운 예약이 들어왔습니다.";
@@ -39,7 +39,7 @@ public class NotificationService {
                 .title(title)
                 .body(body)
                 .type(NotificationType.NEW_BOOKING_FOR_HOST)
-                .user(host)
+                .user(reservation.getHotel().getUser())
                 .reservation(reservation)
                 .build();
 

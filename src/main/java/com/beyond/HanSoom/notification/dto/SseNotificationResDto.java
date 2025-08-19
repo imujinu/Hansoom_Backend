@@ -9,8 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SseNotificationCountResDto {
+public class SseNotificationResDto {
     private String receiver;
-    private Long notificationId;
-    private int notificationCount;
 }
