@@ -27,6 +27,8 @@ public class ChatController {
 //        System.out.println(message);
 //       producer.publish(message);
 //    }
+
+    //1:1채팅방 생성
     @PostMapping("/room/create/{reservationId}")
     public ResponseEntity<?> createChatRoom(@PathVariable Long reservationId){
         Long chatRoomId = chatService.createChatRoom(reservationId);
@@ -45,6 +47,7 @@ public class ChatController {
         return ResponseEntity.ok().build();
     }
 
+
     @PostMapping("/room/private/create")
     public ResponseEntity<?> getOrCreatePrivateRoom(@RequestParam Long otherMemberId){
         Long roomId = chatService.getOrCreatePrivateRoom(otherMemberId);
@@ -52,12 +55,18 @@ public class ChatController {
     }
 
     //나의 채팅 방 조회
-    @GetMapping("/room/list")
-    public ResponseEntity<?> getMyChatRooms(){
+    @GetMapping("/room/private/list")
+    public ResponseEntity<?> getMyChatPrivateRooms(){
         List<ChatMyChatroomResDto> dtos = chatService.getMyChatRoom();
         return new ResponseEntity<>(new CommonSuccessDto(dtos, HttpStatus.OK.value(), "채팅방 조회완료"), HttpStatus.OK);
     }
 
+    //전체 채팅 방 조회
+    @GetMapping("/room/group/list")
+    public ResponseEntity<?> getMyChatGroupRooms(){
+        List<ChatMyChatroomResDto> dtos = chatService.getMyGroupChatRoom();
+        return new ResponseEntity<>(new CommonSuccessDto(dtos, HttpStatus.OK.value(), "채팅방 조회완료"), HttpStatus.OK);
+    }
     //채팅 내역 조회
     @GetMapping("/history/{roomId}")
     public ResponseEntity<?> getChatHistory(@PathVariable Long roomId) {

@@ -110,6 +110,8 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
 
     @Override
     public void onMessage(ObjectRecord<String, String> message) {
+        System.out.println("===================");
+        System.out.println(message);
         String recordId = message.getId().getValue();
         ObjectMapper mapper = new ObjectMapper();
         ChatMessageResDto dto= null;
@@ -118,7 +120,10 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+        System.out.println("=============dto==============");
         System.out.println(dto);
+        System.out.println(dto.getRoomId());
+        System.out.println(dto.getContent());
         redisTemplate.opsForStream().acknowledge(streamKey, consumerGroupName, recordId);
         messagingTemplate.convertAndSend("/topic/" + dto.getRoomId(), dto);
         chatService.saveMessage(dto);
