@@ -31,12 +31,15 @@ public class NotificationService {
     // 알림 등록
     // NEW_BOOKING_FOR_HOST
     public Long createNotiNewBookingForHost(User user, Reservation reservation) {
+        // [호텔명] 새 예약 확정 🎉
+        // [예약자명]님이 [체크인일 ~ 체크아웃일] 예약을 완료했습니다.
+
         // title
         String hotelName = reservation.getHotel().getHotelName();
-        String title = "[" + hotelName + "] 새로운 예약이 들어왔습니다.";
+        String title = "[" + hotelName + "] 새 예약 확정 🎉";
         // body
         String userName = user.getName();
-        String body = "예약자: " + userName +", 체크인: " + reservation.getCheckInDate() + ", 체크아웃: " + reservation.getCheckOutDate();
+        String body = "[" + userName +"]님이 [" + reservation.getCheckInDate() + " ~ " + reservation.getCheckOutDate() + "] 예약을 완료했습니다.";
 
         Notification notification = Notification.builder()
                 .title(title)
@@ -58,12 +61,15 @@ public class NotificationService {
     // 알림 등록
     // BOOKING_CONFIRMED
     public Long createNotiBookingConfirmed(User user, Reservation reservation) {
+        // [호텔명] 예약 확정 완료 ✅
+        // [체크인일 ~ 체크아웃일] 숙박 예약이 정상적으로 완료되었습니다. 예약번호: [번호]
+
         // title
         String hotelName = reservation.getHotel().getHotelName();
-        String title = "[" + hotelName + "] 예약이 완료되었습니다.";
+        String title = "[" + hotelName + "] 예약 확정 완료 ✅";
         // body
         String userName = user.getName();
-        String body = "예약자: " + userName +", 체크인: " + reservation.getCheckInDate() + ", 체크아웃: " + reservation.getCheckOutDate();
+        String body = "[" + reservation.getCheckInDate() + " ~ " + reservation.getCheckOutDate() + "숙박 예약이 정상적으로 완료되었습니다.";
 
         Notification notification = Notification.builder()
                 .title(title)
@@ -85,12 +91,15 @@ public class NotificationService {
     // 알림 등록
     // STAY_REMINDER_D1
     public Long createNotiStayReminderD1(User user, Reservation reservation) {
+        // [호텔명] 내일 체크인 안내 🛎️
+        // 내일 [체크인일] 부터 숙박이 시작됩니다. 체크인은 오후 3시 이후 가능합니다.
+
         // title
         String hotelName = reservation.getHotel().getHotelName();
-        String title = "[" + hotelName + "] 입실이 하루남았습니다.";
+        String title = "[" + hotelName + "] 내일 체크인 안내 🔔";
         // body
         String userName = user.getName();
-        String body = "예약자: " + userName +", 체크인: " + reservation.getCheckInDate() + ", 체크아웃: " + reservation.getCheckOutDate();
+        String body = "내일 [" + reservation.getCheckInDate() + "] 부터 숙박이 시작됩니다.";
 
         Notification notification = Notification.builder()
                 .title(title)
@@ -115,12 +124,15 @@ public class NotificationService {
     // 알림 등록
     // REVIEW_REQUEST
     public Long createNotiReviewRequest(User user, Reservation reservation) {
+        // [호텔명] 숙박은 어떠셨나요? ✨
+        // 고객님의 소중한 리뷰가 다른 여행자들에게 큰 도움이 됩니다. 리뷰를 작성해주시면 [포인트/쿠폰]을 드려요.
+
         // title
         String hotelName = reservation.getHotel().getHotelName();
-        String title = "[" + hotelName + "] 만족스러우셨다면 리뷰를 남겨주세요!";
+        String title = "[" + hotelName + "] 숙박은 어떠셨나요? ✨";
         // body
         String userName = user.getName();
-        String body = "리뷰 남기러가기 👉";
+        String body = "고객님의 소중한 리뷰가 다른 여행자들에게 큰 도움이 됩니다.\n리뷰 쓰러 가기 👉";
 
         Notification notification = Notification.builder()
                 .title(title)
@@ -146,12 +158,15 @@ public class NotificationService {
     // 알림 등록
     // NEW_HOTEL_SUBMITTED
     public Long createNotiNewHotelSubmitted(User user, Hotel hotel) {
+        // [호텔명] 호텔 등록 심사 요청 📩
+        // 호스트 [호스트명]님이 호텔 등록을 요청했습니다. 검토가 필요합니다.
+
         // title
-        String title = "새로운 호텔등록 요청이 들어왔습니다.";
+        String title = "[" + hotel.getHotelName() + "] 호텔 등록 심사 요청 📩";
         // body
         String hotelName = hotel.getHotelName();
         String hostName = hotel.getUser().getName();
-        String body = "호텔명: " + hotelName + ", 호스트명: " + hostName;
+        String body = "호스트 [" + hostName + "]님이 호텔 등록을 요청했습니다. 검토가 필요합니다.";
 
         Notification notification = Notification.builder()
                 .title(title)
