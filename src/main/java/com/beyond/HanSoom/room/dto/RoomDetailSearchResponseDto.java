@@ -1,8 +1,6 @@
 package com.beyond.HanSoom.room.dto;
 
-import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.room.domain.Room;
-import com.beyond.HanSoom.roomImage.domain.RoomImage;
 import com.beyond.HanSoom.roomImage.dto.RoomImageResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,15 +14,14 @@ import java.util.List;
 @NoArgsConstructor
 @Data
 @Builder
-public class RoomDetailResponseDto {
-    private Long roomId;
+public class RoomDetailSearchResponseDto {
+    private Long id;
     private String type;
     private int roomCount;
     private String roomOption1;
     private String roomOption2;
     private String description;
-    private int weekPrice;
-    private int weekendPrice;
+    private int price;
     private int standardPeople;
     private int maximumPeople;
     private LocalTime checkIn;
@@ -32,16 +29,15 @@ public class RoomDetailResponseDto {
     private List<RoomImageResponseDto> roomImages;
     private int remainRoomCount;
 
-    public static RoomDetailResponseDto fromEntity(Room room, List<RoomImageResponseDto> dto, int remainRoomCount) {
-        return RoomDetailResponseDto.builder()
-                .roomId(room.getId())
+    public static RoomDetailSearchResponseDto fromEntity(Room room, List<RoomImageResponseDto> dto, int remainRoomCount, int price) {
+        return RoomDetailSearchResponseDto.builder()
+                .id(room.getId())
                 .type(room.getType())
                 .roomCount(room.getRoomCount())
                 .roomOption1(room.getRoomOption1())
                 .roomOption2(room.getRoomOption2())
                 .description(room.getDescription())
-                .weekPrice(room.getWeekPrice())
-                .weekendPrice(room.getWeekendPrice())
+                .price(price)
                 .standardPeople(room.getStandardPeople())
                 .maximumPeople(room.getMaximumPeople())
                 .checkIn(room.getCheckIn())
