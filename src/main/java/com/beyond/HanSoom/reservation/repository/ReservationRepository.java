@@ -50,4 +50,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     Reservation findByIdAndUser(Long reservationId, User user);
 
     Optional<Reservation> findByUuid(String orderId);
+
+
+    List<Reservation> findAllByUserAndHotel(User user, Hotel hotel);
 }
