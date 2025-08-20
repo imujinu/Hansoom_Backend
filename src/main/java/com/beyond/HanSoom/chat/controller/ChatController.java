@@ -88,8 +88,15 @@ public class ChatController {
         return new ResponseEntity<>(new CommonSuccessDto(dtos, HttpStatus.OK.value(), "내 호텔 조회 완료"), HttpStatus.OK);
     }
 
-    //호스트 호텔 내역 조회
-    @GetMapping("/host/{hotelId}")
+    //호스트 호텔 1:1 채팅 내역 조회
+    @GetMapping("/host/private-{hotelId}")
+    public ResponseEntity<?> getHostPrivateChatRoom(@PathVariable Long hotelId) {
+        List<ChatHostPrivateChatRoomResDto> dto = chatService.getHostPrivateChatRoom(hotelId);
+        return new ResponseEntity<>(new CommonSuccessDto(dto, HttpStatus.OK.value(), "1:1 채팅 조회 완료"), HttpStatus.OK);
+    }
+
+    //호스트 호텔 그룹 채팅 내역 조회
+    @GetMapping("/host/group-{hotelId}")
     public ResponseEntity<?> getHostGroupChatRoom(@PathVariable Long hotelId) {
         ChatHostGroupChatRoomResDto dto = chatService.getHostGroupChatRoom(hotelId);
         return new ResponseEntity<>(new CommonSuccessDto(dto, HttpStatus.OK.value(), "단체 채팅 조회 완료"), HttpStatus.OK);
