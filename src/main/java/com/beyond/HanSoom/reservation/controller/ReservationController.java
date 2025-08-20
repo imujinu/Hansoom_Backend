@@ -31,9 +31,7 @@ public class ReservationController {
     @PostMapping("/confirm")
     public ResponseEntity<?> reservation(@RequestBody ReservationReqDto dto){
         ReservationResponse result = reservationService.confirm(dto);
-        System.out.println("=============");
-        System.out.println(result.getStatus());
-        System.out.println("response :::::::: " + result.getReservationId());
+        System.out.println("response :::::::: " + result);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 

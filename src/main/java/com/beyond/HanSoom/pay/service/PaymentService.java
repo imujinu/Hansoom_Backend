@@ -85,31 +85,31 @@ public class PaymentService {
 
         // 1. Redis에서 모든 날짜 상태 조회 및 PROCESSING인지 확인
         for (LocalDate date = start; date.isBefore(end); date = date.plusDays(1)) {
-            String statusKey = String.format("queue:hotel:%s:room:%s:date:%s",
+            String statusKey = String.format("queue:hotel:%s:room:%s:date:%s:%s",
                     reservation.getHotel().getId(),
                     reservation.getRoom().getId(),
-                    date);
+                    date, user.getId());
 
-            System.out.println("여기까진 오는중4" );
-            // 1. Sorted Set에서 멤버 전체를 가져오기 (예: ZRANGE)
-            Set<String> members = redisTemplate.opsForZSet().range(statusKey, 0, -1);
-            String redisStatus = "";
-// 2. 원하는 유저 ID에 해당하는 멤버 찾기
-            String targetMember = members.stream()
-                    .filter(m -> m.startsWith(user.getId() + ":"))
-                    .findFirst()
-                    .orElse(null);
-
-            if (targetMember != null) {
-                // 3. ':' 기준으로 상태만 분리
-                redisStatus = targetMember.split(":")[1];
-                System.out.println("status = " + redisStatus);
-            } else {
-                System.out.println("해당 유저 상태 없음");
-            }
-
-            System.out.println(redisStatus);
-            if (!"PROCESSING".equals(redisStatus)) {
+//            System.out.println("여기까진 오는중4" );
+//            // 1. Sorted Set에서 멤버 전체를 가져오기 (예: ZRANGE)
+//            Set<String> members = redisTemplate.opsForZSet().range(statusKey, 0, -1);
+//            String redisStatus = "";
+//            // 2. 원하는 유저 ID에 해당하는 멤버 찾기
+//            String targetMember = members.stream()
+//                    .filter(m -> m.endsWith("" + user.getId()))
+//                    .findFirst()
+//                    .orElse(null);
+//
+//            if (targetMember != null) {
+//                // 3. ':' 기준으로 상태만 분리
+//                redisStatus = redisTemplate.opsForValue().get(targetMember);
+//                System.out.println("status = " + redisStatus);
+//            } else {
+//                System.out.println("해당 유저 상태 없음");
+//            }
+            String redisStatus = redisTemplate.opsForValue().get(statusKey);
+            //todo : 상태값 수정하고 넘겨줘야함
+            if (!"PENDING".equals(redisStatus)) {
                 System.out.println("여기까진 오는중5" );
 
                 return PaymentResDto.builder()
