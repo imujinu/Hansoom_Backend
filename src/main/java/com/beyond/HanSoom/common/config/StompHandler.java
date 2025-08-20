@@ -1,6 +1,7 @@
 package com.beyond.HanSoom.common.config;
 
 import com.beyond.HanSoom.chat.service.ChatService;
+import com.beyond.HanSoom.common.dto.SessionInfo;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
@@ -12,13 +13,20 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.security.authentication.AuthenticationServiceException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 public class StompHandler implements ChannelInterceptor {
     private final ChatService chatService;
-
     @Value("${jwt.secretKeyAt}")
     private String secretKey;
 
@@ -31,6 +39,7 @@ public class StompHandler implements ChannelInterceptor {
 
         //요청이 무엇인지 getCommand에 담겨있음
         if(StompCommand.CONNECT == accessor.getCommand()){
+
             String bearerToken = accessor.getFirstNativeHeader("Authorization");
             String token = bearerToken.substring(7);
 
@@ -44,20 +53,29 @@ public class StompHandler implements ChannelInterceptor {
         if(StompCommand.SUBSCRIBE == accessor.getCommand()){
             String bearerToken = accessor.getFirstNativeHeader("Authorization");
             String token = bearerToken.substring(7);
+            String destination = accessor.getDestination(); // ex: /topic/room1
+            String roomId = destination.split("/")[2];
 
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(secretKey)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-            String email = claims.getSubject();
-            String roomId = accessor.getDestination().split("/")[2];
 
-            //대기열을 구독 중인 지 검증
-//            if(!chatService.isInQueue(email,Long.parseLong(roomId))){
-//                throw new AuthenticationServiceException("해당 채팅방 권한 없음");
-//            }
+            SessionInfo sessionInfo = SessionInfo.builder()
+                    .email(claims.getSubject())
+                    .roomId(roomId)
+                    .build();
+            WebSocketSessionRegistry.register(accessor.getSessionId(), sessionInfo);
+
         }
+        if(StompCommand.DISCONNECT == accessor.getCommand()){
+            String bearerToken = accessor.getFirstNativeHeader("Authorization");
+
+            WebSocketSessionRegistry.unregister(accessor.getSessionId());
+        }
+
+
     return message;
     }
 }

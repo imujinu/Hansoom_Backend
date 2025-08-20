@@ -73,8 +73,8 @@ public class PaymentService {
                 .block();
 
         Reservation reservation = reservationRepository.findByUuid(paymentReqDto.getOrderId()).orElseThrow(()->new EntityNotFoundException("예약이 없습니다."));
-        User user = userRepository.findById(1L).orElseThrow(()->new EntityNotFoundException("유저가 없습니다"));
-//        User user = reservation.getUser();// todo : 추후 수정
+//        User user = userRepository.findById(1L).orElseThrow(()->new EntityNotFoundException("유저가 없습니다"));
+        User user = reservation.getUser();// todo : 추후 수정
         System.out.println("여기까진 오는중1" );
         LocalDate start = reservation.getCheckInDate();
         System.out.println("여기까진 오는중2" );

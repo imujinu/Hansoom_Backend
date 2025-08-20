@@ -15,4 +15,8 @@ public class ChatMessageResDto {
     private String timestamp;
     private String senderEmail;
     private String senderName;
+
+    public void updateSenderName(String name){
+        this.senderName=name;
+    }
 }

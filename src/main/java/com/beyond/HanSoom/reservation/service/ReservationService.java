@@ -96,8 +96,8 @@ public class ReservationService {
 
     public ReservationResponse confirm(ReservationReqDto dto) {
         // 값 유효성 검증
-//        User user = getUser(); // todo : 테스트를 위해 더미 유저 찾아오기 나중에 수정할 것
-        User user = userRepository.findById(1L).orElseThrow(()->new EntityNotFoundException("유저가 없습니다"));
+        User user = getUser(); // todo : 테스트를 위해 더미 유저 찾아오기 나중에 수정할 것
+//        User user = userRepository.findById(1L).orElseThrow(()->new EntityNotFoundException("유저가 없습니다"));
         Hotel hotel = hotelRepository.findById(dto.getHotelId()).orElseThrow(()->new EntityNotFoundException("해당 호텔이 존재하지 않습니다."));;
         Room room = roomRepository.findByIdAndHotel(dto.getRoomId(),hotel).orElseThrow(()-> new EntityNotFoundException("해당 객실이 존재하지 않습니다."));
 
@@ -140,8 +140,8 @@ public class ReservationService {
 
 
     public List<ReservationResDto> findAll() {
-//        User user = getUser(); //todo : 추후 수정
-        User user = userRepository.findById(1L).orElseThrow(()->new EntityNotFoundException("유저가 없습니다"));
+        User user = getUser(); //todo : 추후 수정
+//        User user = userRepository.findById(1L).orElseThrow(()->new EntityNotFoundException("유저가 없습니다"));
 
         List<Reservation> reservation = reservationRepository.findAllByUser(user);
         List<ReservationResDto> reservationList = new ArrayList<>();
@@ -207,8 +207,8 @@ public class ReservationService {
     public Long complete(ReservationCompleteReqDto dto) {
         Reservation reservation = reservationRepository.findByUuid(dto.getReservationId()).orElseThrow(()->new EntityNotFoundException("존재하지 않는 예약 내역 입니다."));
         Payment payment = paymentRepository.findByReservationId(reservation.getId());
-//        User user = getUser(); //todo : 추후 수정
-        User user = userRepository.findById(1L).orElseThrow(()->new EntityNotFoundException("유저가 없습니다"));
+        User user = getUser(); //todo : 추후 수정
+//        User user = userRepository.findById(1L).orElseThrow(()->new EntityNotFoundException("유저가 없습니다"));
         ReservationDto reservationDto = new ReservationDto().makeDto(reservation.getHotel(), reservation.getRoom(), user,  reservation.getCheckInDate(), reservation.getCheckOutDate(), reservation.getRoom().getRoomCount());
         List<String> keys = new ArrayList<>();
         generateQueueKey(reservation, reservation.getCheckInDate(), reservation.getCheckOutDate(), keys);
@@ -244,8 +244,8 @@ public class ReservationService {
     public ReservationResponse makeReservation(ReservationDto request, Reservation reservation) {
         // 1. 대기열 등록 시도
         List<Long> queueResult = queueReservationService.addToQueue(new QueueReservationReqDto().makeDto(request));
-//        User user = getUser(); // todo : 추후 수정
-        User user = userRepository.findById(1L).orElseThrow(()->new EntityNotFoundException("유저가 없습니다"));
+        User user = getUser(); // todo : 추후 수정
+//        User user = userRepository.findById(1L).orElseThrow(()->new EntityNotFoundException("유저가 없습니다"));
         long position = queueResult.get(0);
         System.out.println(position);
         if (position == -2) {
@@ -273,7 +273,7 @@ public class ReservationService {
 //                        redisTemplate.opsForHash().put(statusKey, String.valueOf(request.getUserId()), "PROCESSING");
 //                        redisTemplate.opsForHash().put(statusKey, String.valueOf(request.getUserId()), "PROCESSING");
                         System.out.println("여기서 터짐 : 3");
-                        queueReservationService.processNextInQueue(queueKey, lockKey, lockValue, 30000);
+                        queueReservationService.processNextInQueue(queueKey, lockKey, lockValue, 1500);
                         System.out.println("여기서 터짐 : 4");
                         redisTemplate.expire(statusKey, 1500, TimeUnit.SECONDS);  // TTL 설정
                     }

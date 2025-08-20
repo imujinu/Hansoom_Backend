@@ -2,10 +2,13 @@ package com.beyond.HanSoom.chat.service;
 
 import com.beyond.HanSoom.chat.dto.ChatMessageResDto;
 import com.beyond.HanSoom.chat.repository.ChatMessageRepository;
+import com.beyond.HanSoom.user.domain.User;
+import com.beyond.HanSoom.user.repository.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +18,7 @@ import org.springframework.data.redis.stream.StreamListener;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 import org.springframework.data.redis.stream.Subscription;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -33,10 +37,12 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
     private StreamMessageListenerContainer<String, ObjectRecord<String, String>> listenerContainer;
     private Subscription subscription;
     private final ChatService chatService;
-    public ChatStreamListenerService(@Qualifier("redisStream") RedisTemplate<String, String> redisTemplate, SimpMessagingTemplate messagingTemplate, ChatService chatService) {
+    private final UserRepository userRepository;
+    public ChatStreamListenerService(@Qualifier("redisStream") RedisTemplate<String, String> redisTemplate, SimpMessagingTemplate messagingTemplate, ChatService chatService, UserRepository userRepository) {
         this.redisTemplate = redisTemplate;
         this.messagingTemplate = messagingTemplate;
         this.chatService = chatService;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -120,10 +126,8 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        System.out.println("=============dto==============");
-        System.out.println(dto);
-        System.out.println(dto.getRoomId());
-        System.out.println(dto.getContent());
+        User user = userRepository.findByEmail(dto.getSenderEmail()).orElseThrow(()->new EntityNotFoundException("존재하지 않는 유저입니다."));
+        dto.updateSenderName(user.getName());
         redisTemplate.opsForStream().acknowledge(streamKey, consumerGroupName, recordId);
         messagingTemplate.convertAndSend("/topic/" + dto.getRoomId(), dto);
         chatService.saveMessage(dto);
