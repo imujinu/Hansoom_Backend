@@ -23,9 +23,10 @@ public class SseAlarmService implements MessageListener {
 
     // 특정 사용자에게 message 발송
     // productId를 커스텀 할 수 있음
-    public void publishMessage(String receiver) {
+    public void publishReserved(String receiver, String eventName) {
         SseNotificationResDto dto = SseNotificationResDto.builder()
                 .receiver(receiver)
+                .eventName(eventName)
                 .build();
 
         ObjectMapper objectMapper = new ObjectMapper();
@@ -41,13 +42,13 @@ public class SseAlarmService implements MessageListener {
         // emitter객체가 현재 서버에 있으면, 직접 알림 발송. 그렇지 않으면, redis에 publish
         if(sseEmitter != null) {
             try {
-                sseEmitter.send(SseEmitter.event().name("reserved").data(data));
+                sseEmitter.send(SseEmitter.event().name(eventName).data(data));
                 // 사용자가 로그아웃(새로고침)후에 다시 화면에 들어왔을 때, 알림 메시지가 남아있으려면 DB에 추가적인 저장 필요
             } catch (IOException e) {
                 e.printStackTrace();
             }
         } else {
-            redisTemplate.convertAndSend("reserved-channel", data); // 채널명은 원하는데로
+            redisTemplate.convertAndSend("notification-channel", data); // 채널명은 원하는데로
         }
 
     }
@@ -67,7 +68,7 @@ public class SseAlarmService implements MessageListener {
             // emitter객체가 현재 서버에 있으면, 직접 알림 발송. 그렇지 않으면, redis에 publish
             if(sseEmitter != null) {
                 try {
-                    sseEmitter.send(SseEmitter.event().name("reserved").data(dto));
+                    sseEmitter.send(SseEmitter.event().name(dto.getEventName()).data(dto));
                     // 사용자가 로그아웃(새로고침)후에 다시 화면에 들어왔을 때, 알림 메시지가 남아있으려면 DB에 추가적인 저장 필요
                 } catch (IOException e) {
                     e.printStackTrace();

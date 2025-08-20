@@ -7,6 +7,8 @@ import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.hotel.domain.HotelState;
 import com.beyond.HanSoom.hotel.dto.*;
 import com.beyond.HanSoom.hotel.repository.HotelRepository;
+import com.beyond.HanSoom.notification.service.NotificationService;
+import com.beyond.HanSoom.notification.service.SseAlarmService;
 import com.beyond.HanSoom.room.domain.Room;
 import com.beyond.HanSoom.room.dto.RoomDetailResponseDto;
 import com.beyond.HanSoom.room.dto.RoomDetailSearchResponseDto;
@@ -47,6 +49,8 @@ public class HotelService {
     private final ReservationInventoryService reservationInventoryService;
     private final RoomRepository roomRepository;
     private final RoomImageRepository roomImageRepository;
+    private final NotificationService notificationService;
+    private final SseAlarmService sseAlarmService;
 
     public void registerHotel(HotelRegisterRequsetDto dto, MultipartFile hotelImage, List<MultipartFile> roomImages) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -83,6 +87,13 @@ public class HotelService {
             }
             hotel.getRooms().add(room); // 호텔에 객실 추가
         }
+
+        // 호텔등록 알림 생성
+        // 관리자 고정
+        User admin = userRepository.findById(1L).orElseThrow(() -> new EntityNotFoundException("없는 회원입니다."));
+        notificationService.createNotiNewHotelSubmitted(admin, hotel);
+        sseAlarmService.publishReserved(admin.getEmail(), "hotelSubmitted");
+
         hotelRepository.save(hotel);
     }
 

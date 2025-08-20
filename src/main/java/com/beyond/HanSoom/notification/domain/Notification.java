@@ -1,6 +1,7 @@
 package com.beyond.HanSoom.notification.domain;
 
 import com.beyond.HanSoom.common.domain.BaseTimeEntity;
+import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.user.domain.User;
 import jakarta.persistence.*;
@@ -41,6 +42,9 @@ public class Notification extends BaseTimeEntity {
     @JoinColumn(name = "reservation_id")
     @ManyToOne(fetch = FetchType.LAZY)
     private Reservation reservation;
+    @JoinColumn(name = "hotel_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Hotel hotel;
 
     public void updatedReadState() {
         this.state = NotificationState.READ;

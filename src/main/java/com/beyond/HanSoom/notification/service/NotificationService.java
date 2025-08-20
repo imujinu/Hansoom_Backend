@@ -1,5 +1,6 @@
 package com.beyond.HanSoom.notification.service;
 
+import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.notification.domain.Notification;
 import com.beyond.HanSoom.notification.domain.NotificationState;
 import com.beyond.HanSoom.notification.domain.NotificationType;
@@ -138,6 +139,33 @@ public class NotificationService {
         notificationRepository.save(notification);
 
         log.info("[HANSOOM][INFO] - NotificationService/createNotiReviewRequest - 알림 생성 성공, id={}", notification.getId());
+
+        return notification.getId();
+    }
+
+    // 알림 등록
+    // NEW_HOTEL_SUBMITTED
+    public Long createNotiNewHotelSubmitted(User user, Hotel hotel) {
+        // title
+        String title = "새로운 호텔등록 요청이 들어왔습니다.";
+        // body
+        String hotelName = hotel.getHotelName();
+        String hostName = hotel.getUser().getName();
+        String body = "호텔명: " + hotelName + ", 호스트명: " + hostName;
+
+        Notification notification = Notification.builder()
+                .title(title)
+                .body(body)
+                .type(NotificationType.NEW_HOTEL_SUBMITTED)
+                .user(user)
+                .hotel(hotel)
+                .showAtTime(now())
+                .expiresAtTime(now().plusDays(30))
+                .build();
+
+        notificationRepository.save(notification);
+
+        log.info("[HANSOOM][INFO] - NotificationService/createNotiNewHotelSubmitted - 알림 생성 성공, id={}", notification.getId());
 
         return notification.getId();
     }
