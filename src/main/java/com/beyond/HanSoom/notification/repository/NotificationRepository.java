@@ -27,4 +27,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             @Param("state") NotificationState state,
             @Param("now") LocalDateTime now
     );
+
+    List<Notification> findAllByReservationId(Long reservationId);
 }

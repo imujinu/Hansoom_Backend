@@ -8,6 +8,7 @@ import com.beyond.HanSoom.common.service.ReservationCacheService;
 import com.beyond.HanSoom.common.service.ReservationInventoryService;
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.hotel.repository.HotelRepository;
+import com.beyond.HanSoom.notification.domain.NotificationState;
 import com.beyond.HanSoom.notification.repository.NotificationRepository;
 import com.beyond.HanSoom.notification.service.NotificationService;
 import com.beyond.HanSoom.notification.service.SseAlarmService;
@@ -195,6 +196,7 @@ public class ReservationService {
         User user = getUser();
         Reservation reservation = reservationRepository.findByIdAndUser(reservationId,user);
         reservation.cancel();
+        notificationService.cancelAllNotificationsByReservation(reservationId);
         return reservation.getUuid();
     }
 

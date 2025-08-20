@@ -1,6 +1,7 @@
 package com.beyond.HanSoom.notification.controller;
 
 import com.beyond.HanSoom.common.dto.CommonSuccessDto;
+import com.beyond.HanSoom.notification.domain.NotificationState;
 import com.beyond.HanSoom.notification.dto.NotificationListResDto;
 import com.beyond.HanSoom.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +31,7 @@ public class NotificationController {
     // 알림 읽음상태 변경
     @PatchMapping("/updateState/{notiId}")
     public ResponseEntity<?> updateNotificationState(@PathVariable Long notiId) {
-        notificationService.updateNotificationState(notiId);
+        notificationService.updateNotificationState(notiId, NotificationState.READ);
         return new ResponseEntity<>(new CommonSuccessDto(notiId, HttpStatus.OK.value(), "알림상태 읽음으로 수정 성공"), HttpStatus.OK);
     }
 }

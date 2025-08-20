@@ -185,12 +185,20 @@ public class NotificationService {
         return notificationListResDtoList;
     }
 
-    // 알림 읽음상태 변경
-    public void updateNotificationState(Long id) {
+    // 알림 상태 변경
+    public void updateNotificationState(Long id, NotificationState state) {
         Notification notification = notificationRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("없는 알림입니다."));
-        notification.updatedReadState();
+        notification.updatedState(state);
         
-        log.info("[HANSOOM][INFO] - NotificationService/updateNotificationState - 알림상태 읽음으로 수정 성공, id={}", id);
+        log.info("[HANSOOM][INFO] - NotificationService/updateNotificationState - 알림상태 수정 성공, id={}, state={}", id, state);
+    }
+
+    // 예약 취소에 따른 모든 알림상태 취소로 변경
+    public void cancelAllNotificationsByReservation(Long reservationID) {
+        List<Notification> notificationList = notificationRepository.findAllByReservationId(reservationID);
+        for(Notification notification : notificationList) {
+            notification.updatedState(NotificationState.CANCELED);
+        }
     }
 
 }

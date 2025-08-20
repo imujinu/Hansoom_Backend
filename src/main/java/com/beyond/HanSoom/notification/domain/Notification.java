@@ -46,7 +46,7 @@ public class Notification extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private Hotel hotel;
 
-    public void updatedReadState() {
-        this.state = NotificationState.READ;
+    public void updatedState(NotificationState state) {
+        this.state = state;
     }
 }
