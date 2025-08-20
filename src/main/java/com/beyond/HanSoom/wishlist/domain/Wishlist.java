@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 public class Wishlist {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id; // 찜 id
+    private long id; // 찜 id
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="user_id")
