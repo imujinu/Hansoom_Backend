@@ -18,7 +18,6 @@ import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.reservation.domain.State;
 import com.beyond.HanSoom.reservation.dto.req.ReservationCompleteReqDto;
 import com.beyond.HanSoom.reservation.dto.req.ReservationReqDto;
-import com.beyond.HanSoom.reservation.dto.req.ReservationRequest;
 import com.beyond.HanSoom.reservation.dto.res.ReservationCacheResDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResponse;
@@ -31,9 +30,7 @@ import com.beyond.HanSoom.user.domain.User;
 import com.beyond.HanSoom.user.repository.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
@@ -44,10 +41,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static com.beyond.HanSoom.pay.service.PaymentService.generateQueueKey;
 import static java.time.DayOfWeek.SATURDAY;
@@ -201,6 +196,7 @@ public class ReservationService {
         User user = getUser();
         Reservation reservation = reservationRepository.findByIdAndUser(reservationId,user);
         reservation.cancel();
+        notificationService.cancelAllNotificationsByReservation(reservationId);
         return reservation.getUuid();
     }
 
@@ -223,7 +219,7 @@ public class ReservationService {
             notificationService.createNotiBookingConfirmed(user, reservation);
             notificationService.createNotiStayReminderD1(user, reservation);
             notificationService.createNotiReviewRequest(user, reservation);
-            sseAlarmService.publishMessage(reservation.getHotel().getUser().getEmail());
+            sseAlarmService.publishReserved(reservation.getHotel().getUser().getEmail(), "reserved");
 
             return reservation.getId();
         }else{

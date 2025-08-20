@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 public class NotificationListResDto {
     private Long id;
     private Long reservationId;
+    private Long hotelId;
     private LocalDateTime createdTime;
     private String title;
     private String body;
@@ -23,7 +24,8 @@ public class NotificationListResDto {
         return NotificationListResDto
                 .builder()
                 .id(notification.getId())
-                .reservationId(notification.getReservation().getId())
+                .reservationId(notification.getReservation() != null ? notification.getReservation().getId() : null)
+                .hotelId(notification.getHotel() != null ? notification.getHotel().getId() : null)
                 .createdTime(notification.getCreatedTime())
                 .title(notification.getTitle())
                 .body(notification.getBody())

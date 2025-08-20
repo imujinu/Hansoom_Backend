@@ -126,7 +126,7 @@ public class RedisConfig {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
 
         container.setConnectionFactory(redisConnectionFactory);
-        container.addMessageListener(messageListenerAdapter, new PatternTopic("reserved-channel"));
+        container.addMessageListener(messageListenerAdapter, new PatternTopic("notification-channel"));
 
         return container;
     }

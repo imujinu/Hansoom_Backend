@@ -11,4 +11,5 @@ import lombok.NoArgsConstructor;
 @Builder
 public class SseNotificationResDto {
     private String receiver;
+    private String eventName;
 }
