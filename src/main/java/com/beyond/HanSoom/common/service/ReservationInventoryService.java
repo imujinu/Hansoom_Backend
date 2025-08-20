@@ -29,12 +29,17 @@ public class ReservationInventoryService {
         int minStock = Integer.MAX_VALUE;
         int maxStock =  dto.getMaxStock();
 
-        for(String s : keys){
-        Set<String> members = redisTemplate.opsForZSet().range(s, 0, -1);
-            long reservedCount = members.stream()
-                    .filter(m -> m.endsWith(":RESERVED"))
-                    .count();
-            minStock = Math.min(minStock, maxStock-(int)reservedCount);
+        for(String key : keys){
+
+        // ZSET 멤버 전체 가져오기
+        Set<String> members = redisTemplate.opsForZSet().range(key, 0, -1);
+
+        // 상태가 RESERVED인 멤버만 필터링
+        List<String> reservedMembers = members.stream()
+                .filter(m -> "RESERVED".equals(redisTemplate.opsForValue().get(m)))
+                .collect(Collectors.toList());
+        int stock = maxStock-reservedMembers.size();
+        minStock = Math.min(minStock, stock);
         }
 
 

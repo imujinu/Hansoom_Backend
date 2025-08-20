@@ -92,7 +92,6 @@ public class ReservationService {
     public ReservationResponse confirm(ReservationReqDto dto) {
         // 값 유효성 검증
         User user = getUser(); // todo : 테스트를 위해 더미 유저 찾아오기 나중에 수정할 것
-//        User user = userRepository.findById(1L).orElseThrow(()->new EntityNotFoundException("유저가 없습니다"));
         Hotel hotel = hotelRepository.findById(dto.getHotelId()).orElseThrow(()->new EntityNotFoundException("해당 호텔이 존재하지 않습니다."));;
         Room room = roomRepository.findByIdAndHotel(dto.getRoomId(),hotel).orElseThrow(()-> new EntityNotFoundException("해당 객실이 존재하지 않습니다."));
 
@@ -100,13 +99,6 @@ public class ReservationService {
         if(dto.getPeople()>room.getMaximumPeople()){
             throw new IllegalStateException("인원이 초과 되었습니다.");
         }
-
-//        // 예약 가능 여부 검증
-//        List<Reservation> reservationList = reservationRepository.checkRoom(user,room,hotel, dto.getCheckIn(), dto.getCheckOut(), State.RESERVED);
-//        if(reservationList.size()>room.getRoomCount()){
-//            throw new IllegalArgumentException("빈 객실이 존재하지 않습니다.");
-//        }
-
 
         // 실제 숙박비 계산
         LocalDate date = dto.getCheckIn();
@@ -244,62 +236,63 @@ public class ReservationService {
 //        User user = userRepository.findById(1L).orElseThrow(()->new EntityNotFoundException("유저가 없습니다"));
         long position = queueResult.get(0);
         System.out.println(position);
-        if (position == -2) {
-            return ReservationResponse.fail("재고가 없습니다.");
-        } else if (position == -1) {
-            return ReservationResponse.fail("이미 대기열에 등록되어 있습니다.");
-        }
-        if (position == 1) {
-            LocalDate start = request.getCheckIn();
-            LocalDate end = request.getCheckOut();
-            // 바로 예약 처리 시도 (대기열 맨 앞)
-            List<String> lockKey = generateLockKey(request);
-            String lockValue = generateLockValue(user.getId());
-            if (distributedLock.tryLock(lockKey, lockValue, 30000)) {
-                    // 예약 실제 처리 (DB 등)
-                    for (LocalDate date = start; date.isBefore(end); date = date.plusDays(1)) {
-                        String statusKey = String.format("queue:hotel:%s:room:%s:date:%s",
-                                request.getHotelId(),
-                                request.getRoomId(),
-                                date
-                        );
-                        System.out.println("여기서 터짐:1 ");
-                        String queueKey = "queue:hotel:" + request.getHotelId() + ":room:" + request.getRoomId() + ":date:" + date;
-                        System.out.println("여기서 터짐:2 ");
-//                        redisTemplate.opsForHash().put(statusKey, String.valueOf(request.getUserId()), "PROCESSING");
-//                        redisTemplate.opsForHash().put(statusKey, String.valueOf(request.getUserId()), "PROCESSING");
-                        System.out.println("여기서 터짐 : 3");
-                        queueReservationService.processNextInQueue(queueKey, lockKey, lockValue, 1500);
-                        System.out.println("여기서 터짐 : 4");
-                        redisTemplate.expire(statusKey, 1500, TimeUnit.SECONDS);  // TTL 설정
-                    }
-                        Reservation pendingReservation = reservationRepository.save(reservation);
-                    // 2. 바로 성공 리턴 → 프론트에서 결제 화면으로 이동
-                    return ReservationResponse.success(pendingReservation.getUuid());
-
-            } else {
-                // 락 못 얻으면 대기열에서 대기
-                return ReservationResponse.waiting(position);
-            }
-        }
-        else if( position<10){
-            List<LocalDate> dates = new ArrayList<>();
-            for(LocalDate date= request.getCheckIn(); date.isBefore(request.getCheckOut()); date= date.plusDays(1)){
-                dates.add(date);
-            }
-            for(int i=0; i<dates.size(); i++){
-                String chatRoom = String.format("hotelId:%s:roomId:%s:date:%s", request.getHotelId(),request.getRoomId(),dates.get(i));
-
-
-            messageTemplates.convertAndSend(chatRoom, position);
-            }
-            return ReservationResponse.connect("CONNECT");
-        }
-
-        else {
-            // 대기 중 상태 리턴
-            return ReservationResponse.waiting(position);
-        }
+        return ReservationResponse.success(String.valueOf(UUID.randomUUID()));
+//        if (position == -2) {
+//            return ReservationResponse.fail("재고가 없습니다.");
+//        } else if (position == -1) {
+//            return ReservationResponse.fail("이미 대기열에 등록되어 있습니다.");
+//        }
+//        if (position == 1) {
+//            LocalDate start = request.getCheckIn();
+//            LocalDate end = request.getCheckOut();
+//            // 바로 예약 처리 시도 (대기열 맨 앞)
+//            List<String> lockKey = generateLockKey(request);
+//            String lockValue = generateLockValue(user.getId());
+//            if (distributedLock.tryLock(lockKey, lockValue, 30000)) {
+//                    // 예약 실제 처리 (DB 등)
+//                    for (LocalDate date = start; date.isBefore(end); date = date.plusDays(1)) {
+//                        String statusKey = String.format("queue:hotel:%s:room:%s:date:%s",
+//                                request.getHotelId(),
+//                                request.getRoomId(),
+//                                date
+//                        );
+//                        System.out.println("여기서 터짐:1 ");
+//                        String queueKey = "queue:hotel:" + request.getHotelId() + ":room:" + request.getRoomId() + ":date:" + date;
+//                        System.out.println("여기서 터짐:2 ");
+////                        redisTemplate.opsForHash().put(statusKey, String.valueOf(request.getUserId()), "PROCESSING");
+////                        redisTemplate.opsForHash().put(statusKey, String.valueOf(request.getUserId()), "PROCESSING");
+//                        System.out.println("여기서 터짐 : 3");
+//                        queueReservationService.processNextInQueue(queueKey, lockKey, lockValue, 1500);
+//                        System.out.println("여기서 터짐 : 4");
+//                        redisTemplate.expire(statusKey, 1500, TimeUnit.SECONDS);  // TTL 설정
+//                    }
+//                        Reservation pendingReservation = reservationRepository.save(reservation);
+//                    // 2. 바로 성공 리턴 → 프론트에서 결제 화면으로 이동
+//                    return ReservationResponse.success(pendingReservation.getUuid());
+//
+//            } else {
+//                // 락 못 얻으면 대기열에서 대기
+//                return ReservationResponse.waiting(position);
+//            }
+//        }
+//        else if( position<10){
+//            List<LocalDate> dates = new ArrayList<>();
+//            for(LocalDate date= request.getCheckIn(); date.isBefore(request.getCheckOut()); date= date.plusDays(1)){
+//                dates.add(date);
+//            }
+//            for(int i=0; i<dates.size(); i++){
+//                String chatRoom = String.format("hotelId:%s:roomId:%s:date:%s", request.getHotelId(),request.getRoomId(),dates.get(i));
+//
+//
+//            messageTemplates.convertAndSend(chatRoom, position);
+//            }
+//            return ReservationResponse.connect("CONNECT");
+//        }
+//
+//        else {
+//            // 대기 중 상태 리턴
+//            return ReservationResponse.waiting(position);
+//        }
     }
 
     private List<String> generateLockKey(ReservationDto request) {
