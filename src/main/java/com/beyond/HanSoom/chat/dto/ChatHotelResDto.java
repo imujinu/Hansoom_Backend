@@ -5,13 +5,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Data
 @Builder
-public class ChatMessageRedisDto {
-    private String roomId;
-    private Long senderId;
-    private String message;
-    private long timestamp;
+public class ChatHotelResDto {
+    private Long hotelId;
+    private String name;
 }
