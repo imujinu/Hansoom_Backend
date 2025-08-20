@@ -34,6 +34,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
@@ -414,12 +415,11 @@ public class HotelService {
                     int available = reservationInventoryService.getInventory(dto);
                     return available > 0;
                 }))
-                .map(hotel -> {
+                .flatMap(hotel -> {
                     // 조건에 맞는 객실들 중 평균가가 가장 저렴한 객실 찾기
                     OptionalInt minAvgPrice = hotel.getRooms().stream()
                             .filter(room -> room.getState() != HotelState.REMOVE)
                             .filter(room -> room.getMaximumPeople() >= searchDto.getPeople())
-
                             .filter(room -> {
                                 ReservationDto dto = ReservationDto.builder()
                                         .hotelId(hotel.getId())
@@ -430,11 +430,23 @@ public class HotelService {
                                         .build();
                                 return reservationInventoryService.getInventory(dto) > 0;
                             })
-
                             .mapToInt(room -> calculateAveragePrice(room, searchDto.getCheckIn(), searchDto.getCheckOut()))
+                            // 가격 범위 필터링 추가
+                            .filter(avgPrice -> {
+                                // minPrice가 설정된 경우 최소가격 이상인지 확인
+                                boolean minPriceCondition = avgPrice >= searchDto.getMinPrice();
+
+                                // maxPrice가 설정된 경우 최대가격 이하인지 확인
+                                boolean maxPriceCondition = avgPrice <= searchDto.getMaxPrice();
+
+                                return minPriceCondition && maxPriceCondition;
+                            })
                             .min();
 
-                    return HotelListResponseDto.fromEntity(hotel, minAvgPrice.orElse(0));
+                    // 조건에 맞는 객실이 있는 경우만 결과에 포함
+                    return minAvgPrice.isPresent()
+                            ? Stream.of(HotelListResponseDto.fromEntity(hotel, minAvgPrice.getAsInt()))
+                            : Stream.empty();
                 })
                 .toList();
 
