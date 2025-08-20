@@ -1,5 +1,6 @@
 package com.beyond.HanSoom.common.config;
 
+import com.beyond.HanSoom.notification.service.SseAlarmService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -9,6 +10,9 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.listener.PatternTopic;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
@@ -94,7 +98,46 @@ public class RedisConfig {
     }
 
     @Bean
-    @Qualifier("bookingCacheInventory")
+    @Qualifier("ssePubSub")
+    public RedisConnectionFactory sseFactory() {
+        RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
+        configuration.setHostName(host);
+        configuration.setPort(port);
+
+        return new LettuceConnectionFactory(configuration);
+    }
+    @Bean
+    @Qualifier("ssePubSub")
+    public RedisTemplate<String, String> sseRedisTemplate(@Qualifier("ssePubSub") RedisConnectionFactory redisConnectionFactory) {
+        RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(new StringRedisSerializer());
+        redisTemplate.setConnectionFactory(redisConnectionFactory);
+        return redisTemplate;
+    }
+
+    // redis 리스너 객체
+    @Bean
+    @Qualifier("ssePubSub")
+    public RedisMessageListenerContainer redisMessageListenerContainer(
+            @Qualifier("ssePubSub") RedisConnectionFactory redisConnectionFactory,
+            MessageListenerAdapter messageListenerAdapter
+    ) {
+        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+
+        container.setConnectionFactory(redisConnectionFactory);
+        container.addMessageListener(messageListenerAdapter, new PatternTopic("notification-channel"));
+
+        return container;
+    }
+
+    // redis의 채널에서 수신된 메시지를 처리하는 빈객체 (위에서 수신한걸 여기서 처리한다.)
+    @Bean
+    public MessageListenerAdapter messageListenerAdapter(SseAlarmService sseAlarmService) {
+        return new MessageListenerAdapter(sseAlarmService, "onMessage");
+    }
+    @Bean
+    @Qualifier("bookingCacheInventoryFactory")
     public RedisConnectionFactory bookingCacheInventory(){
         RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
         configuration.setHostName(host);
@@ -105,12 +148,14 @@ public class RedisConfig {
 
     @Bean
     @Qualifier("bookingCacheInventory")
-    public RedisTemplate<String, Object> bookingCacheTemplate(@Qualifier("bookingCacheInventory") RedisConnectionFactory redisConnectionFactory){
+    public RedisTemplate<String, Object> bookingCacheTemplate(@Qualifier("bookingCacheInventoryFactory") RedisConnectionFactory redisConnectionFactory){
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(redisConnectionFactory);
+
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-        redisTemplate.setConnectionFactory(redisConnectionFactory);
+
+        redisTemplate.afterPropertiesSet();
         return redisTemplate;
     }
-
 }

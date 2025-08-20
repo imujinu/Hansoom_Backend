@@ -17,7 +17,7 @@ import java.util.List;
 @Data
 @Builder
 public class RoomDetailResponseDto {
-    private Long id;
+    private Long roomId;
     private String type;
     private int roomCount;
     private String roomOption1;
@@ -34,7 +34,7 @@ public class RoomDetailResponseDto {
 
     public static RoomDetailResponseDto fromEntity(Room room, List<RoomImageResponseDto> dto, int remainRoomCount) {
         return RoomDetailResponseDto.builder()
-                .id(room.getId())
+                .roomId(room.getId())
                 .type(room.getType())
                 .roomCount(room.getRoomCount())
                 .roomOption1(room.getRoomOption1())

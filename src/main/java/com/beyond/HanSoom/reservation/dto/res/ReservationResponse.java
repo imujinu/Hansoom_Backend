@@ -31,9 +31,8 @@ public class ReservationResponse {
         return response;
     }
 
-    public static ReservationResponse success(String reservationId, String orderId) {
+    public static ReservationResponse success(String reservationId) {
         ReservationResponse response = new ReservationResponse();
-        response.orderId = orderId;
         response.status = "SUCCESS";
         response.reservationId = reservationId;
         response.message = "예약이 완료되었습니다.";

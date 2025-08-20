@@ -41,4 +41,8 @@ public interface HotelRepository extends JpaRepository<Hotel, Long> {
             @Param("lng") double lng,
             @Param("radius") double radius,
             Pageable pageable);
+
+    Page<Hotel> findByState(Pageable pageable, HotelState hotelState);
+
+    List<Hotel> findAllByUser(User host);
 }

@@ -14,7 +14,7 @@ public class RedisDistributedLock {
     private final StringRedisTemplate redisTemplate;
 
 
-    public RedisDistributedLock (StringRedisTemplate redisTemplate) {
+    public RedisDistributedLock (@Qualifier("distributeLock") StringRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 

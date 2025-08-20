@@ -17,15 +17,6 @@ public class HotelLocationListResponseDto {
     private String image;
     private int price;
     private double distance;
-
-    public static HotelLocationListResponseDto fromEntity(Hotel hotel, double distance) {
-        return HotelLocationListResponseDto.builder()
-                .id(hotel.getId())
-                .hotelName(hotel.getHotelName())
-                .address(hotel.getAddress())
-                .image(hotel.getImage())
-//                .price()
-                .distance(distance)
-                .build();
-    }
+    private double latitude;
+    private double longitude;
 }
