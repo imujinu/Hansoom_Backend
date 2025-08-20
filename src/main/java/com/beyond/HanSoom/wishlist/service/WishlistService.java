@@ -47,7 +47,6 @@ public class WishlistService {
                 .toList();
     }
 
-
     // 찜 상세조회
     @Transactional(readOnly = true)
     public List<WishlistListDto> getWishlist(long userId) {
