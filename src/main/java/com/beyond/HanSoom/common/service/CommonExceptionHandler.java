@@ -1,6 +1,7 @@
 package com.beyond.HanSoom.common.service;
 
 import com.beyond.HanSoom.common.dto.CommonErrorDto;
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -22,6 +23,12 @@ public class CommonExceptionHandler {
     public ResponseEntity<?> entityNotFoundException(EntityNotFoundException e) {
         log.error("[HANSOOM][ERROR] - CommonExceptionHandler/EntityNotFoundException - {}", e.getMessage());
         return new ResponseEntity<>(new CommonErrorDto(HttpStatus.NOT_FOUND.value(), e.getMessage()), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(EntityExistsException.class)
+    public ResponseEntity<?> entityExistsException(EntityExistsException e) {
+        log.error("[HANSOOM][ERROR] - CommonExceptionHandler/EntityExistsException - {}", e.getMessage());
+        return new ResponseEntity<>(new CommonErrorDto(HttpStatus.CONFLICT.value(), e.getMessage()), HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
