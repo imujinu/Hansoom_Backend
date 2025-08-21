@@ -1,4 +1,4 @@
-package com.beyond.HanSoom.reservation.queue.service;
+package com.beyond.HanSoom.reservation.service;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -59,7 +59,7 @@ public class QueueService {
         emitter.onTimeout(() -> emitters.remove(emitter));
     }
 
-    private void broadcastQueue(String queueKey) {
+    public void broadcastQueue(String queueKey) {
         Map<String, Long> sorted = getSortedQueue(queueKey);
         for (SseEmitter emitter : emitters) {
             try {

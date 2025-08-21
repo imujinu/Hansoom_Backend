@@ -1,6 +1,7 @@
 package com.beyond.HanSoom.reservation.controller;
 
 import com.beyond.HanSoom.common.annotation.LimitRequestPerTime;
+import com.beyond.HanSoom.common.annotation.QueueLimit;
 import com.beyond.HanSoom.common.dto.CommonSuccessDto;
 import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.reservation.dto.req.ReservationCompleteReqDto;
@@ -9,6 +10,7 @@ import com.beyond.HanSoom.reservation.dto.req.ReservationReqDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationCacheResDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResponse;
+import com.beyond.HanSoom.reservation.service.QueueService;
 import com.beyond.HanSoom.reservation.service.ReservationPaymentService;
 import com.beyond.HanSoom.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -27,6 +30,8 @@ import java.util.concurrent.TimeUnit;
 public class ReservationController {
     private final ReservationService reservationService;
     private final ReservationPaymentService reservationPaymentService;
+    private final QueueService queueService;
+
     //예약 신청
     @LimitRequestPerTime(prefix = "1", count = 10, ttlTimeUnit = TimeUnit.SECONDS, ttl = 30)
     @PostMapping("/confirm")
@@ -63,4 +68,20 @@ public class ReservationController {
         String reserveId= reservationService.cancel(reservationId);
         return new ResponseEntity<>(reserveId, HttpStatus.ACCEPTED);
     }
+
+    @QueueLimit
+    @GetMapping("/enter-queue")
+    public String enterQueue(@RequestParam String queueKey, @RequestParam String userId) {
+        return "대기열 등록 완료: " + userId;
+    }
+
+    @GetMapping("/queue-status")
+    public SseEmitter queueStatus(@RequestParam String queueKey) {
+        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+        queueService.registerEmitter(emitter);
+        queueService.broadcastQueue(queueKey);
+        return emitter;
+    }
+
+
 }
