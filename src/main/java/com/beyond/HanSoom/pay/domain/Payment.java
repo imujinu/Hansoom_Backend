@@ -32,7 +32,7 @@ public class Payment {
     @Column(nullable = false)
     private String price;
 
-    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private State state;
 
     @Column(nullable = false)

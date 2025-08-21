@@ -1,6 +1,9 @@
 package com.beyond.HanSoom.hotel.domain;
 
+import com.beyond.HanSoom.common.domain.BaseTimeEntity;
+import com.beyond.HanSoom.review.domain.HotelReviewSummary;
 import com.beyond.HanSoom.room.domain.Room;
+import com.beyond.HanSoom.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +19,7 @@ import java.util.List;
 @Getter
 @Builder
 @Entity
-public class Hotel {
+public class Hotel extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -34,9 +37,26 @@ public class Hotel {
     private double latitude;
     private double longitude;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
     @Builder.Default
     @OneToMany(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Room> rooms = new ArrayList<>();
+
+    @OneToOne(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private HotelReviewSummary hotelReviewSummary;
+
+    @PrePersist
+    private void ensureSummary() {
+        if (this.hotelReviewSummary == null) {
+            HotelReviewSummary summary = new HotelReviewSummary();
+            summary.setHotel(this);
+            this.hotelReviewSummary = summary;
+        }
+    }
+
 
     public void updateState(HotelState state) {
         this.state = state;

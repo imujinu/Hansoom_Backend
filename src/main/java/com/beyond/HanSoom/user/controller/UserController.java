@@ -90,7 +90,7 @@ public class UserController {
     // 사용자 정보 수정 (마이페이지)
     @PutMapping("/update")
     // Todo - 프로필 사진 수정
-    public ResponseEntity<?> updateUser(@RequestBody @Valid UserUpdateDto dto) {
+    public ResponseEntity<?> updateUser(@ModelAttribute @Valid UserUpdateDto dto) {
         Long userId = userService.updateUser(dto);
         return new ResponseEntity<>(new CommonSuccessDto(userId, HttpStatus.OK.value(), "사용자 정보 수정 성공"), HttpStatus.OK);
     }

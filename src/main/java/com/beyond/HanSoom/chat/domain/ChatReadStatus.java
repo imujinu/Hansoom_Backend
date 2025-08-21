@@ -1,5 +1,6 @@
 package com.beyond.HanSoom.chat.domain;
 
+import com.beyond.HanSoom.common.domain.BaseTimeEntity;
 import com.beyond.HanSoom.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -12,20 +13,27 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ChatReadStatus {
+public class ChatReadStatus extends BaseTimeEntity {
     @Id
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private boolean readStatus;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "chat_message_id")
-    private ChatMessage chatMessage;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "chat_room_id")
+    @JoinColumn(name="chat_room_id", nullable = false)
     private ChatRoom chatRoom;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false )
     private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "chat_message_id", nullable = false)
+    private ChatMessage chatMessage;
+
+    @Column(nullable = false)
+    private Boolean isRead;
+
+    public void updateIsRead( boolean isRead) {
+        this.isRead = isRead;
+    }
 }

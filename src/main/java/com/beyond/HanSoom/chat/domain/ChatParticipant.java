@@ -1,5 +1,6 @@
 package com.beyond.HanSoom.chat.domain;
 
+import com.beyond.HanSoom.common.domain.BaseTimeEntity;
 import com.beyond.HanSoom.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -12,7 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ChatUser {
+public class ChatParticipant extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;
@@ -25,11 +26,15 @@ public class ChatUser {
     @JoinColumn(name ="chat_room_id")
     private ChatRoom chatRoom;
 
+    @Builder.Default
+    private String isOnline = "N";
 
     private boolean exitYn;
 
     @Builder.Default
     private boolean participationYn = true;
 
-
+    public void updateOnlineState(String state){
+        this.isOnline = state;
+    }
 }

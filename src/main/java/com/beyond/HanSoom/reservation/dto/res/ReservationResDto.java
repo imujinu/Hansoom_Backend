@@ -4,11 +4,14 @@ package com.beyond.HanSoom.reservation.dto.res;
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.reservation.domain.State;
+import com.beyond.HanSoom.review.domain.Review;
+import com.beyond.HanSoom.room.domain.Room;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -17,43 +20,37 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 public class ReservationResDto {
-    private String uuid;
-    private HotelDto hotelDto;
-    private Long roomId;
+    private Long hotelId;
+    private String hotelName;
+    private String hotelImage;
+    private BigDecimal hotelRating;
+    private String roomType;
     private LocalDate checkIn;
     private LocalDate checkOut;
-    private Long people;
+    private Long guests;
     private Long totalPrice;
-    private State state;
+    private String status;
+    private LocalDate bookingDate;
+    private String reservationNumber;
+    private String address;
 
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    @Builder
-    public static class HotelDto{
-        private String hotelName;
-        private String hotelAddress;
-        private String hotelImage;
-
-    }
-
-
-
-    public ReservationResDto fromEntity(Reservation reservation){
+    public ReservationResDto fromEntity(Reservation reservation, BigDecimal hotelRating, String status){
         Hotel hotel = reservation.getHotel();
+        Room room = reservation.getRoom();
         return ReservationResDto.builder()
-                .uuid(reservation.getUuid())
-                .hotelDto(HotelDto.builder()
-                        .hotelName(hotel.getHotelName())
-                        .hotelAddress(hotel.getAddress())
-                        .hotelImage(hotel.getImage())
-                        .build())
-                .roomId(reservation.getRoom().getId())
+                .hotelId(hotel.getId())
+                .hotelName(hotel.getHotelName())
+                .hotelImage(hotel.getImage())
+                .hotelRating(hotelRating)
+                .roomType(room.getType())
                 .checkIn(reservation.getCheckInDate())
                 .checkOut(reservation.getCheckOutDate())
-                .people(reservation.getPeople())
+                .guests(reservation.getPeople())
                 .totalPrice(reservation.getPrice())
-                .state(reservation.getState())
+                .status(status)
+                .bookingDate(reservation.getReservationDate().toLocalDate())
+                .reservationNumber(reservation.getUuid())
+                .address(hotel.getAddress())
                 .build();
     }
 
