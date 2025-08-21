@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 @NoArgsConstructor
@@ -17,4 +18,5 @@ public class UserUpdateDto {
     private String nickName;
     @NotEmpty(message = "전화번호가 비어있습니다.")
     private String phoneNumber;
+    private MultipartFile profileImage;
 }

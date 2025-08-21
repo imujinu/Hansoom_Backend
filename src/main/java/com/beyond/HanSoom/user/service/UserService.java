@@ -161,6 +161,13 @@ public class UserService {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("없는 사용자입니다."));
         user.updateUserInfo(dto.getName(), dto.getNickName(), dto.getPhoneNumber());
 
+        if(dto.getProfileImage() != null) {
+            String profileImageUrl = (!dto.getProfileImage().isEmpty())
+                    ? s3Uploader.upload(dto.getProfileImage(), "user")
+                    : null;
+            user.updateProfileImage(profileImageUrl);
+        }
+
         log.info("[HANSOOM][INFO] - UserService/updateUser - 사용자 정보 수정 성공, email={}", email);
 
         return user.getId();
