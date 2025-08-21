@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @AllArgsConstructor
@@ -24,6 +25,8 @@ public class HotelDetailSearchResponseDto {
     private HotelType type;
     private double latitude;
     private double longitude;
+    private BigDecimal rating;
+    private int reviewCount;
     private List<RoomDetailSearchResponseDto> roomDetailResponseDtoList;
 
     public static HotelDetailSearchResponseDto fromEntity(Hotel hotel, List<RoomDetailSearchResponseDto> dto) {
@@ -36,6 +39,8 @@ public class HotelDetailSearchResponseDto {
                 .type(hotel.getType())
                 .latitude(hotel.getLatitude())
                 .longitude(hotel.getLongitude())
+                .rating(hotel.getHotelReviewSummary().getAverage())
+                .reviewCount(hotel.getHotelReviewSummary().getRatingCount())
                 .roomDetailResponseDtoList(dto)
                 .build();
     }
