@@ -26,29 +26,7 @@ public class RedisConfig {
     @Value("${spring.redis.port}")
     private int port;
 
-    @Bean
-    @Qualifier("reservationList")
-    public RedisConnectionFactory redisConnectionFactory(){
-        RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
-        configuration.setHostName(host);
-        configuration.setPort(port);
-        configuration.setDatabase(8);
-        return new LettuceConnectionFactory(configuration);
-    }
 
-
-    @Bean
-    @Qualifier("reservationList")
-    public RedisTemplate<String, String> redisTemplate(@Qualifier("reservationList")RedisConnectionFactory redisConnectionFactory){
-        RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setKeySerializer(new StringRedisSerializer());
-        redisTemplate.setValueSerializer(new StringRedisSerializer());
-        redisTemplate.setHashKeySerializer(new StringRedisSerializer());
-        redisTemplate.setHashValueSerializer(new StringRedisSerializer());
-        redisTemplate.setConnectionFactory(redisConnectionFactory);
-        return redisTemplate;
-
-    }
 
     @Bean
     @Qualifier("rtInventory")
@@ -70,12 +48,7 @@ public class RedisConfig {
         return redisTemplate;
     }
 
-    @Bean
-    @Qualifier("distributeLock")
-    public StringRedisTemplate distributeLockStringRedisTemplate(
-            @Qualifier("reservationList") RedisConnectionFactory factory) {
-        return new StringRedisTemplate(factory);
-    }
+
 
     @Bean
     @Qualifier("rateLimiter")
@@ -121,7 +94,7 @@ public class RedisConfig {
     @Qualifier("ssePubSub")
     public RedisMessageListenerContainer redisMessageListenerContainer(
             @Qualifier("ssePubSub") RedisConnectionFactory redisConnectionFactory,
-            MessageListenerAdapter messageListenerAdapter
+            @Qualifier("sseMessageListenerAdapter") MessageListenerAdapter messageListenerAdapter
     ) {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
 
@@ -133,29 +106,9 @@ public class RedisConfig {
 
     // redis의 채널에서 수신된 메시지를 처리하는 빈객체 (위에서 수신한걸 여기서 처리한다.)
     @Bean
+    @Qualifier("sseMessageListenerAdapter")
     public MessageListenerAdapter messageListenerAdapter(SseAlarmService sseAlarmService) {
         return new MessageListenerAdapter(sseAlarmService, "onMessage");
     }
-    @Bean
-    @Qualifier("bookingCacheInventoryFactory")
-    public RedisConnectionFactory bookingCacheInventory(){
-        RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
-        configuration.setHostName(host);
-        configuration.setPort(port);
-        configuration.setDatabase(9);
-        return new LettuceConnectionFactory(configuration);
-    }
 
-    @Bean
-    @Qualifier("bookingCacheInventory")
-    public RedisTemplate<String, Object> bookingCacheTemplate(@Qualifier("bookingCacheInventoryFactory") RedisConnectionFactory redisConnectionFactory){
-        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setConnectionFactory(redisConnectionFactory);
-
-        redisTemplate.setKeySerializer(new StringRedisSerializer());
-        redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-
-        redisTemplate.afterPropertiesSet();
-        return redisTemplate;
-    }
 }

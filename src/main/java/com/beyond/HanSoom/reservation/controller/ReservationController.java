@@ -9,6 +9,7 @@ import com.beyond.HanSoom.reservation.dto.req.ReservationReqDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationCacheResDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResponse;
+import com.beyond.HanSoom.reservation.service.ReservationPaymentService;
 import com.beyond.HanSoom.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,20 +26,20 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class ReservationController {
     private final ReservationService reservationService;
-
+    private final ReservationPaymentService reservationPaymentService;
     //예약 신청
     @LimitRequestPerTime(prefix = "1", count = 10, ttlTimeUnit = TimeUnit.SECONDS, ttl = 30)
     @PostMapping("/confirm")
     public ResponseEntity<?> reservation(@RequestBody ReservationReqDto dto){
-        ReservationResponse result = reservationService.confirm(dto);
+        ReservationResponse result = reservationPaymentService.confirm(dto);
         System.out.println("response :::::::: " + result);
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return new ResponseEntity<>(new CommonSuccessDto(result, HttpStatus.ACCEPTED.value(), "결제 요청 중 "), HttpStatus.ACCEPTED);
     }
 
     //예약 확정
     @PostMapping("/complete")
     public ResponseEntity<?> complete(@RequestBody ReservationCompleteReqDto dto){
-        Long reservationId = reservationService.complete(dto);
+        Long reservationId = reservationPaymentService.complete(dto);
         return new ResponseEntity<>(new CommonSuccessDto(reservationId, HttpStatus.ACCEPTED.value(), "예약에 성공하였습니다."), HttpStatus.ACCEPTED);
     }
     //예약 전체 조회
