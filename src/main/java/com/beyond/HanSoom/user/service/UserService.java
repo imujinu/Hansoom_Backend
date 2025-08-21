@@ -166,6 +166,8 @@ public class UserService {
                     ? s3Uploader.upload(dto.getProfileImage(), "user")
                     : null;
             user.updateProfileImage(profileImageUrl);
+        } else {
+            user.updateProfileImage(null);
         }
 
         log.info("[HANSOOM][INFO] - UserService/updateUser - 사용자 정보 수정 성공, email={}", email);
