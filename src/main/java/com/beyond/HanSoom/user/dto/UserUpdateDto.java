@@ -19,4 +19,5 @@ public class UserUpdateDto {
     @NotEmpty(message = "전화번호가 비어있습니다.")
     private String phoneNumber;
     private MultipartFile profileImage;
+    private boolean removeProfileImage;
 }
