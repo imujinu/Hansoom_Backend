@@ -9,6 +9,8 @@ import com.beyond.HanSoom.hotel.dto.*;
 import com.beyond.HanSoom.hotel.repository.HotelRepository;
 import com.beyond.HanSoom.notification.service.NotificationService;
 import com.beyond.HanSoom.notification.service.SseAlarmService;
+import com.beyond.HanSoom.review.domain.HotelReviewSummary;
+import com.beyond.HanSoom.review.repository.HotelReviewSummaryRepository;
 import com.beyond.HanSoom.room.domain.Room;
 import com.beyond.HanSoom.room.dto.RoomDetailResponseDto;
 import com.beyond.HanSoom.room.dto.RoomDetailSearchResponseDto;
@@ -31,6 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.*;
@@ -52,6 +55,7 @@ public class HotelService {
     private final RoomImageRepository roomImageRepository;
     private final NotificationService notificationService;
     private final SseAlarmService sseAlarmService;
+    private final HotelReviewSummaryRepository hotelReviewSummaryRepository;
 
     public void registerHotel(HotelRegisterRequsetDto dto, MultipartFile hotelImage, List<MultipartFile> roomImages) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -499,6 +503,8 @@ public class HotelService {
 
                     .toList();
 
+            HotelReviewSummary hotelReviewSummary = hotelReviewSummaryRepository.findByHotelId(id);
+
             if (!availableRooms.isEmpty()) {
                 // 조건에 맞는 방 중 1박 평균 가격 가장 낮은 방 찾기
                 int minAvgPrice = availableRooms.stream()
@@ -515,6 +521,8 @@ public class HotelService {
                         .longitude(longitude)
                         .distance(distance)
                         .price(minAvgPrice)
+                        .rating(hotelReviewSummary.getAverage())
+                        .reviewCount(hotelReviewSummary.getRatingCount())
                         .build());
             }
         }
