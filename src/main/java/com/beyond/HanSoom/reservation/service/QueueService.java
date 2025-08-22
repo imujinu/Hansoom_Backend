@@ -21,7 +21,7 @@ public class QueueService {
 
     private final RedisTemplate<String, String> redisTemplate;
     private final Map<String, SseEmitter> emitters = new ConcurrentHashMap<>();
-    private final int maxQueueSize = 1;
+    private final int maxQueueSize = 5;
     private final long userTtlSeconds = 600; // 개별 유저 TTL
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private final UserRepository userRepository;
@@ -33,7 +33,7 @@ public class QueueService {
         // 1초마다 TTL 만료 체크 및 SSE 브로드캐스트
         scheduler.scheduleAtFixedRate(() -> {
             broadcastAllQueues();
-            removeExpiredUsers();
+//            removeExpiredUsers();
         }, 0, 1, TimeUnit.SECONDS);
     }
 
@@ -99,12 +99,8 @@ public class QueueService {
             String[] parts = key.split(":", 2);
             String userId = parts[0];
             String queueKey = parts[1];
-            System.out.println("queueKEy");
-            System.out.println(queueKey);
             String ttlKey = queueKey + ":" + userId;
             Boolean exists = redisTemplate.hasKey(ttlKey);
-            System.out.println("exist=============");
-            System.out.println(exists);
             if (exists == null || !exists) {
                 redisTemplate.opsForZSet().remove(queueKey, userId);
                 emitters.remove(key);
@@ -114,8 +110,8 @@ public class QueueService {
 
     /** SSE 1초 브로드캐스트 */
     private void broadcastAllQueues() {
-        System.out.println("emmitersSize::");
-        System.out.println(emitters.size());
+
+        System.out.println("emitter.size======" + emitters.size());
         Map<String, List<String>> cache = new HashMap<>();
         for (Map.Entry<String, SseEmitter> entry : emitters.entrySet()) {
             String emitterKey = entry.getKey();
