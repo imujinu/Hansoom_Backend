@@ -51,7 +51,12 @@ public class RedisReservationConfig {
     @Bean
     @Qualifier("queueRedisFactory")
     public RedisConnectionFactory queueRedisFactory() {
-        return new LettuceConnectionFactory("localhost", 6379);
+        RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
+        configuration.setPort(port);
+        configuration.setHostName(host);
+        configuration.setDatabase(3);
+
+        return new LettuceConnectionFactory(configuration);
     }
 
     @Bean
