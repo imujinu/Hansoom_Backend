@@ -59,5 +59,6 @@ public class StompEventListener {
         chatService.updateOnlineState(email,roomId,"N");
 
         log.info("Session DisConnected : " + sessionId + "roomId : " + roomId);
+        WebSocketSessionRegistry.unregister(accessor.getSessionId());
     }
 }
