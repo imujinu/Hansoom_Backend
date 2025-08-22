@@ -21,6 +21,8 @@ public interface HotelRepository extends JpaRepository<Hotel, Long> {
 
     Optional<Hotel> findByUserAndState(User user, HotelState hotelState);
 
+    Optional<Hotel> findTopByUserAndState(User user, HotelState hotelState);
+
     Optional<Hotel> findByIdAndState(Long id, HotelState hotelState);
 
 
