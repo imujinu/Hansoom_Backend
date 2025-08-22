@@ -35,7 +35,9 @@ public class User {
     private UserState state = UserState.NORMAL;
     private String profileImage;
     @Enumerated(value = EnumType.STRING)
+    @Setter
     private SocialType socialType;
+    @Setter
     private String socialId;
     @CreationTimestamp // Todo - BaseClass로 빼기 (@MappedSuperClass)
     private LocalDateTime createdTime;

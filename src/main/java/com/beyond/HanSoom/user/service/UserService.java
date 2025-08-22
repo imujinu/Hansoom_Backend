@@ -1,5 +1,7 @@
 package com.beyond.HanSoom.user.service;
 
+import com.beyond.HanSoom.common.service.LinkTicketPayload;
+import com.beyond.HanSoom.common.service.LinkTicketService;
 import com.beyond.HanSoom.common.service.S3Uploader;
 import com.beyond.HanSoom.user.domain.SocialType;
 import com.beyond.HanSoom.user.domain.User;
@@ -7,6 +9,7 @@ import com.beyond.HanSoom.user.domain.UserState;
 import com.beyond.HanSoom.user.dto.*;
 import com.beyond.HanSoom.user.repository.UserRepository;
 import com.beyond.HanSoom.common.auth.JwtTokenProvider;
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +32,7 @@ public class UserService {
     private final GoogleService googleService;
     private final KakaoService kakaoService;
     private final S3Uploader s3Uploader;
+    private final LinkTicketService linkTicketService;
 
 
     // 회원가입
@@ -54,6 +58,7 @@ public class UserService {
         User user = userRepository.findByEmail(dto.getEmail()).orElseThrow(() -> new EntityNotFoundException("없는 사용자입니다."));
         boolean isValidPassword = passwordEncoder.matches(dto.getPassword(), user.getPassword());
         if(!isValidPassword) throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        if(user.getState() == UserState.WITHDRAW) throw new IllegalArgumentException("탈퇴한 회원입니다.");
 
         // 토큰 생성해서 반환
         String accessToken = jwtTokenProvider.createAtToken(user);
@@ -75,16 +80,46 @@ public class UserService {
         // 회원가입이 되어있지 않다면 회원가입
         User user = userRepository.findBySocialId(googleProfileDto.getSub()).orElse(null);
         if(user == null) {
+            boolean isValid = userRepository.findByEmail(googleProfileDto.getEmail()).isPresent();
+            if(isValid) {
+                LinkTicketPayload payload = new LinkTicketPayload(googleProfileDto.getEmail(), googleProfileDto.getSub(), "GOOGLE");
+                String ticket = linkTicketService.createTicket(payload);
+                throw new EntityExistsException(ticket);
+            }
+
             user = googleService.createOauth(googleProfileDto);
-            userRepository.save(user);
+            userRepository.save(user); // 여기서 이메일 중복 오류
             log.info("[HANSOOM][INFO] - UserService/googleLogin - google 회원가입 성공, email={}", user.getEmail());
         }
+        if(user.getState() == UserState.WITHDRAW) throw new IllegalArgumentException("탈퇴한 회원입니다.");
 
         // 토큰 생성해서 반환
         String accessToken = jwtTokenProvider.createAtToken(user);
         String refreshToken = jwtTokenProvider.createRtToken(user);
 
         log.info("[HANSOOM][INFO] - UserService/googleLogin - google 로그인 성공, email={}", user.getEmail());
+
+        return new UserLoginResDto(accessToken, refreshToken);
+    }
+
+    // 구글 연동 및 로그인
+    public UserLoginResDto googleReLogin(RedirectLinkTicketDto dto) {
+        String linkTicket = dto.getLinkTicket();
+        LinkTicketPayload payload = linkTicketService.consumeTicket(linkTicket);
+        String email = payload.email();
+        String socialId = payload.sub();
+
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("없는 회원입니다."));
+        if(user.getState() == UserState.WITHDRAW) throw new IllegalArgumentException("탈퇴한 회원입니다.");
+
+        user.setSocialType(SocialType.GOOGLE);
+        user.setSocialId(socialId);
+
+        // 토큰 생성해서 반환
+        String accessToken = jwtTokenProvider.createAtToken(user);
+        String refreshToken = jwtTokenProvider.createRtToken(user);
+
+        log.info("[HANSOOM][INFO] - UserService/googleLogin - google 연동 및 로그인 성공, email={}", user.getEmail());
 
         return new UserLoginResDto(accessToken, refreshToken);
     }
@@ -104,6 +139,7 @@ public class UserService {
             userRepository.save(user);
             log.info("[HANSOOM][INFO] - UserService/googleLogin - kakao 회원가입 성공, email={}", user.getEmail());
         }
+        if(user.getState() == UserState.WITHDRAW) throw new IllegalArgumentException("탈퇴한 회원입니다.");
 
         // 토큰 생성해서 반환
         String accessToken = jwtTokenProvider.createAtToken(user);
