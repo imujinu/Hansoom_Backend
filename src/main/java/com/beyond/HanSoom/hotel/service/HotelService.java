@@ -414,7 +414,7 @@ public class HotelService {
         Specification<Hotel> spec = HotelSpecification.withSearchConditions(searchDto);
         Page<Hotel> hotelPage = hotelRepository.findAll(spec, pageable);
 
-        List<HotelListResponseDto> result = hotelPage.getContent().stream()
+        List<HotelListResponseDto> result = new ArrayList<>(hotelPage.getContent().stream()
                 .filter(hotel -> hotel.getRooms().stream().anyMatch(room -> {
                     if (room.getState() == HotelState.REMOVE) return false;
                     if (room.getMaximumPeople() < searchDto.getPeople()) return false;
@@ -457,13 +457,44 @@ public class HotelService {
                                 return minPriceCondition && maxPriceCondition;
                             })
                             .min();
+                    if (searchDto.getRating() != null) {
+                        if (hotel.getHotelReviewSummary().getAverage().compareTo(searchDto.getRating()) < 0) {
+                            return Stream.empty();
+                        }
+                    }
 
                     // 조건에 맞는 객실이 있는 경우만 결과에 포함
                     return minAvgPrice.isPresent()
                             ? Stream.of(HotelListResponseDto.fromEntity(hotel, minAvgPrice.getAsInt()))
                             : Stream.empty();
                 })
-                .toList();
+                .toList());
+
+        // 정렬 조건에 따라 결과 리스트 정렬
+        if (!result.isEmpty() && searchDto.getSortOption() != null) {
+            String[] sortParams = searchDto.getSortOption().split(",");
+            String sortBy = sortParams[0];
+            String sortDirection = sortParams[1];
+
+            Comparator<HotelListResponseDto> comparator = null;
+
+            if ("price".equals(sortBy)) {
+                comparator = Comparator.comparing(HotelListResponseDto::getPrice);
+            } else if ("rating".equals(sortBy)) {
+                // 평점은 BigDecimal 타입이므로 compareTo 메서드를 사용하여 비교
+                comparator = Comparator.comparing(
+                        HotelListResponseDto::getRating,
+                        Comparator.nullsLast(BigDecimal::compareTo)
+                );
+            }
+
+            if (comparator != null) {
+                if ("desc".equals(sortDirection)) {
+                    comparator = comparator.reversed();
+                }
+                result.sort(comparator);
+            }
+        }
 
         return new PageImpl<>(result, pageable, result.size());
     }
