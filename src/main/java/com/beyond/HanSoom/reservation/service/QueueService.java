@@ -33,7 +33,7 @@ public class QueueService {
         // 1초마다 TTL 만료 체크 및 SSE 브로드캐스트
         scheduler.scheduleAtFixedRate(() -> {
             broadcastAllQueues();
-//            removeExpiredUsers();
+            removeExpiredUsers();
         }, 0, 1, TimeUnit.SECONDS);
     }
 
@@ -76,6 +76,7 @@ public class QueueService {
         redisTemplate.delete(ttlKey);
 
         emitters.remove(userId + ":" + queueKey);
+        broadcastAllQueues();
     }
 
     /** SSE 구독 등록 */
@@ -107,11 +108,24 @@ public class QueueService {
             }
         }
     }
+    private void removeUser(){
+        String userId = getUserId();
+        String queueKey = null;
+
+        for(String key : emitters.keySet()){
+            if(key.startsWith(userId + "")){
+                queueKey = key.split(":",2)[1];
+                break;
+            }
+        }
+
+        emitters.remove(userId);
+        redisTemplate.opsForZSet().remove(queueKey,userId);
+    }
 
     /** SSE 1초 브로드캐스트 */
     private void broadcastAllQueues() {
 
-        System.out.println("emitter.size======" + emitters.size());
         Map<String, List<String>> cache = new HashMap<>();
         for (Map.Entry<String, SseEmitter> entry : emitters.entrySet()) {
             String emitterKey = entry.getKey();
