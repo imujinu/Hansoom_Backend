@@ -178,11 +178,13 @@ public class ChatService {
             ChatRoom chatRoom = cp.getChatRoom();
             Hotel hotel = chatRoom.getHotel();
             Long unReadCount = getUnReadCount(chatRoom, user);
+            Long participantCount = chatParticipantRepository.countByChatRoom(chatRoom);
             return ChatMyChatroomResDto.builder()
                     .roomId(chatRoom.getId())
                     .hotelName(hotel.getHotelName())
                     .isGroupChat(chatRoom.getIsGroupChat())
                     .unReadCount(unReadCount)
+                    .participants(participantCount)
                     .build();
 
         }).collect(Collectors.toList());
@@ -211,6 +213,7 @@ public class ChatService {
                     .roomId(chatRoom.getId())
                     .timestamp(String.valueOf(c.getCreatedTime()))
                     .content(c.getContent())
+                    .senderName(c.getUser().getName())
                     .senderEmail(c.getUser().getEmail())
                     .build();
             chatMessageDtos.add(chatMessageDto);
