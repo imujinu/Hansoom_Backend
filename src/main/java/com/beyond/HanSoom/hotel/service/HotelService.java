@@ -374,7 +374,7 @@ public class HotelService {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("등록된 사용자가 없습니다."));
 
-        Hotel hotel = hotelRepository.findByUserAndState(user, HotelState.APPLY).orElseThrow(() -> new EntityNotFoundException("호텔 정보가 없습니다."));
+        Hotel hotel = hotelRepository.findTopByUserAndState(user, HotelState.APPLY).orElseThrow(() -> new EntityNotFoundException("호텔 정보가 없습니다."));
         List<RoomDetailResponseDto> roomDto = new ArrayList<>();
         for(Room r : hotel.getRooms()) {
             if(r.getState()==HotelState.REMOVE) continue;
@@ -409,94 +409,90 @@ public class HotelService {
     }
 
 //    고객 조회
-    @Transactional(readOnly = true)
     public Page<HotelListResponseDto> findAll(Pageable pageable, HotelListSearchDto searchDto) {
+        // 1. Specification을 사용해 DB에서 1차 필터링된 호텔 페이지를 가져옵니다.
+        // 이 쿼리는 Pageable 정보를 사용해 페이징 처리가 완료된 상태입니다.
         Specification<Hotel> spec = HotelSpecification.withSearchConditions(searchDto);
         Page<Hotel> hotelPage = hotelRepository.findAll(spec, pageable);
 
-        List<HotelListResponseDto> result = new ArrayList<>(hotelPage.getContent().stream()
-                .filter(hotel -> hotel.getRooms().stream().anyMatch(room -> {
-                    if (room.getState() == HotelState.REMOVE) return false;
-                    if (room.getMaximumPeople() < searchDto.getPeople()) return false;
-
-                    ReservationDto dto = ReservationDto.builder()
-                            .hotelId(hotel.getId())
-                            .roomId(room.getId())
-                            .checkIn(searchDto.getCheckIn())
-                            .checkOut(searchDto.getCheckOut())
-                            .maxStock(room.getRoomCount())
-                            .build();
-
-                    int available = reservationInventoryService.getInventory(dto);
-                    return available > 0;
-                }))
+        // 2. Page<Hotel>의 getContent()로 가져온 리스트에 대해 추가 비즈니스 로직 필터링 및 DTO 변환을 수행합니다.
+        List<HotelListResponseDto> dtoList = hotelPage.getContent().stream()
+                // 호텔에 객실이 존재하는지, 그리고 해당 객실에 예약 가능한 재고가 있는지 확인합니다.
+                .filter(hotel -> hotel.getRooms().stream().anyMatch(room ->
+                        isRoomAvailable(room, hotel.getId(), searchDto)
+                ))
+                // 각 호텔별로 가장 저렴한 객실 가격을 찾아 DTO로 변환합니다.
                 .flatMap(hotel -> {
-                    // 조건에 맞는 객실들 중 평균가가 가장 저렴한 객실 찾기
+                    // 조건에 맞는 객실들 중 평균가가 가장 저렴한 객실을 찾습니다.
                     OptionalInt minAvgPrice = hotel.getRooms().stream()
-                            .filter(room -> room.getState() != HotelState.REMOVE)
-                            .filter(room -> room.getMaximumPeople() >= searchDto.getPeople())
-                            .filter(room -> {
-                                ReservationDto dto = ReservationDto.builder()
-                                        .hotelId(hotel.getId())
-                                        .roomId(room.getId())
-                                        .checkIn(searchDto.getCheckIn())
-                                        .checkOut(searchDto.getCheckOut())
-                                        .maxStock(room.getRoomCount())
-                                        .build();
-                                return reservationInventoryService.getInventory(dto) > 0;
-                            })
+                            .filter(room -> isRoomAvailable(room, hotel.getId(), searchDto))
                             .mapToInt(room -> calculateAveragePrice(room, searchDto.getCheckIn(), searchDto.getCheckOut()))
-                            // 가격 범위 필터링 추가
-                            .filter(avgPrice -> {
-                                // minPrice가 설정된 경우 최소가격 이상인지 확인
-                                boolean minPriceCondition = avgPrice >= searchDto.getMinPrice();
-
-                                // maxPrice가 설정된 경우 최대가격 이하인지 확인
-                                boolean maxPriceCondition = avgPrice <= searchDto.getMaxPrice();
-
-                                return minPriceCondition && maxPriceCondition;
-                            })
+                            .filter(avgPrice ->
+                                    (avgPrice >= searchDto.getMinPrice()) && (avgPrice <= searchDto.getMaxPrice())
+                            )
                             .min();
+
+                    // 평점 필터링
                     if (searchDto.getRating() != null) {
                         if (hotel.getHotelReviewSummary().getAverage().compareTo(searchDto.getRating()) < 0) {
                             return Stream.empty();
                         }
                     }
 
-                    // 조건에 맞는 객실이 있는 경우만 결과에 포함
                     return minAvgPrice.isPresent()
                             ? Stream.of(HotelListResponseDto.fromEntity(hotel, minAvgPrice.getAsInt()))
                             : Stream.empty();
                 })
-                .toList());
+                .toList();
 
-        // 정렬 조건에 따라 결과 리스트 정렬
-        if (!result.isEmpty() && searchDto.getSortOption() != null) {
+        // 3. 정렬 조건에 따라 결과 리스트를 정렬합니다.
+        // 이 정렬은 DB에서 처리하는 것이 아니므로, 결과 리스트를 직접 정렬해야 합니다.
+        if (!dtoList.isEmpty() && searchDto.getSortOption() != null) {
             String[] sortParams = searchDto.getSortOption().split(",");
             String sortBy = sortParams[0];
             String sortDirection = sortParams[1];
-
             Comparator<HotelListResponseDto> comparator = null;
 
             if ("price".equals(sortBy)) {
                 comparator = Comparator.comparing(HotelListResponseDto::getPrice);
             } else if ("rating".equals(sortBy)) {
-                // 평점은 BigDecimal 타입이므로 compareTo 메서드를 사용하여 비교
-                comparator = Comparator.comparing(
-                        HotelListResponseDto::getRating,
-                        Comparator.nullsLast(BigDecimal::compareTo)
-                );
+                comparator = Comparator.comparing(HotelListResponseDto::getRating, Comparator.nullsLast(BigDecimal::compareTo));
             }
 
             if (comparator != null) {
                 if ("desc".equals(sortDirection)) {
                     comparator = comparator.reversed();
                 }
-                result.sort(comparator);
+                dtoList.sort(comparator);
             }
         }
 
-        return new PageImpl<>(result, pageable, result.size());
+        // 4. `PageImpl`을 생성할 때, 전체 데이터의 개수는 `hotelPage.getTotalElements()`를 사용합니다.
+        // 이렇게 하면 정확한 페이지네이션 정보(총 페이지 수, 총 데이터 개수)를 제공할 수 있습니다.
+        return new PageImpl<>(dtoList, pageable, hotelPage.getTotalElements());
+    }
+
+    /**
+     * 객실 상태, 인원수, 예약 가능 재고를 확인하는 헬퍼 메서드
+     */
+    private boolean isRoomAvailable(Room room, Long hotelId, HotelListSearchDto searchDto) {
+        if (room.getState() == HotelState.REMOVE) {
+            return false;
+        }
+        if (room.getMaximumPeople() < searchDto.getPeople()) {
+            return false;
+        }
+
+        ReservationDto dto = ReservationDto.builder()
+                .hotelId(hotelId)
+                .roomId(room.getId())
+                .checkIn(searchDto.getCheckIn())
+                .checkOut(searchDto.getCheckOut())
+                .maxStock(room.getRoomCount())
+                .build();
+
+        int available = reservationInventoryService.getInventory(dto);
+        return available > 0;
     }
 
     @Transactional(readOnly = true)
