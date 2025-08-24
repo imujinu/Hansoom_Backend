@@ -52,6 +52,13 @@ public class UserController {
         return new ResponseEntity<>(new CommonSuccessDto(userLoginResDto, HttpStatus.OK.value(), "google 로그인 성공"), HttpStatus.OK);
     }
 
+    // 구글 연동 로그인
+    @PostMapping("/google/reLogin")
+    public ResponseEntity<?> googleReLogin(@RequestBody RedirectLinkTicketDto dto) {
+        UserLoginResDto userLoginResDto = userService.googleReLogin(dto);
+        return new ResponseEntity<>(new CommonSuccessDto(userLoginResDto, HttpStatus.OK.value(), "google 연동 성공"), HttpStatus.OK);
+    }
+
     // 카카오 로그인 (정보 없으면 회원가입까지)
     @PostMapping("/kakao/login")
     public ResponseEntity<?> kakaoLogin(@RequestBody RedirectDto dto) {
@@ -90,7 +97,7 @@ public class UserController {
     // 사용자 정보 수정 (마이페이지)
     @PutMapping("/update")
     // Todo - 프로필 사진 수정
-    public ResponseEntity<?> updateUser(@RequestBody @Valid UserUpdateDto dto) {
+    public ResponseEntity<?> updateUser(@ModelAttribute @Valid UserUpdateDto dto) {
         Long userId = userService.updateUser(dto);
         return new ResponseEntity<>(new CommonSuccessDto(userId, HttpStatus.OK.value(), "사용자 정보 수정 성공"), HttpStatus.OK);
     }

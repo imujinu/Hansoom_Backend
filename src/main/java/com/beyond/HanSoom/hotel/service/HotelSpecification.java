@@ -2,6 +2,7 @@ package com.beyond.HanSoom.hotel.service;
 
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.hotel.domain.HotelState;
+import com.beyond.HanSoom.hotel.domain.HotelType;
 import com.beyond.HanSoom.hotel.dto.HotelListSearchDto;
 import com.beyond.HanSoom.room.domain.Room;
 import jakarta.persistence.criteria.Join;
@@ -28,6 +29,9 @@ public class HotelSpecification {
                 predicates.add(cb.like(root.get("hotelName"), "%" + dto.getHotelName() + "%"));
             } else if (dto.getAddress() != null && !dto.getAddress().isBlank()) {
                 predicates.add(cb.like(root.get("address"), "%" + dto.getAddress() + "%"));
+            }
+            if (!dto.getType().isEmpty()) {
+                predicates.add(root.get("type").in(dto.getType()));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));

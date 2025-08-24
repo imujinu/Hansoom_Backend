@@ -27,14 +27,13 @@ public class ReservationInventoryService {
         generateQueueKey(dto, keys);
 
         int minStock = Integer.MAX_VALUE;
-        int maxStock =  dto.getMaxStock();
+        int maxStock = dto.getMaxStock();
 
-        for(String s : keys){
-        Set<String> members = redisTemplate.opsForZSet().range(s, 0, -1);
-            long reservedCount = members.stream()
-                    .filter(m -> m.endsWith(":RESERVED"))
-                    .count();
-            minStock = Math.min(minStock, maxStock-(int)reservedCount);
+        for (String key : keys) {
+            Map<Object, Object> members = redisTemplate.opsForHash().entries(key);
+
+            int stock = maxStock - members.size();
+            minStock = Math.min(minStock, stock);
         }
 
 

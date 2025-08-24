@@ -9,6 +9,8 @@ import com.beyond.HanSoom.hotel.dto.*;
 import com.beyond.HanSoom.hotel.repository.HotelRepository;
 import com.beyond.HanSoom.notification.service.NotificationService;
 import com.beyond.HanSoom.notification.service.SseAlarmService;
+import com.beyond.HanSoom.review.domain.HotelReviewSummary;
+import com.beyond.HanSoom.review.repository.HotelReviewSummaryRepository;
 import com.beyond.HanSoom.room.domain.Room;
 import com.beyond.HanSoom.room.dto.RoomDetailResponseDto;
 import com.beyond.HanSoom.room.dto.RoomDetailSearchResponseDto;
@@ -31,11 +33,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
@@ -51,6 +55,7 @@ public class HotelService {
     private final RoomImageRepository roomImageRepository;
     private final NotificationService notificationService;
     private final SseAlarmService sseAlarmService;
+    private final HotelReviewSummaryRepository hotelReviewSummaryRepository;
 
     public void registerHotel(HotelRegisterRequsetDto dto, MultipartFile hotelImage, List<MultipartFile> roomImages) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -409,7 +414,7 @@ public class HotelService {
         Specification<Hotel> spec = HotelSpecification.withSearchConditions(searchDto);
         Page<Hotel> hotelPage = hotelRepository.findAll(spec, pageable);
 
-        List<HotelListResponseDto> result = hotelPage.getContent().stream()
+        List<HotelListResponseDto> result = new ArrayList<>(hotelPage.getContent().stream()
                 .filter(hotel -> hotel.getRooms().stream().anyMatch(room -> {
                     if (room.getState() == HotelState.REMOVE) return false;
                     if (room.getMaximumPeople() < searchDto.getPeople()) return false;
@@ -425,12 +430,11 @@ public class HotelService {
                     int available = reservationInventoryService.getInventory(dto);
                     return available > 0;
                 }))
-                .map(hotel -> {
+                .flatMap(hotel -> {
                     // 조건에 맞는 객실들 중 평균가가 가장 저렴한 객실 찾기
                     OptionalInt minAvgPrice = hotel.getRooms().stream()
                             .filter(room -> room.getState() != HotelState.REMOVE)
                             .filter(room -> room.getMaximumPeople() >= searchDto.getPeople())
-
                             .filter(room -> {
                                 ReservationDto dto = ReservationDto.builder()
                                         .hotelId(hotel.getId())
@@ -441,13 +445,56 @@ public class HotelService {
                                         .build();
                                 return reservationInventoryService.getInventory(dto) > 0;
                             })
-
                             .mapToInt(room -> calculateAveragePrice(room, searchDto.getCheckIn(), searchDto.getCheckOut()))
-                            .min();
+                            // 가격 범위 필터링 추가
+                            .filter(avgPrice -> {
+                                // minPrice가 설정된 경우 최소가격 이상인지 확인
+                                boolean minPriceCondition = avgPrice >= searchDto.getMinPrice();
 
-                    return HotelListResponseDto.fromEntity(hotel, minAvgPrice.orElse(0));
+                                // maxPrice가 설정된 경우 최대가격 이하인지 확인
+                                boolean maxPriceCondition = avgPrice <= searchDto.getMaxPrice();
+
+                                return minPriceCondition && maxPriceCondition;
+                            })
+                            .min();
+                    if (searchDto.getRating() != null) {
+                        if (hotel.getHotelReviewSummary().getAverage().compareTo(searchDto.getRating()) < 0) {
+                            return Stream.empty();
+                        }
+                    }
+
+                    // 조건에 맞는 객실이 있는 경우만 결과에 포함
+                    return minAvgPrice.isPresent()
+                            ? Stream.of(HotelListResponseDto.fromEntity(hotel, minAvgPrice.getAsInt()))
+                            : Stream.empty();
                 })
-                .toList();
+                .toList());
+
+        // 정렬 조건에 따라 결과 리스트 정렬
+        if (!result.isEmpty() && searchDto.getSortOption() != null) {
+            String[] sortParams = searchDto.getSortOption().split(",");
+            String sortBy = sortParams[0];
+            String sortDirection = sortParams[1];
+
+            Comparator<HotelListResponseDto> comparator = null;
+
+            if ("price".equals(sortBy)) {
+                comparator = Comparator.comparing(HotelListResponseDto::getPrice);
+            } else if ("rating".equals(sortBy)) {
+                // 평점은 BigDecimal 타입이므로 compareTo 메서드를 사용하여 비교
+                comparator = Comparator.comparing(
+                        HotelListResponseDto::getRating,
+                        Comparator.nullsLast(BigDecimal::compareTo)
+                );
+            }
+
+            if (comparator != null) {
+                if ("desc".equals(sortDirection)) {
+                    comparator = comparator.reversed();
+                }
+                result.sort(comparator);
+            }
+        }
 
         return new PageImpl<>(result, pageable, result.size());
     }
@@ -487,6 +534,8 @@ public class HotelService {
 
                     .toList();
 
+            HotelReviewSummary hotelReviewSummary = hotelReviewSummaryRepository.findByHotelId(id);
+
             if (!availableRooms.isEmpty()) {
                 // 조건에 맞는 방 중 1박 평균 가격 가장 낮은 방 찾기
                 int minAvgPrice = availableRooms.stream()
@@ -503,6 +552,8 @@ public class HotelService {
                         .longitude(longitude)
                         .distance(distance)
                         .price(minAvgPrice)
+                        .rating(hotelReviewSummary.getAverage())
+                        .reviewCount(hotelReviewSummary.getRatingCount())
                         .build());
             }
         }

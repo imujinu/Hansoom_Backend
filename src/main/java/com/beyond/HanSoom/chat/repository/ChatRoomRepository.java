@@ -14,4 +14,8 @@ import java.util.Optional;
 public interface ChatRoomRepository extends JpaRepository<ChatRoom,Long> {
 
     ChatRoom findByHotelAndIsGroupChat(Hotel hotel, String y);
+
+    List<ChatRoom> findAllByIsGroupChat(String y);
+
+    List<ChatRoom> findAllByHotelAndIsGroupChat(Hotel hotel, String n);
 }

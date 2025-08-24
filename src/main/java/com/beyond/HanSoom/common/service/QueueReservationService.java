@@ -6,9 +6,12 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class QueueReservationService {
@@ -25,131 +28,57 @@ public class QueueReservationService {
      * 2. 대기열 등록 (userId:status 형태로)
      * 3. 순위 반환
      */
-    // keys : hotel, room, date
-    // userId
-    // 생성 시간
-    // 만료시간
-    // 최대재고
-    // 상태
+//    -- KEYS: 호텔:룸:날짜
+//-- ARGV[1]: userId
+//-- ARGV[2]: maxStock
+//-- ARGV[3]: status
     private static final String ADD_TO_QUEUE_SCRIPT =
-            // 1. 재고 체크 (tonumber(ARGV[4]) or 0)
-            "local maxStock = tonumber(ARGV[4]) or 50 " +
-                    "for i = 1, #KEYS do " +
-                    "  local count = redis.call('ZCARD', KEYS[i]) " +
-                    "  if tonumber(count or 0) >= maxStock then " +
+//                1. 재고 조회
+            "for i = 1, #KEYS do " +
+                    "  local count = redis.call('HLEN', KEYS[i]) " +
+                    "  if tonumber(count or 0) >= tonumber(ARGV[2]) then " +
                     "    return {-2, i} " +
                     "  end " +
                     "end " +
 
-                    "local now = tonumber(ARGV[2]) or 0 " +
-                    "local maxWaitMillis = (tonumber(ARGV[3]) or 0) * 1000 " +
-                    "local expireAt = now + maxWaitMillis " +
-
-                    // 이미 존재하는 PENDING/PROCESSING 체크
+                    //2. 중복 체크
                     "for i = 1, #KEYS do " +
-                    "  local exist = redis.call('ZSCORE', KEYS[i], ARGV[1] .. ':' .. ARGV[5]) " +
-                    "  if exist ~= false and exist ~= nil then " +
-                    "    local existNum = tonumber(exist) " +
-                    "    if existNum ~= nil and existNum > now then " +
-                    "      local pos = redis.call('ZRANK', KEYS[i], ARGV[1] .. ':' .. ARGV[5]) " +
-                    "      if pos == 0 then " +
-                    "        return {1, redis.call('ZCARD', KEYS[i]) } " +
-                    "      end " +
-                    "      return {-1, exist} " +
-                    "    end " +
+                    "  if redis.call('HEXISTS', KEYS[i], ARGV[1]) == 1 then " +
+                    "    return {-1} " +
                     "  end " +
                     "end " +
 
-                    // 새 멤버 추가
+                    // 3. 예약 추가
                     "for i = 1, #KEYS do " +
-                    "  redis.call('ZADD', KEYS[i], expireAt, ARGV[1] .. ':' .. ARGV[5]) " +
+                    "  redis.call('HSET', KEYS[i], ARGV[1], ARGV[3]) " +
                     "end " +
 
-                    // RESERVED 제외한 순위 계산
-                    "local members = redis.call('ZRANGE', KEYS[1], 0, -1) " +
-                    "local position = -1 " +
-                    "local idx = 0 " +
-                    "for i, member in ipairs(members) do " +
-                    "  if not string.match(member, ':RESERVED$') then " +
-                    "    idx = idx + 1 " +
-                    "    if member == ARGV[1] .. ':' .. ARGV[5] then " +
-                    "      position = idx " +
-                    "      break " +
-                    "    end " +
-                    "  end " +
-                    "end " +
-
-                    "local totalCount = 0 " +
-                    "for i, member in ipairs(members) do " +
-                    "  if not string.match(member, ':RESERVED$') then " +
-                    "    totalCount = totalCount + 1 " +
-                    "  end " +
-                    "end " +
-
-                    "return {position, totalCount}";
-
-
-    /**
-     * Lua 스크립트:
-     * 1. 대기열 맨 앞 사람 꺼내기
-     * 2. 락 검사
-     * 3. PENDING을 PROCESSING으로 변경
-     */
-    private static final String PROCESS_NEXT_IN_QUEUE_SCRIPT =
-            // 맨 앞 사람 꺼냄
-
-            "local nextUser = redis.call('ZRANGE', KEYS[1], 0, 0)[1] " +
-                    "if not nextUser then " +
-                    "    return {0, nil} " +
-                    "end " +
-
-                    // 락 상태 확인
-                    "for i=2, #KEYS do " +
-                    "local lockOwner = redis.call('GET', KEYS[i]) " +
-                    "if lockOwner and lockOwner ~= ARGV[1] then " +
-                    "    return {-1, nextUser} " +
-                    "end " +
-                    "end " +
-
-                    // 락 설정
-                    "for i = 2, #KEYS do " +
-                    "redis.call('SET', KEYS[i], ARGV[1], 'PX', ARGV[2]) " +
-                    " end " +
-
-                    // PENDING을 PROCESSING으로 변경
-                    "local userId = string.match(nextUser, '^([^:]+):') " +
-                    "redis.call('ZREM', KEYS[1], nextUser) " +
-                    "redis.call('ZADD', KEYS[1], ARGV[3], userId .. ':PROCESSING') " +
-
-                    "return {1, userId}";
+                    "return {0}";
 
     public List<Long> addToQueue(QueueReservationReqDto dto) {
         List<String> keys = new ArrayList<>();
-        LocalDate start = LocalDate.parse(dto.getCheckIn().toString());
-        LocalDate end = LocalDate.parse(dto.getCheckOut().toString());
+        generateQueueKey(dto, keys); // 날짜별 큐 key 생성
 
-        generateQueueKey(dto, keys);
+//    -- KEYS: 호텔:룸:날짜
+//-- ARGV[1]: userId
+//-- ARGV[2]: maxStock
+//-- ARGV[3]: status
+        try {
 
-        try{
-            List<Long> list = redisTemplate.execute(
+            List<Long> result = redisTemplate.execute(
                     new DefaultRedisScript<>(ADD_TO_QUEUE_SCRIPT, List.class),
                     keys,
-                    dto.getUserId(),
-                    String.valueOf(System.currentTimeMillis()),
-                    String.valueOf(dto.getMaxWaitTime()),
-                    String.valueOf(dto.getMaxStock()),
-                    "PENDING" // 초기 상태 (실제로는 스크립트에서 하드코딩)
+                    String.valueOf(dto.getUserId()),
+                    String.valueOf(dto.getMaxStock()),     // 재고
+                    "PENDING"                              // 상태
             );
-            return list;
 
+            return result;
 
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("여기서 에러가 터짐!!");
+            throw new RuntimeException("Queue 추가 중 에러 발생!!");
         }
-
-
-
     }
 
     public static void generateQueueKey(QueueReservationReqDto dto, List<String> keys) {
@@ -164,42 +93,26 @@ public class QueueReservationService {
     }
 
     /**
-     * 대기열에서 다음 사용자 처리
-     */
-    public List<Object> processNextInQueue(String queueKey, List<String> lockKey, String myLockValue, long lockTtlMillis) {
-        List<String> keys = new ArrayList<>();
-        keys.add(queueKey);
-        keys.addAll(lockKey); // flatten
-        try{
-            List<Object> result = redisTemplate.execute(
-                    new DefaultRedisScript<>(PROCESS_NEXT_IN_QUEUE_SCRIPT, List.class),
-                    keys,  //
-                    myLockValue,
-                    String.valueOf(lockTtlMillis),
-                    String.valueOf(System.currentTimeMillis())
-            );
-
-            System.out.println(result);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
-
-        return null;
-    }
-
-    /**
      * 결제 완료 후 상태 업데이트
      */
-    public void updateStatus(String queueKey, String userId, String fromStatus, String toStatus) {
-        String oldMember = userId + ":" + fromStatus;
-        String newMember = userId + ":" + toStatus;
+    public void updateStatus(String queueKey, String userId, String toStatus) {
+        redisTemplate.opsForHash().put(queueKey, userId, toStatus);
+    }
 
-        Double score = redisTemplate.opsForZSet().score(queueKey, oldMember);
-        if (score != null) {
-            redisTemplate.opsForZSet().remove(queueKey, oldMember);
-            redisTemplate.opsForZSet().add(queueKey, newMember, score);
+    public void setTtl(String queueKey, LocalDate date) {
+        // 현재 시간
+        LocalDateTime now = LocalDateTime.now();
+        // 만료할 날짜의 자정 기준으로 계산
+        LocalDateTime expireDateTime = date.atStartOfDay();
+        Duration duration = Duration.between(now, expireDateTime);
+        if (!duration.isNegative() && !duration.isZero()) {
+            redisTemplate.expire(queueKey, duration);
+        } else {
+            // 이미 지난 날짜면 바로 만료
+            redisTemplate.expire(queueKey, Duration.ZERO);
         }
+    }
+    public void removeMember(String queueKey, String userId) {
+        redisTemplate.opsForHash().delete(queueKey, userId);
     }
 }

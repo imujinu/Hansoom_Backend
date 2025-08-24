@@ -57,7 +57,7 @@ public class GeocoderService {
 
             JsonNode documents = response.get("documents");
             if (!documents.isArray() || documents.size() == 0) {
-                throw new RuntimeException("주소로 좌표를 찾을 수 없습니다: " + address);
+                throw new IllegalArgumentException("해당 주소로 좌표를 찾을 수 없습니다: " + address);
             }
 
             JsonNode first = documents.get(0);
@@ -73,6 +73,8 @@ public class GeocoderService {
 
             return new Coordinate(latitude, longitude);
 
+        } catch(IllegalArgumentException e) {
+            throw new IllegalArgumentException("카카오 지오코딩 API 호출 실패: " + e.getMessage());
         } catch (WebClientResponseException e) {
             log.error("[HANSOOM][ERROR] - WebClient HTTP 에러 발생:");
             log.error("[HANSOOM][ERROR] - Status: {}", e.getStatusCode());
