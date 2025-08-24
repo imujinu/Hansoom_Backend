@@ -44,6 +44,15 @@ public interface HotelRepository extends JpaRepository<Hotel, Long> {
             @Param("radius") double radius,
             Pageable pageable);
 
+    @Query(value = "SELECT count(*) " +
+            "FROM hotel h WHERE h.state = 'APPLY' " +
+            "AND (6371 * acos(cos(radians(:latitude)) * cos(radians(h.latitude)) * cos(radians(h.longitude) - radians(:longitude)) + sin(radians(:latitude)) * sin(radians(h.latitude)))) <= :radius",
+            nativeQuery = true)
+    long countNearbyHotels(
+            @Param("latitude") double latitude,
+            @Param("longitude") double longitude,
+            @Param("radius") double radius);
+
     Page<Hotel> findByState(Pageable pageable, HotelState hotelState);
 
     List<Hotel> findAllByUser(User host);
