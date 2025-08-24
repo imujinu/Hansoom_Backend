@@ -495,27 +495,27 @@ public class HotelService {
         return available > 0;
     }
 
+//    가까운 호텔 조회
     @Transactional(readOnly = true)
     public Page<HotelLocationListResponseDto> findNearbyHotels(LocationHotelSearchDto dto, Pageable pageable) {
+        // 1. 전체 호텔 개수를 먼저 가져옵니다.
+        // 이는 페이지네이션의 'total' 값을 위해 필요합니다.
+        long totalCount = hotelRepository.countNearbyHotels(dto.getLatitude(), dto.getLongitude(), 5);
+
+        // 2. 현재 페이지에 해당하는 호텔 데이터를 거리를 기준으로 가져옵니다.
         List<Object[]> results = hotelRepository.findNearbyHotelsWithDistance(
                 dto.getLatitude(), dto.getLongitude(), 5, pageable);
 
-        List<HotelLocationListResponseDto> filtered = new ArrayList<>();
+        List<HotelLocationListResponseDto> dtoList = new ArrayList<>();
 
+        // 3. 가져온 각 호텔에 대해 비즈니스 로직 필터링을 적용합니다.
         for (Object[] row : results) {
-            Long id = ((Number) row[4]).longValue();  // hotel.id
-            String hotelName = (String) row[9];
-            String address = (String) row[7];
-            String image = (String) row[10];
-            double latitude = ((Number) row[0]).doubleValue();
-            double longitude = ((Number) row[1]).doubleValue();
-            double rawDistance = ((Number) row[14]).doubleValue();
-            double distance = Math.round(rawDistance * 100.0) / 100.0;
+            Long id = ((Number) row[4]).longValue();
 
+            // 추가 필터링 로직을 수행하기 전에 hotelId로 객실과 평점 데이터를 가져옵니다.
             List<Room> availableRooms = roomRepository.findByHotelId(id).stream()
                     .filter(room -> room.getState() != HotelState.REMOVE)
                     .filter(room -> room.getMaximumPeople() >= dto.getPeople())
-
                     .filter(room -> {
                         ReservationDto reservationDto = ReservationDto.builder()
                                 .hotelId(id)
@@ -527,19 +527,26 @@ public class HotelService {
                         int remaining = reservationInventoryService.getInventory(reservationDto);
                         return remaining > 0;
                     })
-
                     .toList();
 
-            HotelReviewSummary hotelReviewSummary = hotelReviewSummaryRepository.findByHotelId(id);
-
             if (!availableRooms.isEmpty()) {
-                // 조건에 맞는 방 중 1박 평균 가격 가장 낮은 방 찾기
+                // 조건에 맞는 방이 있는 경우에만 DTO 생성
+                String hotelName = (String) row[9];
+                String address = (String) row[7];
+                String image = (String) row[10];
+                double latitude = ((Number) row[0]).doubleValue();
+                double longitude = ((Number) row[1]).doubleValue();
+                double rawDistance = ((Number) row[14]).doubleValue();
+                double distance = Math.round(rawDistance * 100.0) / 100.0;
+
+                HotelReviewSummary hotelReviewSummary = hotelReviewSummaryRepository.findByHotelId(id);
+
                 int minAvgPrice = availableRooms.stream()
                         .mapToInt(room -> calculateAveragePrice(room, dto.getCheckIn(), dto.getCheckOut()))
                         .min()
                         .orElse(0);
 
-                filtered.add(HotelLocationListResponseDto.builder()
+                dtoList.add(HotelLocationListResponseDto.builder()
                         .id(id)
                         .hotelName(hotelName)
                         .address(address)
@@ -553,7 +560,9 @@ public class HotelService {
                         .build());
             }
         }
-        return new PageImpl<>(filtered, pageable, filtered.size());
+
+        // 4. PageImpl을 생성할 때, dtoList와 pageable, 그리고 전체 개수(totalCount)를 사용합니다.
+        return new PageImpl<>(dtoList, pageable, totalCount);
     }
 
     private int calculateAveragePrice(Room room, LocalDate checkIn, LocalDate checkOut) {
