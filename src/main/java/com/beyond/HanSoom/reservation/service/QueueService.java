@@ -47,7 +47,7 @@ public class QueueService {
             System.out.println("queue등록 실패");
             return false;
         }
-        String userId = getUserId();
+        String userId = dto.getUserId();
         // ZSET에 등록 (순서 관리)
         redisTemplate.opsForZSet().add(queueKey, userId, System.currentTimeMillis());
 
@@ -69,7 +69,7 @@ public class QueueService {
     public void leaveQueue(QueueReqDto dto) {
         System.out.println("삭제 로직 동작");
         String queueKey = buildQueueKey(dto);
-        String userId = getUserId();
+        String userId = dto.getUserId();
         redisTemplate.opsForZSet().remove(queueKey, userId);
 
         String ttlKey = buildUserTtlKey(dto);
@@ -82,7 +82,7 @@ public class QueueService {
     /** SSE 구독 등록 */
     public SseEmitter registerEmitter(QueueReqDto dto) {
         String queueKey = buildQueueKey(dto);
-        String userId = getUserId();
+        String userId = dto.getUserId();
         String emitterKey = userId + ":" + queueKey;
 
         SseEmitter emitter = new SseEmitter(300 * 1000L);
@@ -125,7 +125,6 @@ public class QueueService {
 
     /** SSE 1초 브로드캐스트 */
     private void broadcastAllQueues() {
-
         Map<String, List<String>> cache = new HashMap<>();
         for (Map.Entry<String, SseEmitter> entry : emitters.entrySet()) {
             String emitterKey = entry.getKey();
@@ -161,8 +160,7 @@ public class QueueService {
 
     /** 개별 TTL key 생성 */
     private String buildUserTtlKey(QueueReqDto dto) {
-        String userId = getUserId();
-        return buildQueueKey(dto) + ":" + userId;
+        return buildQueueKey(dto) + ":" + dto.getUserId();
     }
 }
 

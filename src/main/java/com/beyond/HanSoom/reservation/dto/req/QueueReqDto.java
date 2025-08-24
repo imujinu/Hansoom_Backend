@@ -15,12 +15,14 @@ import java.time.LocalDate;
 public class QueueReqDto {
     private String hotelId;
     private String roomId;
+    private String userId;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate checkInDate;
-    public QueueReqDto makeDto(String hotelId, String roomId, LocalDate checkInDate){
+    public QueueReqDto makeDto(String hotelId, String roomId, LocalDate checkInDate, String userId){
         return QueueReqDto.builder()
                 .hotelId(hotelId)
                 .roomId(roomId)
+                .userId(userId)
                 .checkInDate(checkInDate)
                 .build();
     }
