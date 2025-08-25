@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -173,24 +174,28 @@ public class ChatService {
     public List<ChatMyChatroomResDto> getMyChatRoom() {
         //1. 유저 조회 -> 2. chatParticipant 조회 -> 3. 채팅방 조회 -> 4. dto 조립해서 리턴
         User user = getUser();
-        List<ChatParticipant> chatParticipants = chatParticipantRepository.findAllByUser(user);
-        List<ChatMyChatroomResDto> dtos = chatParticipants.stream().map(cp->{
-            ChatRoom chatRoom = cp.getChatRoom();
-            Hotel hotel = chatRoom.getHotel();
-            Long unReadCount = getUnReadCount(chatRoom, user);
-            Long participantCount = chatParticipantRepository.countByChatRoom(chatRoom);
-            return ChatMyChatroomResDto.builder()
-                    .roomId(chatRoom.getId())
-                    .hotelName(hotel.getHotelName())
-                    .isGroupChat(chatRoom.getIsGroupChat())
-                    .unReadCount(unReadCount)
-                    .participants(participantCount)
-                    .build();
+        // 내 예약 목록에 있는 호텔 정보들만 가져와서 채팅방 조회하기
+        List<Reservation> reservations = reservationRepository.findAllByUser(user);
+        Set<Hotel> hotelSet = reservations.stream().map(re -> re.getHotel()).collect(Collectors.toSet());
 
-        }).collect(Collectors.toList());
-
+        List<ChatMyChatroomResDto> dtos = hotelSet.stream()
+                .flatMap(ht -> chatRoomRepository.findAllByHotel(ht).stream())
+                .map(cr -> {
+                    Hotel hotel = cr.getHotel();
+                    Long unReadCount = getUnReadCount(cr, user);
+                    Long participantCount = chatParticipantRepository.countByChatRoom(cr);
+                    return ChatMyChatroomResDto.builder()
+                            .roomId(cr.getId())
+                            .hotelName(hotel.getHotelName())
+                            .isGroupChat(cr.getIsGroupChat())
+                            .unReadCount(unReadCount)
+                            .participants(participantCount)
+                            .build();
+                })
+                .collect(Collectors.toList());
 
         return dtos;
+
     }
 
     public List<ChatMessageResDto> getChatHistory(Long roomId) {
@@ -312,7 +317,14 @@ public class ChatService {
                     .get(chatRoom.getChatMessageList().size() - 1);
 
         }
-        return new ChatHostGroupChatRoomResDto().fromEntity(chatRoom, message);
+        List<ChatParticipant> chatParticipants = chatParticipantRepository.findAllByChatRoom(chatRoom);
+        int isOnline = 0;
+        for(ChatParticipant cp : chatParticipants){
+            if(cp.getIsOnline().equals("Y")){
+                isOnline++;
+            }
+        }
+        return new ChatHostGroupChatRoomResDto().fromEntity(chatRoom, message, isOnline);
     }
 
     public ChatHostGroupChatRoomResDto createHostGroupChat(Long hotelId) {
@@ -337,7 +349,7 @@ public class ChatService {
 
         saveMessage(dto);
         ChatMessage chatMessage = chatRoom.getChatMessageList().get(chatRoom.getChatMessageList().size()-1);
-        return new ChatHostGroupChatRoomResDto().fromEntity(chatRoom,chatMessage);
+        return new ChatHostGroupChatRoomResDto().fromEntity(chatRoom,chatMessage, 1);
 
     }
 

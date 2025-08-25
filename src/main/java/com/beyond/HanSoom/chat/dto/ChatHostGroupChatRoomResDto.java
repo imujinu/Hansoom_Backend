@@ -17,15 +17,17 @@ public class ChatHostGroupChatRoomResDto {
     private Long id;
     private String name;
     private int participantCount;
+    private int isOnline;
     private String lastMessage;
     private LocalDateTime timestamp;
     private LocalDateTime createdAt;
 
-    public ChatHostGroupChatRoomResDto fromEntity(ChatRoom chatRoom, ChatMessage message){
+    public ChatHostGroupChatRoomResDto fromEntity(ChatRoom chatRoom, ChatMessage message, int isOnline){
         return ChatHostGroupChatRoomResDto.builder()
                 .id(chatRoom.getId())
                 .name(chatRoom.getHotel().getHotelName()+ " 단체 채팅방")
                 .participantCount(chatRoom.getParticipantList().size())
+                .isOnline(isOnline)
                 .lastMessage(message.getContent())
                 .timestamp(message.getCreatedTime())
                 .createdAt(chatRoom.getCreatedTime())

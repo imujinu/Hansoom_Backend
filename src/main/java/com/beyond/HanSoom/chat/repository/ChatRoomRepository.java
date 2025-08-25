@@ -18,4 +18,6 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom,Long> {
     List<ChatRoom> findAllByIsGroupChat(String y);
 
     List<ChatRoom> findAllByHotelAndIsGroupChat(Hotel hotel, String n);
+
+    List<ChatRoom> findAllByHotel(Hotel ht);
 }
