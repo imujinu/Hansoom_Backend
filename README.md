@@ -287,7 +287,7 @@ https://github.com/user-attachments/assets/ceefd053-9e8a-4187-bc1c-6173c732bed6
 </details>
 
 <details>
-  <summary>예약성공 알림(관리자, 실시간o)</summary>
+  <summary>예약성공 알림(호스트, 실시간o)</summary>
   <div align="center">
     
 
@@ -295,6 +295,32 @@ https://github.com/user-attachments/assets/ceefd053-9e8a-4187-bc1c-6173c732bed6
   </div>
 </details>
 
+<details>
+  <summary>호텔등록 알림(관리자, 실시간o)</summary>
+  <div align="center">
+    
+
+    
+  </div>
+</details>
+
+<details>
+  <summary>입실 하루 전 알림(사용자, 실시간x)</summary>
+  <div align="center">
+    
+
+    
+  </div>
+</details>
+
+<details>
+  <summary>퇴실 후 리뷰 요청 알림(사용자, 실시간x)</summary>
+  <div align="center">
+    
+
+    
+  </div>
+</details>
 
 
 ## <span id="11">🚦 6. 트러블 슈팅</span>
