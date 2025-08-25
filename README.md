@@ -34,3 +34,161 @@
   <summary>결제 다이어그램</summary>
     ![결제 다이어 그램]<img width="822" height="922" alt="결제 시퀀스 다이어그램 drawio (1)" src="https://github.com/user-attachments/assets/7d5760a4-8e72-4fb5-a195-3b8eb46b1c6d" />
 </details>
+
+## <span id="11">📄 5. 주요 기능 소개</span>
+
+#### 📌 메인
+<details>
+  <summary>회원가입</summary>
+  <div align="center">
+    <img src="https://github.com/your-repo/demo/signup.gif" alt="회원가입 시연" width="600"/>
+  </div>
+</details>
+
+<details>
+  <summary>로그인</summary>
+  <div align="center">
+    <img src="https://github.com/your-repo/demo/login.gif" alt="로그인 시연" width="600"/>
+  </div>
+</details>
+
+<details>
+  <summary>구글 회원가입 / 로그인</summary>
+  <div align="center">
+    <img src="https://github.com/your-repo/demo/google.gif" alt="구글 회원가입/로그인 시연" width="600"/>
+  </div>
+</details>
+
+<details>
+  <summary>카카오 회원가입 / 로그인</summary>
+  <div align="center">
+    <img src="https://github.com/your-repo/demo/kakao.gif" alt="카카오 회원가입/로그인 시연" width="600"/>
+  </div>
+</details>
+
+---
+
+### 🏨 호텔 조회
+<details>
+  <summary>호텔 조회 메인</summary>
+  <div align="center">
+    <img src="https://github.com/your-repo/demo/hotel.gif" alt="호텔 조회 시연" width="600"/>
+  </div>
+</details>
+
+---
+
+### 🛏 객실 조회
+<details>
+  <summary>객실 조회 메인</summary>
+  <div align="center">
+    <img src="https://github.com/your-repo/demo/room.gif" alt="객실 조회 시연" width="600"/>
+  </div>
+</details>
+
+---
+
+### 📅 예약
+<details>
+  <summary>예약 메인</summary>
+  <div align="center">
+    <img src="https://github.com/your-repo/demo/reservation.gif" alt="예약 시연" width="600"/>
+  </div>
+</details>
+
+<details>
+  <summary>결제 성공</summary>
+  <div align="center">
+    <img src="https://github.com/your-repo/demo/payment.gif" alt="결제 성공 시연" width="600"/>
+  </div>
+</details>
+
+<details>
+  <summary>결제 실패</summary>
+  <div align="center">
+    <img src="https://github.com/your-repo/demo/payment.gif" alt="결제 성공 시연" width="600"/>
+  </div>
+</details>
+
+<details>
+  <summary>예약 내역 조회</summary>
+  <div align="center">
+    <img src="https://github.com/your-repo/demo/payment.gif" alt="결제 성공 시연" width="600"/>
+  </div>
+</details>
+
+---
+
+### 💬 채팅
+<details>
+  <summary>1:1 채팅 메인</summary>
+  <div align="center">
+    <img src="https://github.com/your-repo/demo/chat.gif" alt="채팅 시연" width="600"/>
+  </div>
+</details>
+
+<details>
+  <summary>그룹 채팅 메인</summary>
+  <div align="center">
+    <img src="https://github.com/your-repo/demo/chat.gif" alt="채팅 시연" width="600"/>
+  </div>
+</details>
+
+<details>
+  <summary>호스트 그룹 채팅 메인</summary>
+  <div align="center">
+    <img src="https://github.com/your-repo/demo/chat.gif" alt="채팅 시연" width="600"/>
+  </div>
+</details>
+
+<details>
+  <summary>호스트 1:1 채팅 메인</summary>
+  <div align="center">
+    <img src="https://github.com/your-repo/demo/chat.gif" alt="채팅 시연" width="600"/>
+  </div>
+</details>
+
+## <span id="11">🚦 6. 트러블 슈팅</span>
+
+<details>
+<summary> 1. 트러블 슈팅  </summary>
+
+<div>
+
+1. 문제 상황 <br />
+
+2. 시도 <br />
+
+3. 해결방안 <br />
+
+</div>
+</details>
+<details>
+<summary> 1. 트러블 슈팅  </summary>
+
+<div>
+
+1. 문제 상황 <br />
+
+2. 시도 <br />
+
+3. 해결방안 <br />
+
+</div>
+</details>
+<details>
+<summary> 1. 트러블 슈팅  </summary>
+
+<div>
+
+1. 문제 상황 <br />
+
+2. 시도 <br />
+
+3. 해결방안 <br />
+
+</div>
+</details>
+
+
+
