@@ -251,9 +251,25 @@ https://github.com/user-attachments/assets/0209dafa-0353-4e38-8e42-40e6501b1b8f
   <summary>내 리뷰 수정/삭제</summary>
   <div align="center">
 
-
 https://github.com/user-attachments/assets/a5b2b96b-df51-4259-82a8-cb02dfed30c2
 
+  </div>
+</details>
+
+<details>
+  <summary>리뷰 답글 작성</summary>
+  <div align="center">
+
+https://github.com/user-attachments/assets/cf3caa7f-dda1-4b3b-86c8-fef3bd7a1382
+
+  </div>
+</details>
+
+<details>
+  <summary>리뷰 답글 수정/삭제</summary>
+  <div align="center">
+
+https://github.com/user-attachments/assets/ceefd053-9e8a-4187-bc1c-6173c732bed6
 
   </div>
 </details>
