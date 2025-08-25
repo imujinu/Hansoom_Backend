@@ -216,6 +216,46 @@ https://github.com/user-attachments/assets/b1d031fe-6075-47ff-8933-9a99aa412c3e
   </div>
 </details>
 
+### ✏️ 리뷰
+<details>
+  <summary>리뷰작성</summary>
+  <div align="center">
+    
+  
+    
+  </div>
+</details>
+
+<details>
+  <summary>리뷰수정</summary>
+  <div align="center">
+    
+
+    
+  </div>
+</details>
+
+### ✏️ 알림
+<details>
+  <summary>예약성공 알림(사용자, 실시간x)</summary>
+  <div align="center">
+    
+  
+    
+  </div>
+</details>
+
+<details>
+  <summary>예약성공 알림(관리자, 실시간o)</summary>
+  <div align="center">
+    
+
+    
+  </div>
+</details>
+
+
+
 ## <span id="11">🚦 6. 트러블 슈팅</span>
 
 <details>
