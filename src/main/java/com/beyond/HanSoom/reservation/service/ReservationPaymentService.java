@@ -102,32 +102,42 @@ public class ReservationPaymentService {
         List<Long> queueResult = queueReservationService.addToQueue(new QueueReservationReqDto().makeDto(request));
 
         long result = queueResult.get(0);
-
+        List<String> keys = new ArrayList<>();
+        generateQueueKey(reservation, reservation.getCheckInDate(), reservation.getCheckOutDate(), keys);
+        
         if (result == -2) {
+
+
+
             return ReservationResponse.fail("재고가 없습니다.");
         } else if (result == -1) {
             return ReservationResponse.fail("기존 예약 내역이 존재합니다.");
         }
         else  {
-
                 Reservation pendingReservation = reservationRepository.save(reservation);
                 return ReservationResponse.success(pendingReservation.getUuid());
+        }
+    }
+
+    private void deleteRedisReservation(Reservation reservation, List<String> keys) {
+        for(int i = 0; i< keys.size(); i++){
+
+        queueReservationService.removeMember(keys.get(i), String.valueOf(reservation.getUser().getId()) );
         }
     }
 
     public Long complete(ReservationCompleteReqDto dto) {
         Reservation reservation = reservationRepository.findByUuid(dto.getReservationId()).orElseThrow(()->new EntityNotFoundException("존재하지 않는 예약 내역 입니다."));
         Payment payment = paymentRepository.findByReservationId(reservation.getId());
-        User user = getUser(); //todo : 추후 수정
+        User user = getUser();
         List<String> keys = new ArrayList<>();
         generateQueueKey(reservation, reservation.getCheckInDate(), reservation.getCheckOutDate(), keys);
 
         if(reservation.getState() == State.SUCCEED && payment.getReservation().getState() == State.SUCCEED){
-            LocalDate checkIn = reservation.getCheckInDate();
+            LocalDate ttlDate = reservation.getCheckOutDate();
             for(int i=0; i<keys.size(); i++){
                 queueReservationService.updateStatus(keys.get(i), String.valueOf(user.getId()), "RESERVED");
-                queueReservationService.setTtl(keys.get(i), checkIn );
-                checkIn = checkIn.plusDays(1);
+                queueReservationService.setTtl(keys.get(i),  ttlDate);
             }
             reservation.changeState(State.RESERVED);
 
