@@ -35,7 +35,7 @@
     ![결제 다이어 그램]<img width="822" height="922" alt="결제 시퀀스 다이어그램 drawio (1)" src="https://github.com/user-attachments/assets/7d5760a4-8e72-4fb5-a195-3b8eb46b1c6d" />
 </details>
 
-## <span id="11">📄 5. 주요 기능 소개</span>
+## <span id="11">📄 5. 주요 기능 소개(테스트케이스)</span>
 
 #### 👥 사용자
 <details>
@@ -68,6 +68,15 @@ https://github.com/user-attachments/assets/6a1d76a8-97aa-4b83-9adc-b0c2834d966a
 
 https://github.com/user-attachments/assets/09a457de-615a-49f2-932a-85ea5107ab4b
 
+
+  </div>
+</details>
+
+<details>
+  <summary>내 정보 조회(마이페이지)</summary>
+  <div align="center">
+
+https://github.com/user-attachments/assets/3808539e-7ce1-416a-9093-75b26770d642
 
   </div>
 </details>
