@@ -61,6 +61,9 @@ public class HotelService {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("등록된 사용자가 아닙니다."));
 
+        // 호텔 주소 정규화
+        dto.setAddress(normalizeAddress(dto.getAddress()));
+
         // 호텔 이미지 S3 저장
         String hotelImageUrl = (hotelImage != null && !hotelImage.isEmpty())
                 ? s3Uploader.upload(hotelImage, "hotel")
@@ -102,6 +105,26 @@ public class HotelService {
         hotelRepository.save(hotel);
     }
 
+    private String normalizeAddress(String address) {
+        if (address == null || address.trim().isEmpty()) {
+            return address;
+        }
+
+        String normalized = address;
+
+        // "특별시"를 "시"로 변환 (예: 서울특별시 -> 서울시)
+        normalized = normalized.replace("특별시", "시");
+
+        // "광역시"를 "시"로 변환 (예: 부산광역시 -> 부산시)
+        normalized = normalized.replace("광역시", "시");
+
+        // "특별자치도"를 "도"로 변환 (예: 강원특별자치도 -> 강원도)
+        normalized = normalized.replace("특별자치도", "도");
+
+        // 불필요한 공백 제거
+        return normalized.trim();
+    }
+
     public void answerAdmin(HotelStateUpdateDto dto) {
         Hotel hotel = hotelRepository.findById(dto.getHotelId()).orElseThrow(() -> new EntityNotFoundException("등록된 호텔이 없습니다."));
         hotel.updateState(dto.getState());
@@ -126,6 +149,7 @@ public class HotelService {
 
         try {
             // 2. 주소로 좌표 조회
+            dto.setAddress(normalizeAddress(dto.getAddress()));
             GeocoderService.Coordinate coord = geocoderService.getCoordinates(dto.getAddress());
 
             // 3. 호텔 기본 정보 업데이트
@@ -412,6 +436,7 @@ public class HotelService {
     public Page<HotelListResponseDto> findAll(Pageable pageable, HotelListSearchDto searchDto) {
         // 1. Specification을 사용해 DB에서 1차 필터링된 호텔 페이지를 가져옵니다.
         // 이 쿼리는 Pageable 정보를 사용해 페이징 처리가 완료된 상태입니다.
+        searchDto.setAddress(normalizeAddress(searchDto.getAddress()));
         Specification<Hotel> spec = HotelSpecification.withSearchConditions(searchDto);
         Page<Hotel> hotelPage = hotelRepository.findAll(spec, pageable);
 
