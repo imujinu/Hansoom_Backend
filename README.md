@@ -175,6 +175,18 @@ https://github.com/user-attachments/assets/c0f0476c-1bf6-404b-b7a6-702d5695d98b
 
 ### 📅 예약
 <details>
+  <summary>예약 대기열 생성</summary>
+  <div align="center">
+    
+
+https://github.com/user-attachments/assets/3527c99f-0700-465c-ab97-c37c2591f9ce
+
+
+  </div>
+</details>
+
+
+<details>
   <summary>예약 - 결제 성공</summary>
   <div align="center">
    
@@ -208,30 +220,30 @@ https://github.com/user-attachments/assets/b1d031fe-6075-47ff-8933-9a99aa412c3e
 
 ### 💬 채팅
 <details>
-  <summary>1:1 채팅 메인</summary>
+  <summary>1:1 채팅 </summary>
   <div align="center">
-    <img src="https://github.com/your-repo/demo/chat.gif" alt="채팅 시연" width="600"/>
+    
+
+https://github.com/user-attachments/assets/5c894b7d-54cb-4cd6-b69c-fc068621f469
+
+
   </div>
 </details>
 
 <details>
-  <summary>그룹 채팅 메인</summary>
+  <summary>그룹 채팅</summary>
   <div align="center">
-    <img src="https://github.com/your-repo/demo/chat.gif" alt="채팅 시연" width="600"/>
+
+https://github.com/user-attachments/assets/12906ac7-caf3-44eb-af7d-77b735c2a49d
+
+
   </div>
 </details>
 
 <details>
-  <summary>호스트 그룹 채팅 메인</summary>
+  <summary>호스트 그룹 채팅 관리</summary>
   <div align="center">
-    <img src="https://github.com/your-repo/demo/chat.gif" alt="채팅 시연" width="600"/>
-  </div>
-</details>
-
-<details>
-  <summary>호스트 1:1 채팅 메인</summary>
-  <div align="center">
-    <img src="https://github.com/your-repo/demo/chat.gif" alt="채팅 시연" width="600"/>
+    
   </div>
 </details>
 
