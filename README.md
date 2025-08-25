@@ -73,21 +73,82 @@ https://github.com/user-attachments/assets/09a457de-615a-49f2-932a-85ea5107ab4b
 
 ---
 
-### 🏨 호텔 조회
+### 🏨 호스트 기능
 <details>
-  <summary>호텔 조회 메인</summary>
+  <summary>호텔 등록</summary>
   <div align="center">
-    <img src="https://github.com/your-repo/demo/hotel.gif" alt="호텔 조회 시연" width="600"/>
+
+https://github.com/user-attachments/assets/3f0e2484-803b-44ba-af2e-64849e545cda
+
+  </div>
+</details>
+<details>
+  <summary>호텔 수정</summary>
+  <div align="center">
+
+https://github.com/user-attachments/assets/3b5c26c2-4f58-47d1-b29e-884fc1d94e79
+
   </div>
 </details>
 
 ---
 
-### 🛏 객실 조회
+### 🏨 관리자 화면
 <details>
-  <summary>객실 조회 메인</summary>
+  <summary>호텔 승인</summary>
   <div align="center">
-    <img src="https://github.com/your-repo/demo/room.gif" alt="객실 조회 시연" width="600"/>
+
+
+https://github.com/user-attachments/assets/e3b34a71-39eb-49b1-9160-b2c809419b05
+
+
+  </div>
+</details>
+
+---
+### 🏨 호텔 조회
+<details>
+  <summary>지역명 조회</summary>
+  <div align="center">
+    
+https://github.com/user-attachments/assets/1c60441e-731f-4a45-a82c-627df4c58bc4
+
+  </div>
+</details>
+
+<details>
+  <summary>호텔명 조회</summary>
+  <div align="center">
+    
+https://github.com/user-attachments/assets/7d848b57-d613-47cb-bfef-e2af1f0656a8
+
+  </div>
+</details>
+
+<details>
+  <summary>호텔검색 필터기능</summary>
+  <div align="center">
+
+https://github.com/user-attachments/assets/0fb87306-3ae8-4470-a341-05f306d8ebb9
+
+  </div>
+</details>
+
+<details>
+  <summary>호텔검색 정렬기능</summary>
+  <div align="center">
+
+https://github.com/user-attachments/assets/2df76079-b447-49db-bc63-4b10a954a208
+
+  </div>
+</details>
+
+<details>
+  <summary>내 주변 호텔 조회</summary>
+  <div align="center">
+
+https://github.com/user-attachments/assets/c0f0476c-1bf6-404b-b7a6-702d5695d98b
+
   </div>
 </details>
 
