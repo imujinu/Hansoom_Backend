@@ -317,8 +317,8 @@ https://github.com/user-attachments/assets/ceefd053-9e8a-4187-bc1c-6173c732bed6
   <summary>호텔등록 알림(관리자, 실시간o)</summary>
   <div align="center">
     
+https://github.com/user-attachments/assets/f6b3994a-baa6-4929-9e35-fa4f912d4fca
 
-    
   </div>
 </details>
 
