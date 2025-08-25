@@ -1,6 +1,7 @@
 package com.beyond.HanSoom.review.controller;
 
 import com.beyond.HanSoom.common.dto.CommonSuccessDto;
+import com.beyond.HanSoom.reply.dto.HotelReviewImageListResDto;
 import com.beyond.HanSoom.review.dto.*;
 import com.beyond.HanSoom.review.service.ReviewService;
 import jakarta.validation.Valid;
@@ -13,6 +14,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/review")
@@ -69,5 +72,13 @@ public class ReviewController {
     public ResponseEntity<?> getReviewRatings(@PathVariable Long inputId) {
         ReviewRatingsResDto resDto = reviewService.getReviewRatings(inputId);
         return new ResponseEntity<>(new CommonSuccessDto(resDto, HttpStatus.OK.value(), "리뷰 합산데이터 조회 성공"), HttpStatus.OK);
+    }
+
+    // ReviewImage
+    // 해당 호텔의 리뷰 중 사진만 모두 가져오기
+    @GetMapping("/images/{inputId}")
+    public ResponseEntity<?> getReviewList(@PathVariable Long inputId) {
+        List<HotelReviewImageListResDto> hotelReviewImageListResDtoList = reviewService.getReviewList(inputId);
+        return new ResponseEntity<>(new CommonSuccessDto(hotelReviewImageListResDtoList, HttpStatus.OK.value(), "호텔 리뷰 전체이미지 조회 성공"), HttpStatus.OK);
     }
 }

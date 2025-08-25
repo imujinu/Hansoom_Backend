@@ -42,18 +42,23 @@ public class ReplyService {
     }
 
     // 답글 수정
-    public void updateReply(Long id, ReplyUpdateReqDto dto) {
-        Reply reply = replyRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("없는 답글입니다."));
+    public void updateReply(ReplyUpdateReqDto dto) {
+        Reply reply = replyRepository.findById(dto.getReplyId()).orElseThrow(() -> new EntityNotFoundException("없는 답글입니다."));
         reply.updateContents(dto.getContents());
         
-        log.info("[HANSOOM][INFO] - ReplyService/updateReply - 답글수정 성공, id={}", id);
+        log.info("[HANSOOM][INFO] - ReplyService/updateReply - 답글수정 성공, id={}", dto.getReplyId());
     }
 
     // 답글 삭제
     public void deleteReply(Long id) {
         Reply reply = replyRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("없는 답글입니다."));
         reply.deleteReply();
+
         log.info("[HANSOOM][INFO] - ReplyService/deleteReply - 답글삭제 성공, id={}", id);
+    }
+
+    public Long getRepliesCount(Long id) {
+        return replyRepository.countByHotelId(id);
     }
 
 }
