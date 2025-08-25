@@ -535,7 +535,7 @@ public class HotelService {
 
         // 3. 가져온 각 호텔에 대해 비즈니스 로직 필터링을 적용합니다.
         for (Object[] row : results) {
-            Long id = ((Number) row[4]).longValue();
+            Long id = ((Number) row[0]).longValue();
 
             // 추가 필터링 로직을 수행하기 전에 hotelId로 객실과 평점 데이터를 가져옵니다.
             List<Room> availableRooms = roomRepository.findByHotelId(id).stream()
@@ -556,12 +556,12 @@ public class HotelService {
 
             if (!availableRooms.isEmpty()) {
                 // 조건에 맞는 방이 있는 경우에만 DTO 생성
-                String hotelName = (String) row[9];
-                String address = (String) row[7];
-                String image = (String) row[10];
-                double latitude = ((Number) row[0]).doubleValue();
-                double longitude = ((Number) row[1]).doubleValue();
-                double rawDistance = ((Number) row[14]).doubleValue();
+                String hotelName = (String) row[3];
+                String address = (String) row[4];
+                String image = (String) row[5];
+                double latitude = ((Number) row[1]).doubleValue();
+                double longitude = ((Number) row[2]).doubleValue();
+                double rawDistance = ((Number) row[6]).doubleValue();
                 double distance = Math.round(rawDistance * 100.0) / 100.0;
 
                 HotelReviewSummary hotelReviewSummary = hotelReviewSummaryRepository.findByHotelId(id);

@@ -27,11 +27,12 @@ public interface HotelRepository extends JpaRepository<Hotel, Long> {
 
 
     @Query(value = """
-    SELECT h.*, (6371 * acos(
-        cos(radians(:lat)) * cos(radians(h.latitude)) *
-        cos(radians(h.longitude) - radians(:lng)) +
-        sin(radians(:lat)) * sin(radians(h.latitude))
-    )) AS distance
+    SELECT h.id, h.latitude, h.longitude, h.hotel_name, h.address, h.image,
+           (6371 * acos(
+               cos(radians(:lat)) * cos(radians(h.latitude)) *
+               cos(radians(h.longitude) - radians(:lng)) +
+               sin(radians(:lat)) * sin(radians(h.latitude))
+           )) AS distance
     FROM hotel h
     WHERE h.state = 'APPLY'
     HAVING distance <= :radius
