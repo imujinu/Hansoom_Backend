@@ -216,26 +216,50 @@ https://github.com/user-attachments/assets/b1d031fe-6075-47ff-8933-9a99aa412c3e
   </div>
 </details>
 
+---
+
 ### ✏️ 리뷰
+<details>
+  <summary>호텔 리뷰조회</summary>
+  <div align="center">
+
+https://github.com/user-attachments/assets/552c6183-4314-47c6-a3e6-7621fa7feb7c
+    
+  </div>
+</details>
+
 <details>
   <summary>리뷰작성</summary>
   <div align="center">
     
-  
-    
+https://github.com/user-attachments/assets/3bd7ffdc-3594-4d61-8ab2-99f933b5c996
+
   </div>
 </details>
 
 <details>
-  <summary>리뷰수정</summary>
+  <summary>내 리뷰 조회(마이페이지)</summary>
   <div align="center">
     
+https://github.com/user-attachments/assets/0209dafa-0353-4e38-8e42-40e6501b1b8f
 
-    
   </div>
 </details>
 
-### ✏️ 알림
+<details>
+  <summary>내 리뷰 수정/삭제</summary>
+  <div align="center">
+
+
+https://github.com/user-attachments/assets/a5b2b96b-df51-4259-82a8-cb02dfed30c2
+
+
+  </div>
+</details>
+
+---
+
+### 🔔 알림
 <details>
   <summary>예약성공 알림(사용자, 실시간x)</summary>
   <div align="center">
