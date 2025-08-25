@@ -299,17 +299,17 @@ https://github.com/user-attachments/assets/ceefd053-9e8a-4187-bc1c-6173c732bed6
   <summary>예약성공 알림(사용자, 실시간x)</summary>
   <div align="center">
     
-  
-    
+  <img width="423" height="416" alt="사용자 예약확정 알림" src="https://github.com/user-attachments/assets/ddd70b3c-40db-4d88-8940-ca1d30fc3922" />
+
   </div>
 </details>
 
 <details>
   <summary>예약성공 알림(호스트, 실시간o)</summary>
   <div align="center">
-    
 
-    
+https://github.com/user-attachments/assets/566c0bd8-14f4-40bd-8fc6-690b3f2d1339
+
   </div>
 </details>
 
