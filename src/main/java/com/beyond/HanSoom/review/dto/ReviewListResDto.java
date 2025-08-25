@@ -18,6 +18,9 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class ReviewListResDto {
+    private Long id;
+    private Long hotelId;
+    private String hotelName;
     @Builder.Default
     private String userNickname = "익명사용자";
     private String roomType;
@@ -30,6 +33,9 @@ public class ReviewListResDto {
 
     public static ReviewListResDto fromEntity(Review review, Reservation reservation) {
         return ReviewListResDto.builder()
+                .id(review.getId())
+                .hotelId(review.getHotel().getId())
+                .hotelName(review.getHotel().getHotelName())
                 .userNickname(reservation.getUser().getNickName())
                 .roomType(reservation.getRoom().getType())
                 .rating(review.getRating())
