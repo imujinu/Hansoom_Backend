@@ -37,7 +37,7 @@
 
 ## <span id="11">📄 5. 주요 기능 소개</span>
 
-#### 📌 메인
+#### 👥 사용자
 <details>
   <summary>회원가입</summary>
   <div align="center">
@@ -74,7 +74,7 @@ https://github.com/user-attachments/assets/09a457de-615a-49f2-932a-85ea5107ab4b
 
 ---
 
-### 🏨 호스트 기능
+### 🔑 호스트 기능
 <details>
   <summary>호텔 등록</summary>
   <div align="center">
@@ -94,7 +94,7 @@ https://github.com/user-attachments/assets/3b5c26c2-4f58-47d1-b29e-884fc1d94e79
 
 ---
 
-### 🏨 관리자 화면
+### ⚙️ 관리자 화면
 <details>
   <summary>호텔 승인</summary>
   <div align="center">
