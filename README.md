@@ -81,6 +81,15 @@ https://github.com/user-attachments/assets/3808539e-7ce1-416a-9093-75b26770d642
   </div>
 </details>
 
+<details>
+  <summary>내 정보 수정/탈퇴</summary>
+  <div align="center">
+
+https://github.com/user-attachments/assets/5ad777ce-03c8-41c1-b6fa-d07bd8107dc1
+
+  </div>
+</details>
+
 ---
 
 ### 🔑 호스트 기능
