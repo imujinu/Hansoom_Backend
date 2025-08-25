@@ -41,14 +41,15 @@
 <details>
   <summary>회원가입</summary>
   <div align="center">
-    <img src="https://github.com/your-repo/demo/signup.gif" alt="회원가입 시연" width="600"/>
+  https://github.com/user-attachments/assets/d95ef7fc-6a14-4c9c-8fb8-2f8c9ce89225
   </div>
 </details>
 
 <details>
-  <summary>로그인</summary>
+  <summary>일반 로그인</summary>
   <div align="center">
-    <img src="https://github.com/your-repo/demo/login.gif" alt="로그인 시연" width="600"/>
+    
+https://github.com/user-attachments/assets/6a1d76a8-97aa-4b83-9adc-b0c2834d966a
   </div>
 </details>
 
@@ -62,7 +63,11 @@
 <details>
   <summary>카카오 회원가입 / 로그인</summary>
   <div align="center">
-    <img src="https://github.com/your-repo/demo/kakao.gif" alt="카카오 회원가입/로그인 시연" width="600"/>
+
+
+https://github.com/user-attachments/assets/09a457de-615a-49f2-932a-85ea5107ab4b
+
+
   </div>
 </details>
 
@@ -90,23 +95,25 @@
 
 ### 📅 예약
 <details>
-  <summary>예약 메인</summary>
+  <summary>예약 - 결제 성공</summary>
   <div align="center">
-    <img src="https://github.com/your-repo/demo/reservation.gif" alt="예약 시연" width="600"/>
+   
+
+https://github.com/user-attachments/assets/947e51f7-0a34-434e-a06b-e72cafbb6952
+
+
   </div>
 </details>
 
-<details>
-  <summary>결제 성공</summary>
-  <div align="center">
-    <img src="https://github.com/your-repo/demo/payment.gif" alt="결제 성공 시연" width="600"/>
-  </div>
-</details>
 
 <details>
-  <summary>결제 실패</summary>
+  <summary>예약 - 결제 실패</summary>
   <div align="center">
-    <img src="https://github.com/your-repo/demo/payment.gif" alt="결제 성공 시연" width="600"/>
+    
+
+https://github.com/user-attachments/assets/b1d031fe-6075-47ff-8933-9a99aa412c3e
+
+
   </div>
 </details>
 
