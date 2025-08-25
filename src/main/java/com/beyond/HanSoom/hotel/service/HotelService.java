@@ -441,7 +441,7 @@ public class HotelService {
         Page<Hotel> hotelPage = hotelRepository.findAll(spec, pageable);
 
         // 2. Page<Hotel>의 getContent()로 가져온 리스트에 대해 추가 비즈니스 로직 필터링 및 DTO 변환을 수행합니다.
-        List<HotelListResponseDto> dtoList = hotelPage.getContent().stream()
+        List<HotelListResponseDto> dtoList = new ArrayList<>(hotelPage.getContent().stream()
                 // 호텔에 객실이 존재하는지, 그리고 해당 객실에 예약 가능한 재고가 있는지 확인합니다.
                 .filter(hotel -> hotel.getRooms().stream().anyMatch(room ->
                         isRoomAvailable(room, hotel.getId(), searchDto)
@@ -468,7 +468,7 @@ public class HotelService {
                             ? Stream.of(HotelListResponseDto.fromEntity(hotel, minAvgPrice.getAsInt()))
                             : Stream.empty();
                 })
-                .toList();
+                .toList());
 
         // 3. 정렬 조건에 따라 결과 리스트를 정렬합니다.
         // 이 정렬은 DB에서 처리하는 것이 아니므로, 결과 리스트를 직접 정렬해야 합니다.
