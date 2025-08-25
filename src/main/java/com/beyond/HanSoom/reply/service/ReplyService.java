@@ -57,4 +57,8 @@ public class ReplyService {
         log.info("[HANSOOM][INFO] - ReplyService/deleteReply - 답글삭제 성공, id={}", id);
     }
 
+    public Long getRepliesCount(Long id) {
+        return replyRepository.countByHotelId(id);
+    }
+
 }
