@@ -300,15 +300,12 @@ https://github.com/user-attachments/assets/ceefd053-9e8a-4187-bc1c-6173c732bed6
 ## <span id="11">🚦 6. 트러블 슈팅</span>
 
 <details>
-<summary> 1. 트러블 슈팅  </summary>
+<summary> 조은성 트러블 슈팅(로그인, 리뷰)  </summary>
 
 <div>
 
-1. 문제 상황 <br />
-
-2. 시도 <br />
-
-3. 해결방안 <br />
+- 프로젝트 완료 후, ReadMe에 업데이트<br>
+https://vivid-swallow-267.notion.site/ReadMe-25ab1da1d9f9801c9a53f57faf4d5029?source=copy_link
 
 </div>
 </details>
