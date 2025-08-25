@@ -224,7 +224,10 @@ https://github.com/user-attachments/assets/b1d031fe-6075-47ff-8933-9a99aa412c3e
   <div align="center">
     
 
-https://github.com/user-attachments/assets/5c894b7d-54cb-4cd6-b69c-fc068621f469
+
+
+https://github.com/user-attachments/assets/6711a4af-2a96-4c4e-bbea-d9ced595077c
+
 
 
   </div>
@@ -234,7 +237,11 @@ https://github.com/user-attachments/assets/5c894b7d-54cb-4cd6-b69c-fc068621f469
   <summary>그룹 채팅</summary>
   <div align="center">
 
-https://github.com/user-attachments/assets/12906ac7-caf3-44eb-af7d-77b735c2a49d
+
+
+
+https://github.com/user-attachments/assets/8b5edf44-99bb-459c-a17e-109dce570c06
+
 
 
   </div>
@@ -365,20 +372,37 @@ https://vivid-swallow-267.notion.site/ReadMe-25ab1da1d9f9801c9a53f57faf4d5029?so
 
 </div>
 </details>
+
 <details>
-<summary> 1. 트러블 슈팅  </summary>
+<summary> 임진우 트러블 슈팅(예약, 채팅)  </summary>
 
 <div>
+<details>
+  <summary>
+    1. 예약 동시성 
+  </summary>
+</details>
 
-1. 문제 상황 <br />
+<details>
+  <summary>
+    2. 서버 대기열
+  </summary>
+</details>
 
-2. 시도 <br />
+<details>
+  <summary>
+    3. 메시지 소실
+  </summary>
+</details>
 
-3. 해결방안 <br />
 
 </div>
 </details>
 <details>
+
+
+
+  
 <summary> 1. 트러블 슈팅  </summary>
 
 <div>
