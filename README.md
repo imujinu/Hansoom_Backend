@@ -41,6 +41,7 @@
 <details>
   <summary>회원가입</summary>
   <div align="center">
+    
   https://github.com/user-attachments/assets/d95ef7fc-6a14-4c9c-8fb8-2f8c9ce89225
   </div>
 </details>
