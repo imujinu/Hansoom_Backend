@@ -26,6 +26,7 @@ public class ReviewListResDto {
     private String roomType;
     private BigDecimal rating;
     private String contents;
+    private Long replyId;
     private String replyContents;
     private LocalDateTime createdTime;
     @Builder.Default
@@ -40,6 +41,7 @@ public class ReviewListResDto {
                 .roomType(reservation.getRoom().getType())
                 .rating(review.getRating())
                 .contents(review.getContents())
+                .replyId(review.getReply() != null ? review.getReply().getId() : null)
                 .replyContents(review.getReply() != null ? review.getReply().getContents() : null)
                 .createdTime(review.getCreatedTime())
                 .reviewImageResDtoList(review.getReviewImageDtoList())

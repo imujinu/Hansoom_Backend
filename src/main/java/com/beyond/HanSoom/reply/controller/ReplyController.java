@@ -26,11 +26,11 @@ public class ReplyController {
     }
 
     // 답글 수정
-    @PutMapping("/update/{replyId}")
+    @PutMapping("/update")
     @PreAuthorize("hasRole('HOST')")
-    public ResponseEntity<?> updateReply(@PathVariable Long replyId, @RequestBody ReplyUpdateReqDto dto) {
-        replyService.updateReply(replyId, dto);
-        return new ResponseEntity<>(new CommonSuccessDto(replyId, HttpStatus.OK.value(), "답글수정 성공"), HttpStatus.OK);
+    public ResponseEntity<?> updateReply(@RequestBody ReplyUpdateReqDto dto) {
+        replyService.updateReply(dto);
+        return new ResponseEntity<>(new CommonSuccessDto(dto.getReplyId(), HttpStatus.OK.value(), "답글수정 성공"), HttpStatus.OK);
     }
 
     // 답글 삭제

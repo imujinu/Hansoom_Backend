@@ -28,7 +28,7 @@ public class Reply extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
     @JoinColumn(name = "review_id")
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     private Review review;
 
     public void updateContents(String contents) {
