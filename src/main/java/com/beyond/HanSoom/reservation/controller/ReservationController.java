@@ -94,10 +94,12 @@ public class ReservationController {
     @GetMapping("/connect")
     public SseEmitter subscribeQueue( @RequestParam String hotelId,
                                              @RequestParam String roomId,
-                                             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkInDate
+                                             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkInDate,
+                                      @RequestParam String userId
     ) {
         System.out.println("connect 요청 시작 =========");
-        QueueReqDto dto = new QueueReqDto().makeDto(hotelId, roomId, checkInDate);
+        QueueReqDto dto = new QueueReqDto().makeDto(hotelId, roomId, checkInDate,userId);
+        queueService.enterQueue(dto);
         SseEmitter sseEmitter =  queueService.registerEmitter(dto);
         try {
             sseEmitter.send(SseEmitter.event().name("book").data("예약 대기열 연결완료"));

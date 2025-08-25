@@ -41,12 +41,13 @@ public class ChatController {
         return new ResponseEntity<>(new CommonSuccessDto(chatRoomId, HttpStatus.OK.value(), "단체 채팅방 입장 완료"), HttpStatus.OK);
     }
 
+    //단체 채팅방 생성
     @PostMapping("/room/group/create")
     public ResponseEntity<?> createGroupRoom (){
         chatService.createGroupRoom();
         return ResponseEntity.ok().build();
     }
-
+    //메시지 읽음 처리
     @PostMapping("/room/{roomId}/read")
     public ResponseEntity<?> messageRead(@PathVariable Long roomId){
         chatService.messageRead(roomId);

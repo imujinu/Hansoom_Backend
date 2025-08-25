@@ -52,12 +52,12 @@ public class JwtTokenProvider {
 
     public String createAtToken(User user) {
         String email = user.getEmail();
-        String name = user.getName();
+        Long userId = user.getId();
         String role = user.getUserRole().toString();
 
         Claims claims = Jwts.claims().setSubject(email);
         claims.put("role", role);
-        claims.put("name", name);
+        claims.put("userId", userId);
         Date now = new Date();
         String accessToken = Jwts.builder()
                 .setClaims(claims)
@@ -72,10 +72,10 @@ public class JwtTokenProvider {
     public String createRtToken(User user) {
         String email = user.getEmail();
         String role = user.getUserRole().toString();
-        String name = user.getName();
+        Long userId = user.getId();;
         Claims claims = Jwts.claims().setSubject(email);
         claims.put("role", role);
-        claims.put("name", name);
+        claims.put("userId", userId);
         Date now = new Date();
         String refreshToken = Jwts.builder()
                 .setClaims(claims)
