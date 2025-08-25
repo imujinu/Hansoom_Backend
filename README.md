@@ -326,7 +326,7 @@ https://github.com/user-attachments/assets/f6b3994a-baa6-4929-9e35-fa4f912d4fca
   <summary>입실 하루 전 알림(사용자, 실시간x)</summary>
   <div align="center">
     
-
+<img width="417" height="253" alt="사용자 내일 입실 알림" src="https://github.com/user-attachments/assets/e16c3ca2-20ff-436d-a1f8-a8ad91e1a8bb" />
     
   </div>
 </details>
@@ -335,7 +335,7 @@ https://github.com/user-attachments/assets/f6b3994a-baa6-4929-9e35-fa4f912d4fca
   <summary>퇴실 후 리뷰 요청 알림(사용자, 실시간x)</summary>
   <div align="center">
     
-
+<img width="408" height="269" alt="사용자 리뷰 요청 알림" src="https://github.com/user-attachments/assets/f85d1f43-ad23-4bce-9ef1-fb920c3da9ce" />
     
   </div>
 </details>
