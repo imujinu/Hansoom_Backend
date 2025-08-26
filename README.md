@@ -2,6 +2,9 @@
 ### **슬로건: "한숨 쉬지 말고 한숨 쉬다가세요."**<br/>
 이 슬로건은 단순히 물리적 휴식을 넘어, 예약 과정에서의 복잡함과 스트레스까지 해소하겠다는 프로젝트의 핵심 가치를 담고 있습니다. 사용자에게는 '편리한 휴식 경험'을, 호스트에게는 '간편한 관리 경험'을 제공하는 것이 목표입니다.
 
+<img width="1887" height="845" alt="대표 화면" src="https://github.com/user-attachments/assets/e26d2960-6a80-4356-88b8-fd55afe0eff7" />
+
+
 ### **프로젝트 소개**<br/>
 '한숨' 스테이는 사용자와 호스트 간의 숙박 예약, 취소, 변경 등 모든 상호작용 내역을 실시간으로 동기화하는 통합 예약 관리 시스템입니다. 복잡한 절차를 최소화하고 직관적인 UX를 구현하여 누구나 손쉽게 원하는 숙소를 탐색하고 예약할 수 있도록 설계되었습니다.<br/>
 본 프로젝트는 최신 웹 기술을 기반으로 안정적인 데이터 처리와 매끄러운 사용자 경험을 동시에 확보하는 데 중점을 두었습니다. 강력한 백엔드 시스템을 통해 예약 데이터의 무결성을 보장하고, 사용자 인터페이스와 실시간으로 데이터를 연동함으로써 예약 오류나 데이터 누락 없이 신뢰할 수 있는 숙박 환경을 구축하고자 합니다.<br/>
@@ -31,6 +34,7 @@
   <img src="https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white" />
   <img src="https://img.shields.io/badge/docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
   <img src="https://img.shields.io/badge/intellijidea-000000?style=for-the-badge&logo=intellijidea&logoColor=white" />
+  <img src="https://img.shields.io/badge/luascript-2C2D72?style=for-the-badge&logo=lua&logoColor=white" />
 </p>
 
 ### 🛠️ FRONTEND
@@ -62,34 +66,41 @@
   <img src="https://img.shields.io/badge/discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" />
 </p>
 
+### 🔍 사용한 핵심 기술
+| 사용 기술 | 설명 |
+| ---------- | ---------------------------------------------- |
+| 다양한 로그인 방식 | 자체 로그인 외에 구글, 카카오 소셜 로그인을 도입하여 사용자의 편의성을 높였습니다. |
+| Redis를 활용한 토큰 관리 | 로그인 시 발급되는 토큰을 Redis에 저장하고 관리함으로써, 빠르고 안정적인 사용자 인증 시스템을 구축했습니다. |
+| Redis를 통한 동시성 제어 | 여러 사용자가 동시에 같은 객실에 접근할 경우, Redis를 활용한 분산 락(Distributed Lock)으로 객실 수량을 정확하게 제어하여 이중 예약을 방지했습니다. |
+| Redis PUB/SUB 알림 기능 | Redis의 PUB/SUB (발행/구독) 기능을 활용해 예약, 취소 등 중요한 이벤트 발생 시 사용자에게 실시간 알림을 제공하는 시스템을 구현했습니다. |
+| 카카오지도 API 연동 | 카카오지도 API의 주소-좌표 변환(Geocoding) 기능을 이용해 호텔 주소를 좌표로 변환하고, 이를 바탕으로 지도를 구현하여 사용자가 호텔 위치를 쉽게 찾을 수 있도록 했습니다. |
+| 토스페이먼츠 API 결제 | 간편하고 안전한 결제 환경을 위해 토스페이먼츠 API를 연동하여 사용자가 편리하게 결제할 수 있도록 했습니다. |
 
-## 🧩 ERD 모델링
-[ERD LINK](https://www.erdcloud.com/d/KZpy58Bipc3W5dMCp)
-
-## 🧩 화면 설계
-[FIGMA LINK](https://www.figma.com/design/5YAs2wQfAH7CbiuoVLxr83/hwswcamp16-hansoom?node-id=9-399&t=4fWD07lFKPfFA3RF-1)
-
-## 🗂️ WBS(Work Breakdown Structure)
-[WBS LINK](https://docs.google.com/spreadsheets/d/1WBdN5PjUgrAbVGL3SymTdRr_rnKO_Wy1DPPokykaKWM/edit?gid=692648115#gid=692648115)
-
-## 📄 주요기능, 요구사항명세서, 팀 전략
-[NOTION LINK](https://vivid-swallow-267.notion.site/247b1da1d9f980179d12d61e05389f50?source=copy_link)
-
-## 📄 API 명세서
-[POSTMAN LINK](https://documenter.getpostman.com/view/40187629/2sB3BBqsB9#702f82d9-09c1-43f8-830c-56f957a19796)
-
-## 📄 예시 페이지
-[PREVIEW LINK](https://readdy.link/preview/d972ce86-2686-4d95-91a4-ea112118bf7e/1293925)
-
-## 📄 다이어그램
+### 📄 다이어그램
 <details>
   <summary>결제 다이어그램</summary>
     ![결제 다이어 그램]<img width="822" height="922" alt="결제 시퀀스 다이어그램 drawio (1)" src="https://github.com/user-attachments/assets/7d5760a4-8e72-4fb5-a195-3b8eb46b1c6d" />
 </details>
 
-## <span id="11">📄 5. 주요 기능 소개(테스트케이스)</span>
+## 기획
+### 🧩 ERD 모델링
+[ERD설계](https://www.erdcloud.com/d/KZpy58Bipc3W5dMCp)
 
-#### 👥 사용자
+### 🧩 화면 설계
+[화면설계(FIGMA)](https://www.figma.com/design/5YAs2wQfAH7CbiuoVLxr83/hwswcamp16-hansoom?node-id=9-399&t=4fWD07lFKPfFA3RF-1)
+
+### 🗂️ WBS(Work Breakdown Structure)
+[WBS](https://docs.google.com/spreadsheets/d/1WBdN5PjUgrAbVGL3SymTdRr_rnKO_Wy1DPPokykaKWM/edit?gid=692648115#gid=692648115)
+
+### 📄 주요기능, 요구사항명세서, 팀 전략
+[요구사항 명세서(노션)](https://vivid-swallow-267.notion.site/247b1da1d9f980179d12d61e05389f50?source=copy_link)
+
+### 📄 API 명세서
+[API 명세서](https://documenter.getpostman.com/view/40187629/2sB3BBqsB9#702f82d9-09c1-43f8-830c-56f957a19796)
+
+## <span id="11">📄 5. 주요 기능 소개(테스트케이스)</span>
+<details>
+  <summary> 👥 사용자 </summary>
 <details>
   <summary>회원가입</summary>
   <div align="center">
@@ -141,10 +152,10 @@ https://github.com/user-attachments/assets/5ad777ce-03c8-41c1-b6fa-d07bd8107dc1
 
   </div>
 </details>
+</details>
 
----
-
-### 🔑 호스트 기능
+<details>
+ <summary> 🔑 호스트 기능 </summary>
 <details>
   <summary>호텔 등록</summary>
   <div align="center">
@@ -161,10 +172,10 @@ https://github.com/user-attachments/assets/3b5c26c2-4f58-47d1-b29e-884fc1d94e79
 
   </div>
 </details>
+</details>
 
----
-
-### ⚙️ 관리자 화면
+<details>
+<summary>⚙️ 관리자 화면</summary>
 <details>
   <summary>호텔 승인</summary>
   <div align="center">
@@ -175,9 +186,10 @@ https://github.com/user-attachments/assets/e3b34a71-39eb-49b1-9160-b2c809419b05
 
   </div>
 </details>
+</details>
 
----
-### 🏨 호텔 조회
+<details>
+<summary>🏨 호텔 조회</summary>
 <details>
   <summary>지역명 조회</summary>
   <div align="center">
@@ -222,10 +234,10 @@ https://github.com/user-attachments/assets/c0f0476c-1bf6-404b-b7a6-702d5695d98b
 
   </div>
 </details>
+</details>
 
----
-
-### 📅 예약
+<details>
+<summary>📅 예약</summary>
 <details>
   <summary>예약 대기열 생성</summary>
   <div align="center">
@@ -267,10 +279,10 @@ https://github.com/user-attachments/assets/b1d031fe-6075-47ff-8933-9a99aa412c3e
     <img src="https://github.com/your-repo/demo/payment.gif" alt="결제 성공 시연" width="600"/>
   </div>
 </details>
+</details>
 
----
-
-### 💬 채팅
+<details>
+<summary>💬 채팅</summary>
 <details>
   <summary>1:1 채팅 </summary>
   <div align="center">
@@ -305,10 +317,10 @@ https://github.com/user-attachments/assets/8b5edf44-99bb-459c-a17e-109dce570c06
     
   </div>
 </details>
+</details>
 
----
-
-### ✏️ 리뷰
+<details>
+<summary>✏️ 리뷰</summary>
 <details>
   <summary>호텔 리뷰조회</summary>
   <div align="center">
@@ -362,10 +374,10 @@ https://github.com/user-attachments/assets/ceefd053-9e8a-4187-bc1c-6173c732bed6
 
   </div>
 </details>
+</details>
 
----
-
-### 🔔 알림
+<details>
+<summary>🔔 알림</summary>
 <details>
   <summary>예약성공 알림(사용자, 실시간x)</summary>
   <div align="center">
@@ -409,6 +421,7 @@ https://github.com/user-attachments/assets/f6b3994a-baa6-4929-9e35-fa4f912d4fca
 <img width="408" height="269" alt="사용자 리뷰 요청 알림" src="https://github.com/user-attachments/assets/f85d1f43-ad23-4bce-9ef1-fb920c3da9ce" />
     
   </div>
+</details>
 </details>
 
 
