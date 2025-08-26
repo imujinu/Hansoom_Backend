@@ -22,7 +22,7 @@
   </tbody>
 </table>
 
-## 기술스택
+## 🛠️ 기술스택
 ### 🛠️ BACKEND
 
 <p align="center">
@@ -82,7 +82,7 @@
     ![결제 다이어 그램]<img width="822" height="922" alt="결제 시퀀스 다이어그램 drawio (1)" src="https://github.com/user-attachments/assets/7d5760a4-8e72-4fb5-a195-3b8eb46b1c6d" />
 </details>
 
-## 기획
+## 📄 기획
 ### 🧩 ERD 모델링
 [ERD설계](https://www.erdcloud.com/d/KZpy58Bipc3W5dMCp)
 
@@ -98,7 +98,7 @@
 ### 📄 API 명세서
 [API 명세서](https://documenter.getpostman.com/view/40187629/2sB3BBqsB9#702f82d9-09c1-43f8-830c-56f957a19796)
 
-## <span id="11">📄 5. 주요 기능 소개(테스트케이스)</span>
+## <span id="11">🖥️ 주요 기능 소개(테스트케이스)</span>
 <details>
   <summary> 👥 사용자 </summary>
 <details>
@@ -425,7 +425,7 @@ https://github.com/user-attachments/assets/f6b3994a-baa6-4929-9e35-fa4f912d4fca
 </details>
 
 
-## <span id="11">🚦 6. 트러블 슈팅</span>
+## <span id="11">🚦 트러블 슈팅</span>
 
 <details>
 <summary> 조은성 트러블 슈팅(로그인, 리뷰)  </summary>
