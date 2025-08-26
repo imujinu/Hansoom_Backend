@@ -70,6 +70,7 @@
 [FIGMA LINK](https://www.figma.com/design/5YAs2wQfAH7CbiuoVLxr83/hwswcamp16-hansoom?node-id=9-399&t=4fWD07lFKPfFA3RF-1)
 
 ## 🗂️ WBS(Work Breakdown Structure)
+[WBS LINK](https://docs.google.com/spreadsheets/d/1WBdN5PjUgrAbVGL3SymTdRr_rnKO_Wy1DPPokykaKWM/edit?gid=692648115#gid=692648115)
 
 ## 📄 주요기능, 요구사항명세서, 팀 전략
 [NOTION LINK](https://vivid-swallow-267.notion.site/247b1da1d9f980179d12d61e05389f50?source=copy_link)
