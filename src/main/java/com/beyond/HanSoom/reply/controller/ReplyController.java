@@ -5,6 +5,7 @@ import com.beyond.HanSoom.reply.dto.ReplyCreateReqDto;
 import com.beyond.HanSoom.reply.dto.ReplyUpdateReqDto;
 import com.beyond.HanSoom.reply.service.ReplyService;
 import jakarta.validation.Valid;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,11 +27,11 @@ public class ReplyController {
     }
 
     // 답글 수정
-    @PutMapping("/update/{replyId}")
+    @PutMapping("/update")
     @PreAuthorize("hasRole('HOST')")
-    public ResponseEntity<?> updateReply(@PathVariable Long replyId, @RequestBody ReplyUpdateReqDto dto) {
-        replyService.updateReply(replyId, dto);
-        return new ResponseEntity<>(new CommonSuccessDto(replyId, HttpStatus.OK.value(), "답글수정 성공"), HttpStatus.OK);
+    public ResponseEntity<?> updateReply(@RequestBody ReplyUpdateReqDto dto) {
+        replyService.updateReply(dto);
+        return new ResponseEntity<>(new CommonSuccessDto(dto.getReplyId(), HttpStatus.OK.value(), "답글수정 성공"), HttpStatus.OK);
     }
 
     // 답글 삭제
@@ -39,6 +40,13 @@ public class ReplyController {
     public ResponseEntity<?> deleteReply(@PathVariable Long replyId) {
         replyService.deleteReply(replyId);
         return new ResponseEntity<>(new CommonSuccessDto(replyId, HttpStatus.OK.value(), "답글삭제 성공"), HttpStatus.OK);
+    }
+
+    // 호텔의 답글 수 조회
+    @GetMapping("/hotels/{hotelId}/replies/count")
+    public ResponseEntity<?> getRepliesCount(@PathVariable Long hotelId) {
+        Long count = replyService.getRepliesCount(hotelId);
+        return new ResponseEntity<>(new CommonSuccessDto(count, HttpStatus.OK.value(), "답글 개수 조회 성공"), HttpStatus.OK);
     }
 
 }

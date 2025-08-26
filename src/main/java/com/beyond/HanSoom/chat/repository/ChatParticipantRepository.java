@@ -24,4 +24,8 @@ public interface ChatParticipantRepository extends JpaRepository<ChatParticipant
     List<ChatParticipant> findAllByUser(User user);
 
     List<ChatParticipant> findAllByChatRoom(ChatRoom chatRoom);
+
+    Long countByChatRoom(ChatRoom chatRoom);
+
+    int countByChatRoomAndIsOnline(ChatRoom cr, String y);
 }

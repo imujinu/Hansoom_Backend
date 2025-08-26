@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
@@ -16,6 +18,8 @@ public class HotelListResponseDto {
     private String address;
     private String image;
     private int price;
+    private BigDecimal rating;
+    private int reviewCount;
 
     public static HotelListResponseDto fromEntity(Hotel hotel, int price) {
         return HotelListResponseDto.builder()
@@ -24,6 +28,8 @@ public class HotelListResponseDto {
                 .address(hotel.getAddress())
                 .image(hotel.getImage())
                 .price(price)
+                .rating(hotel.getHotelReviewSummary().getAverage())
+                .reviewCount(hotel.getHotelReviewSummary().getRatingCount())
                 .build();
     }
 }

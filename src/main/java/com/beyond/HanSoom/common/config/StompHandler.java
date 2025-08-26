@@ -72,7 +72,7 @@ public class StompHandler implements ChannelInterceptor {
         if(StompCommand.DISCONNECT == accessor.getCommand()){
             String bearerToken = accessor.getFirstNativeHeader("Authorization");
 
-            WebSocketSessionRegistry.unregister(accessor.getSessionId());
+
         }
 
 

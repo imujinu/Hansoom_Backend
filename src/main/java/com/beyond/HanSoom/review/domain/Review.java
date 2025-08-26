@@ -3,6 +3,7 @@ package com.beyond.HanSoom.review.domain;
 import com.beyond.HanSoom.common.domain.BaseTimeEntity;
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.reply.domain.Reply;
+import com.beyond.HanSoom.reply.domain.ReplyState;
 import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.review.dto.ReviewImageResDto;
 import com.beyond.HanSoom.reviewImage.domain.ReviewImage;
@@ -16,6 +17,7 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Getter
 @NoArgsConstructor
@@ -48,8 +50,9 @@ public class Review extends BaseTimeEntity {
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ReviewImage> reviewImageList = new ArrayList<>();
-    @OneToOne(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Reply reply;
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL)
+    @Builder.Default
+    private List<Reply> replyList = new ArrayList<>();
 
     public void updateReview(BigDecimal rating, String contents) {
         this.rating = rating;
@@ -60,5 +63,9 @@ public class Review extends BaseTimeEntity {
     }
     public List<ReviewImageResDto> getReviewImageDtoList() {
         return reviewImageList.stream().map(a -> ReviewImageResDto.fromEntity(a)).toList();
+    }
+    public Reply getReply() {
+        Reply reply = replyList.stream().filter(a -> a.getState() == ReplyState.NORMAL).findFirst().orElse(null);
+        return reply;
     }
 }

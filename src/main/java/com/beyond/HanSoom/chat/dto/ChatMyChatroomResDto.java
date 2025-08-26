@@ -15,6 +15,7 @@ public class ChatMyChatroomResDto {
     private String hotelName;
     private String isGroupChat;
     private Long unReadCount;
+    private Long participants;
 
     public ChatMyChatroomResDto fromEntity(ChatRoom chatRoom, Long unReadCount){
         return ChatMyChatroomResDto.builder()

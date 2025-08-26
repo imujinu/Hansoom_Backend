@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,4 +25,6 @@ public class HotelListSearchDto {
     private int maxPrice;
     @Builder.Default
     private List<HotelType> type = new ArrayList<>();
+    private BigDecimal rating;
+    private String sortOption;
 }

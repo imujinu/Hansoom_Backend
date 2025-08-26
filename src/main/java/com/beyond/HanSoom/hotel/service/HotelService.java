@@ -9,6 +9,8 @@ import com.beyond.HanSoom.hotel.dto.*;
 import com.beyond.HanSoom.hotel.repository.HotelRepository;
 import com.beyond.HanSoom.notification.service.NotificationService;
 import com.beyond.HanSoom.notification.service.SseAlarmService;
+import com.beyond.HanSoom.review.domain.HotelReviewSummary;
+import com.beyond.HanSoom.review.repository.HotelReviewSummaryRepository;
 import com.beyond.HanSoom.room.domain.Room;
 import com.beyond.HanSoom.room.dto.RoomDetailResponseDto;
 import com.beyond.HanSoom.room.dto.RoomDetailSearchResponseDto;
@@ -31,6 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.*;
@@ -52,10 +55,14 @@ public class HotelService {
     private final RoomImageRepository roomImageRepository;
     private final NotificationService notificationService;
     private final SseAlarmService sseAlarmService;
+    private final HotelReviewSummaryRepository hotelReviewSummaryRepository;
 
     public void registerHotel(HotelRegisterRequsetDto dto, MultipartFile hotelImage, List<MultipartFile> roomImages) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("등록된 사용자가 아닙니다."));
+
+        // 호텔 주소 정규화
+        dto.setAddress(normalizeAddress(dto.getAddress()));
 
         // 호텔 이미지 S3 저장
         String hotelImageUrl = (hotelImage != null && !hotelImage.isEmpty())
@@ -98,6 +105,26 @@ public class HotelService {
         hotelRepository.save(hotel);
     }
 
+    private String normalizeAddress(String address) {
+        if (address == null || address.trim().isEmpty()) {
+            return address;
+        }
+
+        String normalized = address;
+
+        // "특별시"를 "시"로 변환 (예: 서울특별시 -> 서울시)
+        normalized = normalized.replace("특별시", "시");
+
+        // "광역시"를 "시"로 변환 (예: 부산광역시 -> 부산시)
+        normalized = normalized.replace("광역시", "시");
+
+        // "특별자치도"를 "도"로 변환 (예: 강원특별자치도 -> 강원도)
+        normalized = normalized.replace("특별자치도", "도");
+
+        // 불필요한 공백 제거
+        return normalized.trim();
+    }
+
     public void answerAdmin(HotelStateUpdateDto dto) {
         Hotel hotel = hotelRepository.findById(dto.getHotelId()).orElseThrow(() -> new EntityNotFoundException("등록된 호텔이 없습니다."));
         hotel.updateState(dto.getState());
@@ -122,6 +149,7 @@ public class HotelService {
 
         try {
             // 2. 주소로 좌표 조회
+            dto.setAddress(normalizeAddress(dto.getAddress()));
             GeocoderService.Coordinate coord = geocoderService.getCoordinates(dto.getAddress());
 
             // 3. 호텔 기본 정보 업데이트
@@ -370,7 +398,7 @@ public class HotelService {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("등록된 사용자가 없습니다."));
 
-        Hotel hotel = hotelRepository.findByUserAndState(user, HotelState.APPLY).orElseThrow(() -> new EntityNotFoundException("호텔 정보가 없습니다."));
+        Hotel hotel = hotelRepository.findTopByUserAndState(user, HotelState.APPLY).orElseThrow(() -> new EntityNotFoundException("호텔 정보가 없습니다."));
         List<RoomDetailResponseDto> roomDto = new ArrayList<>();
         for(Room r : hotel.getRooms()) {
             if(r.getState()==HotelState.REMOVE) continue;
@@ -405,86 +433,114 @@ public class HotelService {
     }
 
 //    고객 조회
-    @Transactional(readOnly = true)
     public Page<HotelListResponseDto> findAll(Pageable pageable, HotelListSearchDto searchDto) {
+        // 1. Specification을 사용해 DB에서 1차 필터링된 호텔 페이지를 가져옵니다.
+        // 이 쿼리는 Pageable 정보를 사용해 페이징 처리가 완료된 상태입니다.
+        searchDto.setAddress(normalizeAddress(searchDto.getAddress()));
         Specification<Hotel> spec = HotelSpecification.withSearchConditions(searchDto);
         Page<Hotel> hotelPage = hotelRepository.findAll(spec, pageable);
 
-        List<HotelListResponseDto> result = hotelPage.getContent().stream()
-                .filter(hotel -> hotel.getRooms().stream().anyMatch(room -> {
-                    if (room.getState() == HotelState.REMOVE) return false;
-                    if (room.getMaximumPeople() < searchDto.getPeople()) return false;
-
-                    ReservationDto dto = ReservationDto.builder()
-                            .hotelId(hotel.getId())
-                            .roomId(room.getId())
-                            .checkIn(searchDto.getCheckIn())
-                            .checkOut(searchDto.getCheckOut())
-                            .maxStock(room.getRoomCount())
-                            .build();
-
-                    int available = reservationInventoryService.getInventory(dto);
-                    return available > 0;
-                }))
+        // 2. Page<Hotel>의 getContent()로 가져온 리스트에 대해 추가 비즈니스 로직 필터링 및 DTO 변환을 수행합니다.
+        List<HotelListResponseDto> dtoList = hotelPage.getContent().stream()
+                // 호텔에 객실이 존재하는지, 그리고 해당 객실에 예약 가능한 재고가 있는지 확인합니다.
+                .filter(hotel -> hotel.getRooms().stream().anyMatch(room ->
+                        isRoomAvailable(room, hotel.getId(), searchDto)
+                ))
+                // 각 호텔별로 가장 저렴한 객실 가격을 찾아 DTO로 변환합니다.
                 .flatMap(hotel -> {
-                    // 조건에 맞는 객실들 중 평균가가 가장 저렴한 객실 찾기
+                    // 조건에 맞는 객실들 중 평균가가 가장 저렴한 객실을 찾습니다.
                     OptionalInt minAvgPrice = hotel.getRooms().stream()
-                            .filter(room -> room.getState() != HotelState.REMOVE)
-                            .filter(room -> room.getMaximumPeople() >= searchDto.getPeople())
-                            .filter(room -> {
-                                ReservationDto dto = ReservationDto.builder()
-                                        .hotelId(hotel.getId())
-                                        .roomId(room.getId())
-                                        .checkIn(searchDto.getCheckIn())
-                                        .checkOut(searchDto.getCheckOut())
-                                        .maxStock(room.getRoomCount())
-                                        .build();
-                                return reservationInventoryService.getInventory(dto) > 0;
-                            })
+                            .filter(room -> isRoomAvailable(room, hotel.getId(), searchDto))
                             .mapToInt(room -> calculateAveragePrice(room, searchDto.getCheckIn(), searchDto.getCheckOut()))
-                            // 가격 범위 필터링 추가
-                            .filter(avgPrice -> {
-                                // minPrice가 설정된 경우 최소가격 이상인지 확인
-                                boolean minPriceCondition = avgPrice >= searchDto.getMinPrice();
-
-                                // maxPrice가 설정된 경우 최대가격 이하인지 확인
-                                boolean maxPriceCondition = avgPrice <= searchDto.getMaxPrice();
-
-                                return minPriceCondition && maxPriceCondition;
-                            })
+                            .filter(avgPrice ->
+                                    (avgPrice >= searchDto.getMinPrice()) && (avgPrice <= searchDto.getMaxPrice())
+                            )
                             .min();
 
-                    // 조건에 맞는 객실이 있는 경우만 결과에 포함
+                    // 평점 필터링
+                    if (searchDto.getRating() != null) {
+                        if (hotel.getHotelReviewSummary().getAverage().compareTo(searchDto.getRating()) < 0) {
+                            return Stream.empty();
+                        }
+                    }
+
                     return minAvgPrice.isPresent()
                             ? Stream.of(HotelListResponseDto.fromEntity(hotel, minAvgPrice.getAsInt()))
                             : Stream.empty();
                 })
                 .toList();
 
-        return new PageImpl<>(result, pageable, result.size());
+        // 3. 정렬 조건에 따라 결과 리스트를 정렬합니다.
+        // 이 정렬은 DB에서 처리하는 것이 아니므로, 결과 리스트를 직접 정렬해야 합니다.
+        if (!dtoList.isEmpty() && searchDto.getSortOption() != null) {
+            String[] sortParams = searchDto.getSortOption().split(",");
+            String sortBy = sortParams[0];
+            String sortDirection = sortParams[1];
+            Comparator<HotelListResponseDto> comparator = null;
+
+            if ("price".equals(sortBy)) {
+                comparator = Comparator.comparing(HotelListResponseDto::getPrice);
+            } else if ("rating".equals(sortBy)) {
+                comparator = Comparator.comparing(HotelListResponseDto::getRating, Comparator.nullsLast(BigDecimal::compareTo));
+            }
+
+            if (comparator != null) {
+                if ("desc".equals(sortDirection)) {
+                    comparator = comparator.reversed();
+                }
+                dtoList.sort(comparator);
+            }
+        }
+
+        // 4. `PageImpl`을 생성할 때, 전체 데이터의 개수는 `hotelPage.getTotalElements()`를 사용합니다.
+        // 이렇게 하면 정확한 페이지네이션 정보(총 페이지 수, 총 데이터 개수)를 제공할 수 있습니다.
+        return new PageImpl<>(dtoList, pageable, hotelPage.getTotalElements());
     }
 
+    /**
+     * 객실 상태, 인원수, 예약 가능 재고를 확인하는 헬퍼 메서드
+     */
+    private boolean isRoomAvailable(Room room, Long hotelId, HotelListSearchDto searchDto) {
+        if (room.getState() == HotelState.REMOVE) {
+            return false;
+        }
+        if (room.getMaximumPeople() < searchDto.getPeople()) {
+            return false;
+        }
+
+        ReservationDto dto = ReservationDto.builder()
+                .hotelId(hotelId)
+                .roomId(room.getId())
+                .checkIn(searchDto.getCheckIn())
+                .checkOut(searchDto.getCheckOut())
+                .maxStock(room.getRoomCount())
+                .build();
+
+        int available = reservationInventoryService.getInventory(dto);
+        return available > 0;
+    }
+
+//    가까운 호텔 조회
     @Transactional(readOnly = true)
     public Page<HotelLocationListResponseDto> findNearbyHotels(LocationHotelSearchDto dto, Pageable pageable) {
+        // 1. 전체 호텔 개수를 먼저 가져옵니다.
+        // 이는 페이지네이션의 'total' 값을 위해 필요합니다.
+        long totalCount = hotelRepository.countNearbyHotels(dto.getLatitude(), dto.getLongitude(), 5);
+
+        // 2. 현재 페이지에 해당하는 호텔 데이터를 거리를 기준으로 가져옵니다.
         List<Object[]> results = hotelRepository.findNearbyHotelsWithDistance(
                 dto.getLatitude(), dto.getLongitude(), 5, pageable);
 
-        List<HotelLocationListResponseDto> filtered = new ArrayList<>();
+        List<HotelLocationListResponseDto> dtoList = new ArrayList<>();
 
+        // 3. 가져온 각 호텔에 대해 비즈니스 로직 필터링을 적용합니다.
         for (Object[] row : results) {
-            Long id = ((Number) row[4]).longValue();  // hotel.id
-            String hotelName = (String) row[9];
-            String address = (String) row[7];
-            String image = (String) row[10];
-            double latitude = ((Number) row[0]).doubleValue();
-            double longitude = ((Number) row[1]).doubleValue();
-            double rawDistance = ((Number) row[14]).doubleValue();
-            double distance = Math.round(rawDistance * 100.0) / 100.0;
+            Long id = ((Number) row[0]).longValue();
 
+            // 추가 필터링 로직을 수행하기 전에 hotelId로 객실과 평점 데이터를 가져옵니다.
             List<Room> availableRooms = roomRepository.findByHotelId(id).stream()
                     .filter(room -> room.getState() != HotelState.REMOVE)
                     .filter(room -> room.getMaximumPeople() >= dto.getPeople())
-
                     .filter(room -> {
                         ReservationDto reservationDto = ReservationDto.builder()
                                 .hotelId(id)
@@ -496,17 +552,26 @@ public class HotelService {
                         int remaining = reservationInventoryService.getInventory(reservationDto);
                         return remaining > 0;
                     })
-
                     .toList();
 
             if (!availableRooms.isEmpty()) {
-                // 조건에 맞는 방 중 1박 평균 가격 가장 낮은 방 찾기
+                // 조건에 맞는 방이 있는 경우에만 DTO 생성
+                String hotelName = (String) row[3];
+                String address = (String) row[4];
+                String image = (String) row[5];
+                double latitude = ((Number) row[1]).doubleValue();
+                double longitude = ((Number) row[2]).doubleValue();
+                double rawDistance = ((Number) row[6]).doubleValue();
+                double distance = Math.round(rawDistance * 100.0) / 100.0;
+
+                HotelReviewSummary hotelReviewSummary = hotelReviewSummaryRepository.findByHotelId(id);
+
                 int minAvgPrice = availableRooms.stream()
                         .mapToInt(room -> calculateAveragePrice(room, dto.getCheckIn(), dto.getCheckOut()))
                         .min()
                         .orElse(0);
 
-                filtered.add(HotelLocationListResponseDto.builder()
+                dtoList.add(HotelLocationListResponseDto.builder()
                         .id(id)
                         .hotelName(hotelName)
                         .address(address)
@@ -515,10 +580,14 @@ public class HotelService {
                         .longitude(longitude)
                         .distance(distance)
                         .price(minAvgPrice)
+                        .rating(hotelReviewSummary.getAverage())
+                        .reviewCount(hotelReviewSummary.getRatingCount())
                         .build());
             }
         }
-        return new PageImpl<>(filtered, pageable, filtered.size());
+
+        // 4. PageImpl을 생성할 때, dtoList와 pageable, 그리고 전체 개수(totalCount)를 사용합니다.
+        return new PageImpl<>(dtoList, pageable, totalCount);
     }
 
     private int calculateAveragePrice(Room room, LocalDate checkIn, LocalDate checkOut) {

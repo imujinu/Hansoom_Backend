@@ -41,12 +41,13 @@ public class ChatController {
         return new ResponseEntity<>(new CommonSuccessDto(chatRoomId, HttpStatus.OK.value(), "단체 채팅방 입장 완료"), HttpStatus.OK);
     }
 
+    //단체 채팅방 생성
     @PostMapping("/room/group/create")
     public ResponseEntity<?> createGroupRoom (){
         chatService.createGroupRoom();
         return ResponseEntity.ok().build();
     }
-
+    //메시지 읽음 처리
     @PostMapping("/room/{roomId}/read")
     public ResponseEntity<?> messageRead(@PathVariable Long roomId){
         chatService.messageRead(roomId);
@@ -88,24 +89,24 @@ public class ChatController {
         return new ResponseEntity<>(new CommonSuccessDto(dtos, HttpStatus.OK.value(), "내 호텔 조회 완료"), HttpStatus.OK);
     }
 
-    //호스트 호텔 1:1 채팅 내역 조회
-    @GetMapping("/host/private-{hotelId}")
+    //호스트 채팅 내역 조회
+    @GetMapping("/host/{hotelId}")
     public ResponseEntity<?> getHostPrivateChatRoom(@PathVariable Long hotelId) {
-        List<ChatHostPrivateChatRoomResDto> dto = chatService.getHostPrivateChatRoom(hotelId);
+        List<ChatHostChatRoomResDto> dto = chatService.getHostChatRoom(hotelId);
         return new ResponseEntity<>(new CommonSuccessDto(dto, HttpStatus.OK.value(), "1:1 채팅 조회 완료"), HttpStatus.OK);
     }
 
-    //호스트 호텔 그룹 채팅 내역 조회
-    @GetMapping("/host/group-{hotelId}")
-    public ResponseEntity<?> getHostGroupChatRoom(@PathVariable Long hotelId) {
-        ChatHostGroupChatRoomResDto dto = chatService.getHostGroupChatRoom(hotelId);
-        return new ResponseEntity<>(new CommonSuccessDto(dto, HttpStatus.OK.value(), "단체 채팅 조회 완료"), HttpStatus.OK);
-    }
+//    //호스트 호텔 그룹 채팅 내역 조회
+//    @GetMapping("/host/group-{hotelId}")
+//    public ResponseEntity<?> getHostGroupChatRoom(@PathVariable Long hotelId) {
+//        ChatHostChatRoomResDto dto = chatService.getChatHistory(hotelId);
+//        return new ResponseEntity<>(new CommonSuccessDto(dto, HttpStatus.OK.value(), "단체 채팅 조회 완료"), HttpStatus.OK);
+//    }
 
     //호스트 단체 채팅 생성
     @PostMapping("/host/{hotelId}")
     public ResponseEntity<?> createHostGroupChat(@PathVariable Long hotelId) {
-        ChatHostGroupChatRoomResDto dto = chatService.createHostGroupChat(hotelId);
+        ChatHostChatRoomResDto dto = chatService.createHostGroupChat(hotelId);
         return new ResponseEntity<>(new CommonSuccessDto(dto, HttpStatus.OK.value(), "단체 채팅 생성 완료"), HttpStatus.OK);
     }
 
