@@ -34,3 +34,387 @@
   <summary>결제 다이어그램</summary>
     ![결제 다이어 그램]<img width="822" height="922" alt="결제 시퀀스 다이어그램 drawio (1)" src="https://github.com/user-attachments/assets/7d5760a4-8e72-4fb5-a195-3b8eb46b1c6d" />
 </details>
+
+## <span id="11">📄 5. 주요 기능 소개(테스트케이스)</span>
+
+#### 👥 사용자
+<details>
+  <summary>회원가입</summary>
+  <div align="center">
+    
+  https://github.com/user-attachments/assets/d95ef7fc-6a14-4c9c-8fb8-2f8c9ce89225
+  </div>
+</details>
+
+<details>
+  <summary>일반 로그인</summary>
+  <div align="center">
+    
+https://github.com/user-attachments/assets/6a1d76a8-97aa-4b83-9adc-b0c2834d966a
+  </div>
+</details>
+
+<details>
+  <summary>구글 회원가입 / 로그인</summary>
+  <div align="center">
+    <img src="https://github.com/your-repo/demo/google.gif" alt="구글 회원가입/로그인 시연" width="600"/>
+  </div>
+</details>
+
+<details>
+  <summary>카카오 회원가입 / 로그인</summary>
+  <div align="center">
+
+
+https://github.com/user-attachments/assets/09a457de-615a-49f2-932a-85ea5107ab4b
+
+
+  </div>
+</details>
+
+<details>
+  <summary>내 정보 조회(마이페이지)</summary>
+  <div align="center">
+
+https://github.com/user-attachments/assets/3808539e-7ce1-416a-9093-75b26770d642
+
+  </div>
+</details>
+
+<details>
+  <summary>내 정보 수정/탈퇴</summary>
+  <div align="center">
+
+https://github.com/user-attachments/assets/5ad777ce-03c8-41c1-b6fa-d07bd8107dc1
+
+  </div>
+</details>
+
+---
+
+### 🔑 호스트 기능
+<details>
+  <summary>호텔 등록</summary>
+  <div align="center">
+
+https://github.com/user-attachments/assets/3f0e2484-803b-44ba-af2e-64849e545cda
+
+  </div>
+</details>
+<details>
+  <summary>호텔 수정</summary>
+  <div align="center">
+
+https://github.com/user-attachments/assets/3b5c26c2-4f58-47d1-b29e-884fc1d94e79
+
+  </div>
+</details>
+
+---
+
+### ⚙️ 관리자 화면
+<details>
+  <summary>호텔 승인</summary>
+  <div align="center">
+
+
+https://github.com/user-attachments/assets/e3b34a71-39eb-49b1-9160-b2c809419b05
+
+
+  </div>
+</details>
+
+---
+### 🏨 호텔 조회
+<details>
+  <summary>지역명 조회</summary>
+  <div align="center">
+    
+https://github.com/user-attachments/assets/1c60441e-731f-4a45-a82c-627df4c58bc4
+
+  </div>
+</details>
+
+<details>
+  <summary>호텔명 조회</summary>
+  <div align="center">
+    
+https://github.com/user-attachments/assets/7d848b57-d613-47cb-bfef-e2af1f0656a8
+
+  </div>
+</details>
+
+<details>
+  <summary>호텔검색 필터기능</summary>
+  <div align="center">
+
+https://github.com/user-attachments/assets/0fb87306-3ae8-4470-a341-05f306d8ebb9
+
+  </div>
+</details>
+
+<details>
+  <summary>호텔검색 정렬기능</summary>
+  <div align="center">
+
+https://github.com/user-attachments/assets/2df76079-b447-49db-bc63-4b10a954a208
+
+  </div>
+</details>
+
+<details>
+  <summary>내 주변 호텔 조회</summary>
+  <div align="center">
+
+https://github.com/user-attachments/assets/c0f0476c-1bf6-404b-b7a6-702d5695d98b
+
+  </div>
+</details>
+
+---
+
+### 📅 예약
+<details>
+  <summary>예약 대기열 생성</summary>
+  <div align="center">
+    
+
+https://github.com/user-attachments/assets/3527c99f-0700-465c-ab97-c37c2591f9ce
+
+
+  </div>
+</details>
+
+
+<details>
+  <summary>예약 - 결제 성공</summary>
+  <div align="center">
+   
+
+https://github.com/user-attachments/assets/947e51f7-0a34-434e-a06b-e72cafbb6952
+
+
+  </div>
+</details>
+
+
+<details>
+  <summary>예약 - 결제 실패</summary>
+  <div align="center">
+    
+
+https://github.com/user-attachments/assets/b1d031fe-6075-47ff-8933-9a99aa412c3e
+
+
+  </div>
+</details>
+
+<details>
+  <summary>예약 내역 조회</summary>
+  <div align="center">
+    <img src="https://github.com/your-repo/demo/payment.gif" alt="결제 성공 시연" width="600"/>
+  </div>
+</details>
+
+---
+
+### 💬 채팅
+<details>
+  <summary>1:1 채팅 </summary>
+  <div align="center">
+    
+
+
+
+https://github.com/user-attachments/assets/6711a4af-2a96-4c4e-bbea-d9ced595077c
+
+
+
+  </div>
+</details>
+
+<details>
+  <summary>그룹 채팅</summary>
+  <div align="center">
+
+
+
+
+https://github.com/user-attachments/assets/8b5edf44-99bb-459c-a17e-109dce570c06
+
+
+
+  </div>
+</details>
+
+<details>
+  <summary>호스트 그룹 채팅 관리</summary>
+  <div align="center">
+    
+  </div>
+</details>
+
+---
+
+### ✏️ 리뷰
+<details>
+  <summary>호텔 리뷰조회</summary>
+  <div align="center">
+
+https://github.com/user-attachments/assets/552c6183-4314-47c6-a3e6-7621fa7feb7c
+    
+  </div>
+</details>
+
+<details>
+  <summary>리뷰작성</summary>
+  <div align="center">
+    
+https://github.com/user-attachments/assets/3bd7ffdc-3594-4d61-8ab2-99f933b5c996
+
+  </div>
+</details>
+
+<details>
+  <summary>내 리뷰 조회(마이페이지)</summary>
+  <div align="center">
+    
+https://github.com/user-attachments/assets/0209dafa-0353-4e38-8e42-40e6501b1b8f
+
+  </div>
+</details>
+
+<details>
+  <summary>내 리뷰 수정/삭제</summary>
+  <div align="center">
+
+https://github.com/user-attachments/assets/a5b2b96b-df51-4259-82a8-cb02dfed30c2
+
+  </div>
+</details>
+
+<details>
+  <summary>리뷰 답글 작성</summary>
+  <div align="center">
+
+https://github.com/user-attachments/assets/cf3caa7f-dda1-4b3b-86c8-fef3bd7a1382
+
+  </div>
+</details>
+
+<details>
+  <summary>리뷰 답글 수정/삭제</summary>
+  <div align="center">
+
+https://github.com/user-attachments/assets/ceefd053-9e8a-4187-bc1c-6173c732bed6
+
+  </div>
+</details>
+
+---
+
+### 🔔 알림
+<details>
+  <summary>예약성공 알림(사용자, 실시간x)</summary>
+  <div align="center">
+    
+  <img width="423" height="416" alt="사용자 예약확정 알림" src="https://github.com/user-attachments/assets/ddd70b3c-40db-4d88-8940-ca1d30fc3922" />
+
+  </div>
+</details>
+
+<details>
+  <summary>예약성공 알림(호스트, 실시간o)</summary>
+  <div align="center">
+
+https://github.com/user-attachments/assets/566c0bd8-14f4-40bd-8fc6-690b3f2d1339
+
+  </div>
+</details>
+
+<details>
+  <summary>호텔등록 알림(관리자, 실시간o)</summary>
+  <div align="center">
+    
+https://github.com/user-attachments/assets/f6b3994a-baa6-4929-9e35-fa4f912d4fca
+
+  </div>
+</details>
+
+<details>
+  <summary>입실 하루 전 알림(사용자, 실시간x)</summary>
+  <div align="center">
+    
+<img width="417" height="253" alt="사용자 내일 입실 알림" src="https://github.com/user-attachments/assets/e16c3ca2-20ff-436d-a1f8-a8ad91e1a8bb" />
+    
+  </div>
+</details>
+
+<details>
+  <summary>퇴실 후 리뷰 요청 알림(사용자, 실시간x)</summary>
+  <div align="center">
+    
+<img width="408" height="269" alt="사용자 리뷰 요청 알림" src="https://github.com/user-attachments/assets/f85d1f43-ad23-4bce-9ef1-fb920c3da9ce" />
+    
+  </div>
+</details>
+
+
+## <span id="11">🚦 6. 트러블 슈팅</span>
+
+<details>
+<summary> 조은성 트러블 슈팅(로그인, 리뷰)  </summary>
+
+<div>
+
+- 프로젝트 완료 후, ReadMe에 업데이트<br>
+https://vivid-swallow-267.notion.site/ReadMe-25ab1da1d9f9801c9a53f57faf4d5029?source=copy_link
+
+</div>
+</details>
+
+<details>
+<summary> 임진우 트러블 슈팅(예약, 채팅)  </summary>
+
+<div>
+<details>
+  <summary>
+    1. 예약 동시성 
+  </summary>
+</details>
+
+<details>
+  <summary>
+    2. 서버 대기열
+  </summary>
+</details>
+
+<details>
+  <summary>
+    3. 메시지 소실
+  </summary>
+</details>
+
+
+</div>
+</details>
+<details>
+
+
+
+  
+<summary> 1. 트러블 슈팅  </summary>
+
+<div>
+
+1. 문제 상황 <br />
+
+2. 시도 <br />
+
+3. 해결방안 <br />
+
+</div>
+</details>
+
+
+
