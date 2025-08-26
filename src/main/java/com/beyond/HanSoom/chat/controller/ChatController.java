@@ -28,7 +28,7 @@ public class ChatController {
 //       producer.publish(message);
 //    }
 
-    //1:1채팅방 생성
+    // 예약완료 후 1:1 채팅방 생성
     @PostMapping("/room/create/{reservationId}")
     public ResponseEntity<?> createChatRoom(@PathVariable Long reservationId){
         Long chatRoomId = chatService.createChatRoom(reservationId);
