@@ -398,11 +398,77 @@ https://vivid-swallow-267.notion.site/ReadMe-25ab1da1d9f9801c9a53f57faf4d5029?so
 
 </div>
 </details>
+
 <details>
+<summary> 최승휘 트러블 슈팅(호텔)  </summary>
+
+<div>
+<details>
+  <summary>
+    1. 외부 API 사용(RestTemplate 문제)
+  </summary>
+  <div>
+
+1. 문제 상황 <br />
+카카오 GEOCODING API를 사용하여 주소를 좌표로 변환하려 했으나, RestTemplate를 통해 요청을 보내면 ACCESS DENIED 오류가 지속적으로 발생했습니다.
+
+2. 시도 <br />
+API 키를 재발급하고 코드에 직접 입력하는 등 다양한 시도를 했지만 해결되지 않았습니다. Postman으로 직접 테스트했을 때는 정상적으로 작동하여 API 키 자체에는 문제가 없다고 판단했습니다. 이는 결국 RestTemplate의 요청 처리 방식에 문제가 있었다는 결론으로 이어졌습니다.
+
+3. 해결방안 <br />
+RestTemplate 대신 WebClient로 코드를 변경하자 문제가 해결되고 API 호출이 정상적으로 성공했습니다.
+
+</div>
+</details>
+
+<details>
+  <summary>
+    2. JPA 무한참조
+  </summary>
+  <div>
+
+1. 문제 상황 <br />
+호텔 상세 정보 조회 API 개발 중, Hotel - Room - RoomImage 엔티티 간의 양방향 관계로 인해 JSON 변환 시 무한 참조(StackOverflowError)가 발생했습니다.
+
+2. 시도 <br />
+무한 참조를 끊기 위해, 엔티티를 직접 사용하지 않고 DTO(Data Transfer Object)를 분리하여 API 응답에 필요한 데이터만 담도록 구조를 변경했습니다.
+
+3. 해결방안 <br />
+HotelDetailResponseDto에 RoomDetailResponseDto 리스트를, RoomDetailResponseDto에 RoomImageResponseDto 리스트를 포함시켰습니다.
+엔티티 객체를 DTO로 변환하여 데이터를 전달함으로써 순환 참조를 완전히 제거하고 문제를 해결했습니다.
+
+</div>
+</details>
+
+<details>
+  <summary>
+    3. 톰캣 FileCountLimitExceededException
+  </summary>
+<div>
+
+1. 문제 상황 <br />
+호텔 등록 기능에서 10장 이상의 이미지를 업로드할 경우, 서버에서 FileCountLimitExceededException 오류가 발생했습니다.
+이는 톰캣 서버의 기본 설정이 한 번에 받을 수 있는 파일의 개수를 초과했기 때문에 발생한 문제입니다.
+
+3. 시도 <br />
+application.yml 파일에서 servlet.multipart.max-file-size나 max-request-size 같은 설정을 변경해 보았습니다.
+하지만 이 설정들은 개별 파일 크기나 전체 요청 크기를 제한하는 용도일 뿐, 파일의 개수를 직접 제어할 수는 없었습니다.
+
+4. 해결방안 <br />
+Spring Boot의 자동 구성에 의존하는 대신, **TomcatServletWebServerFactory**를 직접 커스터마이징하는 방식으로 문제를 해결했습니다.
+TomcatConfig라는 @Configuration 클래스를 만들고, TomcatServletWebServerFactory 빈(Bean)을 등록하여 setTomcatConnectorCustomizers 메서드를 통해 톰캣 커넥터 설정을 직접 변경했습니다.
+이 과정에서 TomcatConnectorCustomizer를 사용하여 setMaxSwallowSize와 setMaxPostSize를 원하는 값으로 설정하고, 핵심적으로 setMaxParts 값을 기본값(10)보다 크게 설정하여 파일 개수 제한을 늘려주었습니다.
+이처럼 application.yml에서 변경할 수 없는 톰캣의 세부 설정을 직접 코드 레벨에서 제어함으로써, 파일 개수 제한 문제를 해결할 수 있었습니다.
+
+</div>
+</details>
+
+</div>
+</details>
 
 
 
-  
+<details>
 <summary> 1. 트러블 슈팅  </summary>
 
 <div>
