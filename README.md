@@ -473,7 +473,7 @@ https://vivid-swallow-267.notion.site/ReadMe-25ab1da1d9f9801c9a53f57faf4d5029?so
     1. 외부 API 사용(RestTemplate 문제)
   </summary>
   <div>
-
+    
 1. 문제 상황 <br />
 카카오 GEOCODING API를 사용하여 주소를 좌표로 변환하려 했으나, RestTemplate를 통해 요청을 보내면 ACCESS DENIED 오류가 지속적으로 발생했습니다.
 
@@ -483,6 +483,8 @@ API 키를 재발급하고 코드에 직접 입력하는 등 다양한 시도를
 3. 해결방안 <br />
 RestTemplate 대신 WebClient로 코드를 변경하자 문제가 해결되고 API 호출이 정상적으로 성공했습니다.
 
+4. 정리 링크 <br />
+[RestTemplate 문제](https://velog.io/@kishinoa/JPA-%EB%AC%B4%ED%95%9C%EC%B0%B8%EC%A1%B0-%EB%AC%B8%EC%A0%9C)
 </div>
 </details>
 
@@ -502,6 +504,8 @@ RestTemplate 대신 WebClient로 코드를 변경하자 문제가 해결되고 A
 HotelDetailResponseDto에 RoomDetailResponseDto 리스트를, RoomDetailResponseDto에 RoomImageResponseDto 리스트를 포함시켰습니다.
 엔티티 객체를 DTO로 변환하여 데이터를 전달함으로써 순환 참조를 완전히 제거하고 문제를 해결했습니다.
 
+4. 정리 링크 <br />
+[JPA 무한참조](https://velog.io/@kishinoa/JPA-%EB%AC%B4%ED%95%9C%EC%B0%B8%EC%A1%B0-%EB%AC%B8%EC%A0%9C)
 </div>
 </details>
 
@@ -510,21 +514,23 @@ HotelDetailResponseDto에 RoomDetailResponseDto 리스트를, RoomDetailResponse
     3. 톰캣 FileCountLimitExceededException
   </summary>
 <div>
-
+  
 1. 문제 상황 <br />
 호텔 등록 기능에서 10장 이상의 이미지를 업로드할 경우, 서버에서 FileCountLimitExceededException 오류가 발생했습니다.
 이는 톰캣 서버의 기본 설정이 한 번에 받을 수 있는 파일의 개수를 초과했기 때문에 발생한 문제입니다.
 
-3. 시도 <br />
+2. 시도 <br />
 application.yml 파일에서 servlet.multipart.max-file-size나 max-request-size 같은 설정을 변경해 보았습니다.
 하지만 이 설정들은 개별 파일 크기나 전체 요청 크기를 제한하는 용도일 뿐, 파일의 개수를 직접 제어할 수는 없었습니다.
 
-4. 해결방안 <br />
+3. 해결방안 <br />
 Spring Boot의 자동 구성에 의존하는 대신, **TomcatServletWebServerFactory**를 직접 커스터마이징하는 방식으로 문제를 해결했습니다.
 TomcatConfig라는 @Configuration 클래스를 만들고, TomcatServletWebServerFactory 빈(Bean)을 등록하여 setTomcatConnectorCustomizers 메서드를 통해 톰캣 커넥터 설정을 직접 변경했습니다.
 이 과정에서 TomcatConnectorCustomizer를 사용하여 setMaxSwallowSize와 setMaxPostSize를 원하는 값으로 설정하고, 핵심적으로 setMaxParts 값을 기본값(10)보다 크게 설정하여 파일 개수 제한을 늘려주었습니다.
 이처럼 application.yml에서 변경할 수 없는 톰캣의 세부 설정을 직접 코드 레벨에서 제어함으로써, 파일 개수 제한 문제를 해결할 수 있었습니다.
 
+4. 정리 링크 <br />
+[톰캣 FileCountLimitExceededException](https://velog.io/@kishinoa/%ED%86%B0%EC%BA%A3FileCountLimitExceededException-%EB%AC%B8%EC%A0%9C-%ED%95%B4%EA%B2%B0)
 </div>
 </details>
 
