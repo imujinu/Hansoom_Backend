@@ -247,7 +247,9 @@ https://github.com/user-attachments/assets/6a1d76a8-97aa-4b83-9adc-b0c2834d966a
 <details>
   <summary>구글 회원가입 / 로그인</summary>
   <div align="center">
-    <img src="https://github.com/your-repo/demo/google.gif" alt="구글 회원가입/로그인 시연" width="600"/>
+    
+  ![구글로그인](https://github.com/user-attachments/assets/29923e10-4d45-4461-b04c-d56d4b4c266e)
+  
   </div>
 </details>
 
