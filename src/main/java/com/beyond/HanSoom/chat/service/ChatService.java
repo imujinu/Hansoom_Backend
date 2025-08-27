@@ -305,32 +305,31 @@ public class ChatService {
     }
 
     //호스트 1:1 채팅 방 조회
-    public List<ChatHostChatRoomResDto> getHostChatRoom(Long hotelId) {
-        Hotel hotel = hotelRepository.findById(hotelId).orElseThrow(()->new EntityNotFoundException("존재하지 않는 호텔 입니다."));
-        User host = getUser();
-        List<ChatRoom> chatRooms = chatRoomRepository.findAllByHotel(hotel);
-        if(chatRooms.isEmpty()){
+    public List<ChatHostChatRoomResDto> getHostChatRoom() {
+         User host =getUser();
+        List<ChatParticipant> chatParticipants = chatParticipantRepository.findAllByUser(host);
+
+        if(chatParticipants.isEmpty()){
             throw new IllegalArgumentException("채팅방이 존재하지 않습니다.");
         }
+
         List<ChatHostChatRoomResDto> dtos = new ArrayList<>();
 
-        for(ChatRoom cr : chatRooms){
-            if(cr.getIsGroupChat().equals("Y")){
-
+        for(ChatParticipant cp : chatParticipants){
+            ChatRoom cr = cp.getChatRoom();
             ChatMessage chatMessage = chatMessageRepository
                     .findTopByChatRoomIdOrderByCreatedTimeDesc(cr.getId()).orElse(null);
             int isOnline = chatParticipantRepository.countByChatRoomAndIsOnline(cr,"Y");
             long unReadCount = getUnReadCount(cr,host);
+            String guestName = null;
+
+            if(cr.getIsGroupChat().equals("N")){
+                User guest = cr.getParticipantList().stream().map(ChatParticipant::getUser).filter(user -> !user.equals(host)).findFirst().orElse(null);
+                dtos.add(new ChatHostChatRoomResDto().fromEntity(cr, chatMessage, guest.getName(),unReadCount ));
+            }else{
 
            dtos.add(new ChatHostChatRoomResDto().fromEntity(cr, chatMessage, isOnline,unReadCount ));
-            }else{
-                ChatMessage chatMessage = chatMessageRepository
-                        .findTopByChatRoomIdOrderByCreatedTimeDesc(cr.getId()).orElse(null);
-                long unReadCount = getUnReadCount(cr,host);
-                dtos.add(new ChatHostChatRoomResDto().fromEntity(cr, chatMessage,host.getName(),unReadCount ));
-
             }
-
         }
         return dtos;
     }

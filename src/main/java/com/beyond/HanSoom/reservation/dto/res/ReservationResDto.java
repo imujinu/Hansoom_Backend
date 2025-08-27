@@ -20,6 +20,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 public class ReservationResDto {
+    private Long id;
     private Long hotelId;
     private String hotelName;
     private String hotelImage;
@@ -38,6 +39,7 @@ public class ReservationResDto {
         Hotel hotel = reservation.getHotel();
         Room room = reservation.getRoom();
         return ReservationResDto.builder()
+                .id(reservation.getId())
                 .hotelId(hotel.getId())
                 .hotelName(hotel.getHotelName())
                 .hotelImage(hotel.getImage())
