@@ -446,7 +446,9 @@ https://github.com/user-attachments/assets/8b5edf44-99bb-459c-a17e-109dce570c06
 <details>
   <summary>호스트 그룹 채팅 관리</summary>
   <div align="center">
-    ![호스트 채팅관리](https://github.com/user-attachments/assets/f9839efc-dcdf-492f-a513-cb06a1ed692b)
+
+   ![호스트 채팅관리](https://github.com/user-attachments/assets/664e4e2d-c731-44fc-be71-2817bc6d08ad)
+
 
   </div>
 </details>
