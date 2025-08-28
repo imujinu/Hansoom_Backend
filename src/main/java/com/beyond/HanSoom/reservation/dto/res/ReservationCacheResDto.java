@@ -24,6 +24,7 @@ import java.util.List;
 @Builder
 public class ReservationCacheResDto {
     private Long reservationId;
+    private Long chatRoomId;
     private HotelDto hotelDto;
     private UserDto userDto;
     private ReservationDto reservationDto;
@@ -91,7 +92,7 @@ public class ReservationCacheResDto {
     }
 
     // Entity -> DTO 변환 메서드
-    public ReservationCacheResDto fromEntity(Reservation reservation, String status, List<Review> reviewList) {
+    public ReservationCacheResDto fromEntity(Reservation reservation, String status, List<Review> reviewList, Long chatRoomId) {
         Hotel hotel = reservation.getHotel();
         Room room = reservation.getRoom();
         User user = reservation.getUser();
@@ -112,6 +113,7 @@ public class ReservationCacheResDto {
         }
         return ReservationCacheResDto.builder()
                 .reservationId(reservation.getId())
+                .chatRoomId(chatRoomId)
                 .userDto(new UserDto().fromEntity(user))
                 .hotelDto(new HotelDto().fromEntity(hotel))
                 .reservationDto(new ReservationDto().fromEntity(reservation))

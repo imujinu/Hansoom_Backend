@@ -26,11 +26,17 @@ public class ChatParticipant extends BaseTimeEntity {
     @JoinColumn(name ="chat_room_id")
     private ChatRoom chatRoom;
 
+    @Builder.Default
+    private String isOnline = "N";
 
     private boolean exitYn;
 
     @Builder.Default
     private boolean participationYn = true;
 
-
+    @Builder.Default
+    private boolean isFirstEntry = true;
+    public void updateOnlineState(String state){
+        this.isOnline = state;
+    }
 }

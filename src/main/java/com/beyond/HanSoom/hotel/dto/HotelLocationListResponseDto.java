@@ -1,10 +1,11 @@
 package com.beyond.HanSoom.hotel.dto;
 
-import com.beyond.HanSoom.hotel.domain.Hotel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -19,4 +20,6 @@ public class HotelLocationListResponseDto {
     private double distance;
     private double latitude;
     private double longitude;
+    private BigDecimal rating;
+    private int reviewCount;
 }

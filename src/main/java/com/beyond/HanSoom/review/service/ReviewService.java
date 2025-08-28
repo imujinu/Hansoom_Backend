@@ -3,6 +3,7 @@ package com.beyond.HanSoom.review.service;
 import com.beyond.HanSoom.common.service.S3Uploader;
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.hotel.repository.HotelRepository;
+import com.beyond.HanSoom.reply.dto.HotelReviewImageListResDto;
 import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.reservation.repository.ReservationRepository;
 import com.beyond.HanSoom.review.domain.HotelReviewSummary;
@@ -12,6 +13,7 @@ import com.beyond.HanSoom.review.dto.*;
 import com.beyond.HanSoom.review.repository.HotelReviewSummaryRepository;
 import com.beyond.HanSoom.review.repository.ReviewRepository;
 import com.beyond.HanSoom.reviewImage.domain.ReviewImage;
+import com.beyond.HanSoom.reviewImage.repository.ReviewImageRepository;
 import com.beyond.HanSoom.user.domain.User;
 import com.beyond.HanSoom.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -38,6 +40,7 @@ public class ReviewService {
     private final ReservationRepository reservationRepository;
     private final S3Uploader s3Uploader;
     private final HotelReviewSummaryRepository hotelReviewSummaryRepository;
+    private final ReviewImageRepository reviewImageRepository;
 
     // 리뷰작성
     public Long createReview(ReviewCreateReqDto dto) {
@@ -153,5 +156,13 @@ public class ReviewService {
         log.info("[HANSOOM][INFO] - ReviewService/getReviewRatings - 리뷰 합산데이터 조회 성공, hotelId={}", hotelId);
         
         return resDto;
+    }
+
+    // ReviewImage
+    // 해당 호텔의 리뷰 중 사진만 모두 가져오기
+    public List<HotelReviewImageListResDto> getReviewList(Long hotelId) {
+        List<HotelReviewImageListResDto> hotelReviewImageList = reviewImageRepository.findImagesByHotelIdAndReviewNormal(hotelId).stream()
+                .map(a -> HotelReviewImageListResDto.fromEntity(a)).toList();
+        return hotelReviewImageList;
     }
 }

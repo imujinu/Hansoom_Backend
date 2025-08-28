@@ -21,15 +21,18 @@ public interface HotelRepository extends JpaRepository<Hotel, Long> {
 
     Optional<Hotel> findByUserAndState(User user, HotelState hotelState);
 
+    Optional<Hotel> findTopByUserAndState(User user, HotelState hotelState);
+
     Optional<Hotel> findByIdAndState(Long id, HotelState hotelState);
 
 
     @Query(value = """
-    SELECT h.*, (6371 * acos(
-        cos(radians(:lat)) * cos(radians(h.latitude)) *
-        cos(radians(h.longitude) - radians(:lng)) +
-        sin(radians(:lat)) * sin(radians(h.latitude))
-    )) AS distance
+    SELECT h.id, h.latitude, h.longitude, h.hotel_name, h.address, h.image,
+           (6371 * acos(
+               cos(radians(:lat)) * cos(radians(h.latitude)) *
+               cos(radians(h.longitude) - radians(:lng)) +
+               sin(radians(:lat)) * sin(radians(h.latitude))
+           )) AS distance
     FROM hotel h
     WHERE h.state = 'APPLY'
     HAVING distance <= :radius
@@ -42,7 +45,18 @@ public interface HotelRepository extends JpaRepository<Hotel, Long> {
             @Param("radius") double radius,
             Pageable pageable);
 
+    @Query(value = "SELECT count(*) " +
+            "FROM hotel h WHERE h.state = 'APPLY' " +
+            "AND (6371 * acos(cos(radians(:latitude)) * cos(radians(h.latitude)) * cos(radians(h.longitude) - radians(:longitude)) + sin(radians(:latitude)) * sin(radians(h.latitude)))) <= :radius",
+            nativeQuery = true)
+    long countNearbyHotels(
+            @Param("latitude") double latitude,
+            @Param("longitude") double longitude,
+            @Param("radius") double radius);
+
     Page<Hotel> findByState(Pageable pageable, HotelState hotelState);
 
     List<Hotel> findAllByUser(User host);
+
+    int countByUser(User user);
 }

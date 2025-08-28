@@ -1,6 +1,7 @@
 package com.beyond.HanSoom.room.dto;
 
 import com.beyond.HanSoom.hotel.domain.Hotel;
+import com.beyond.HanSoom.hotel.domain.HotelState;
 import com.beyond.HanSoom.room.domain.Room;
 import com.beyond.HanSoom.roomImage.domain.RoomImage;
 import com.beyond.HanSoom.roomImage.dto.RoomImageResponseDto;
@@ -31,6 +32,7 @@ public class RoomDetailResponseDto {
     private LocalTime checkOut;
     private List<RoomImageResponseDto> roomImages;
     private int remainRoomCount;
+    private HotelState state;
 
     public static RoomDetailResponseDto fromEntity(Room room, List<RoomImageResponseDto> dto, int remainRoomCount) {
         return RoomDetailResponseDto.builder()
@@ -48,6 +50,7 @@ public class RoomDetailResponseDto {
                 .checkOut(room.getCheckOut())
                 .roomImages(dto)
                 .remainRoomCount(remainRoomCount)
+                .state(room.getState())
                 .build();
     }
 }

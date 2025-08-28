@@ -4,10 +4,7 @@ import com.beyond.HanSoom.chat.domain.ChatMessage;
 import com.beyond.HanSoom.chat.domain.ChatReadStatus;
 import com.beyond.HanSoom.chat.domain.ChatRoom;
 import com.beyond.HanSoom.chat.domain.ChatParticipant;
-import com.beyond.HanSoom.chat.dto.ChatHostGroupChatRoomResDto;
-import com.beyond.HanSoom.chat.dto.ChatHotelResDto;
-import com.beyond.HanSoom.chat.dto.ChatMessageResDto;
-import com.beyond.HanSoom.chat.dto.ChatMyChatroomResDto;
+import com.beyond.HanSoom.chat.dto.*;
 import com.beyond.HanSoom.chat.repository.ChatMessageRepository;
 import com.beyond.HanSoom.chat.repository.ChatParticipantRepository;
 import com.beyond.HanSoom.chat.repository.ChatReadStatusRepository;
@@ -17,9 +14,11 @@ import com.beyond.HanSoom.hotel.repository.HotelRepository;
 import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.reservation.repository.ReservationRepository;
 import com.beyond.HanSoom.user.domain.User;
+import com.beyond.HanSoom.user.domain.UserRole;
 import com.beyond.HanSoom.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +28,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -85,6 +85,8 @@ public class ChatService {
         }
         ChatRoom newRoom = ChatRoom.builder()
                 .hotel(reservation.getHotel())
+                .reservation(reservation)
+                .isGroupChat("N")
                 .build();
         addParticipantChatRoom(newRoom, host);
         addParticipantChatRoom(newRoom, guest);
@@ -111,11 +113,9 @@ public class ChatService {
      }
 
 
-     public void addParticipantToGroupChat(Long roomId) {
+     public void addParticipantToGroupChat(Long roomId, User user) {
           // 채팅방 조회
           ChatRoom chatRoom = chatRoomRepository.findById(roomId).orElseThrow(()->new EntityNotFoundException(""));
-          // 멤버 조회
-          User user = userRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName()).orElseThrow(()->new EntityNotFoundException(""));
           // 이미 참여자인지 검증
           Optional<ChatParticipant> participant = chatParticipantRepository.findByChatRoomAndUser(chatRoom,user);
 
@@ -175,22 +175,21 @@ public class ChatService {
     public List<ChatMyChatroomResDto> getMyChatRoom() {
         //1. 유저 조회 -> 2. chatParticipant 조회 -> 3. 채팅방 조회 -> 4. dto 조립해서 리턴
         User user = getUser();
-        List<ChatParticipant> chatParticipants = chatParticipantRepository.findAllByUser(user);
-        List<ChatMyChatroomResDto> dtos = chatParticipants.stream().map(cp->{
-            ChatRoom chatRoom = cp.getChatRoom();
-            Hotel hotel = chatRoom.getHotel();
-            Long unReadCount = chatReadStatusRepository.findByChatRoomAndUserAndIsReadFalse(chatRoom,user);
-            return ChatMyChatroomResDto.builder()
-                    .roomId(chatRoom.getId())
-                    .hotelName(hotel.getHotelName())
-                    .isGroupChat(chatRoom.getIsGroupChat())
-                    .ueReadCount(unReadCount)
-                    .build();
-
-        }).collect(Collectors.toList());
-
-
-        return dtos;
+            List<ChatMyChatroomResDto> dtos = chatParticipantRepository.findAllByUser(user)
+                    .stream()
+                    .map(cp -> {
+                        ChatRoom chatRoom = cp.getChatRoom();
+                        return ChatMyChatroomResDto.builder()
+                                .roomId(chatRoom.getId())
+                                .hotelName(chatRoom.getHotel().getHotelName())
+                                .isGroupChat(chatRoom.getIsGroupChat())
+                                .unReadCount(getUnReadCount(chatRoom, user))
+                                .participants(chatParticipantRepository.countByChatRoom(chatRoom))
+                                .build();
+                    })
+                    .toList();
+            System.out.println("호스트==========" + dtos);
+            return dtos;
     }
 
     public List<ChatMessageResDto> getChatHistory(Long roomId) {
@@ -213,7 +212,8 @@ public class ChatService {
                     .roomId(chatRoom.getId())
                     .timestamp(String.valueOf(c.getCreatedTime()))
                     .content(c.getContent())
-                    .senderEmail(user.getEmail())
+                    .senderName(c.getUser().getName())
+                    .senderEmail(c.getUser().getEmail())
                     .build();
             chatMessageDtos.add(chatMessageDto);
         }
@@ -237,14 +237,19 @@ public class ChatService {
              ChatRoom chatRoom = chatRoomRepository.findByHotelAndIsGroupChat(hotel,"Y");
              if(chatRoom!=null){
 
-             Long unReadCount = chatReadStatusRepository.findByChatRoomAndUserAndIsReadFalse(chatRoom,user);
-             chatRooms.add(new ChatMyChatroomResDto().fromEntity(chatRoom,unReadCount));
+                 Long unReadCount = getUnReadCount(chatRoom, user);
+                 chatRooms.add(new ChatMyChatroomResDto().fromEntity(chatRoom,unReadCount));
              }
              }
 
          }
 
          return chatRooms;
+    }
+
+    private Long getUnReadCount(ChatRoom chatRoom, User user) {
+        Long unReadCount = chatReadStatusRepository.countByChatRoomAndUserAndIsReadFalse(chatRoom, user);
+        return unReadCount;
     }
 
     public List<ChatHotelResDto> getHostHotelList() {
@@ -265,27 +270,62 @@ public class ChatService {
         return userRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName()).orElseThrow(() -> new EntityNotFoundException("존재하지 않는 유저입니다."));
     }
 
+    //호스트 1:1 채팅 방 조회
+    public List<ChatHostChatRoomResDto> getHostChatRoom() {
+         User host =getUser();
+        List<ChatParticipant> chatParticipants = chatParticipantRepository.findAllByUser(host);
 
-    public ChatHostGroupChatRoomResDto getHostGroupChatRoom(Long hotelId) {
-         Hotel hotel = hotelRepository.findById(hotelId).orElseThrow(()->new EntityNotFoundException("존재하지 않는 호텔 입니다."));
-         ChatRoom chatRoom = chatRoomRepository.findByHotelAndIsGroupChat(hotel, "Y");
-        System.out.println("hotl Chatroom=================");
-        System.out.println(chatRoom);
-         if(chatRoom==null){
-             return null;
-         }
-         ChatMessage message = null;
-        if (!chatRoom.getChatMessageList().isEmpty()) {
-            message = chatRoom.getChatMessageList()
-                    .get(chatRoom.getChatMessageList().size() - 1);
-
+        if(chatParticipants.isEmpty()){
+            throw new IllegalArgumentException("채팅방이 존재하지 않습니다.");
         }
-        return new ChatHostGroupChatRoomResDto().fromEntity(chatRoom, message);
+
+        List<ChatHostChatRoomResDto> dtos = new ArrayList<>();
+
+        for(ChatParticipant cp : chatParticipants){
+            ChatRoom cr = cp.getChatRoom();
+            ChatMessage chatMessage = chatMessageRepository
+                    .findTopByChatRoomIdOrderByCreatedTimeDesc(cr.getId()).orElse(null);
+            int isOnline = chatParticipantRepository.countByChatRoomAndIsOnline(cr,"Y");
+            long unReadCount = getUnReadCount(cr,host);
+            String guestName = null;
+
+            if(cr.getIsGroupChat().equals("N")){
+                User guest = cr.getParticipantList().stream().map(ChatParticipant::getUser).filter(user -> !user.equals(host)).findFirst().orElse(null);
+                dtos.add(new ChatHostChatRoomResDto().fromEntity(cr, chatMessage, guest.getName(),unReadCount ));
+            }else{
+
+           dtos.add(new ChatHostChatRoomResDto().fromEntity(cr, chatMessage, isOnline,unReadCount ));
+            }
+        }
+        return dtos;
     }
 
-    public ChatHostGroupChatRoomResDto createHostGroupChat(Long hotelId) {
+    //호스트 단체 채팅 방 조회
+//    public ChatHostGroupChatRoomResDto getHostGroupChatRoom(Long hotelId) {
+//         Hotel hotel = hotelRepository.findById(hotelId).orElseThrow(()->new EntityNotFoundException("존재하지 않는 호텔 입니다."));
+//         ChatRoom chatRoom = chatRoomRepository.findByHotelAndIsGroupChat(hotel, "Y");
+//         if(chatRoom==null){
+//             return null;
+//         }
+//         ChatMessage message = null;
+//        if (!chatRoom.getChatMessageList().isEmpty()) {
+//            message = chatRoom.getChatMessageList()
+//                    .get(chatRoom.getChatMessageList().size() - 1);
+//
+//        }
+//        List<ChatParticipant> chatParticipants = chatParticipantRepository.findAllByChatRoom(chatRoom);
+//        int isOnline = 0;
+//        for(ChatParticipant cp : chatParticipants){
+//            if(cp.getIsOnline().equals("Y")){
+//                isOnline++;
+//            }
+//        }
+//        return new ChatHostGroupChatRoomResDto().fromEntity(chatRoom, message, isOnline);
+//    }
+
+    public ChatHostChatRoomResDto createHostGroupChat(Long hotelId) {
         Hotel hotel = hotelRepository.findById(hotelId).orElseThrow(()->new EntityNotFoundException("존재하지 않는 호텔 입니다."));
-        User host = getUser();
+        User host = hotel.getUser();
 
         ChatRoom chatRoom = ChatRoom.builder()
                 .isGroupChat("Y")
@@ -293,7 +333,7 @@ public class ChatService {
                 .build();
 
         chatRoomRepository.save(chatRoom);
-        addParticipantToGroupChat(chatRoom.getId());
+        addParticipantChatRoom(chatRoom,host);
 
         ChatMessageResDto dto = ChatMessageResDto.builder()
                 .roomId(chatRoom.getId())
@@ -305,7 +345,32 @@ public class ChatService {
 
         saveMessage(dto);
         ChatMessage chatMessage = chatRoom.getChatMessageList().get(chatRoom.getChatMessageList().size()-1);
-        return new ChatHostGroupChatRoomResDto().fromEntity(chatRoom,chatMessage);
+        return new ChatHostChatRoomResDto().fromEntity(chatRoom,chatMessage, 1, 0L);
 
     }
+
+    public void updateOnlineState(String email, String roomId, String state) {
+         ChatRoom chatRoom = chatRoomRepository.findById(Long.valueOf(roomId)).orElseThrow(()->new EntityNotFoundException("채팅방이 존재하지 않습니다."));
+         User user = userRepository.findByEmail(email).orElseThrow(()->new EntityNotFoundException("존재하지 않는 유저입니다."));
+         ChatParticipant chatParticipant = chatParticipantRepository.findByChatRoomAndUser(chatRoom,user).orElseThrow(()->new EntityNotFoundException("존재하지 않는 채팅 참여자 입니다."));
+         chatParticipant.updateOnlineState(state);
+    }
+
+    public List<ChatGroupUserListResDto> getGroupChatUserList(Long roomId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId).orElseThrow(()->new EntityNotFoundException("채팅방이 존재하지 않습니다."));
+        List<ChatParticipant> chatParticipants = chatParticipantRepository.findAllByChatRoom(chatRoom);
+
+        return chatParticipants.stream().map(cp -> new ChatGroupUserListResDto().fromEntity(cp)).collect(Collectors.toList());
+    }
+
+    public Long joinGroupChatRoom(Long reservationId) {
+         Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(()->new EntityNotFoundException("예약 내역이 존재하지 않습니다."));
+         Hotel hotel = reservation.getHotel();
+         ChatRoom chatRoom = chatRoomRepository.findByHotelAndIsGroupChat(hotel, "Y");
+         User user = getUser();
+         addParticipantChatRoom(chatRoom, user);
+         return chatRoom.getId();
+    }
+
+
 }

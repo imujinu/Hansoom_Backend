@@ -14,14 +14,15 @@ public class ChatMyChatroomResDto {
     private Long roomId;
     private String hotelName;
     private String isGroupChat;
-    private Long ueReadCount;
+    private Long unReadCount;
+    private Long participants;
 
-    public ChatMyChatroomResDto fromEntity(ChatRoom chatRoom, Long ueReadCount){
+    public ChatMyChatroomResDto fromEntity(ChatRoom chatRoom, Long unReadCount){
         return ChatMyChatroomResDto.builder()
                 .roomId(chatRoom.getId())
                 .hotelName(chatRoom.getHotel().getHotelName())
                 .isGroupChat(chatRoom.getIsGroupChat())
-                .ueReadCount(ueReadCount)
+                .unReadCount(unReadCount)
                 .build();
     }
 }

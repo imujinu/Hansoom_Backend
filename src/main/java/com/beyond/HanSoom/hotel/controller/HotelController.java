@@ -25,8 +25,8 @@ public class HotelController {
     @PostMapping("/create")
     @PreAuthorize("hasRole('HOST')")
     public ResponseEntity<?> registerHotel(@RequestPart(name = "hotelRegisterDto") HotelRegisterRequsetDto dto,
-                                           @RequestPart(name = "hotelImage") MultipartFile hotelImage,
-                                           @RequestPart(name = "roomImages") List<MultipartFile> roomImages) {
+                                           @RequestPart(name = "hotelImage", required = false) MultipartFile hotelImage,
+                                           @RequestPart(name = "roomImages", required = false) List<MultipartFile> roomImages) {
         hotelService.registerHotel(dto, hotelImage, roomImages);
         return new ResponseEntity<>(new CommonSuccessDto("OK", HttpStatus.CREATED.value(), "hotel is created"), HttpStatus.CREATED);
     }
@@ -99,6 +99,20 @@ public class HotelController {
         return new ResponseEntity<>(
                 CommonSuccessDto.builder()
                         .result(dto)
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("호텔 리스트 조회")
+                        .build(),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/myhotelcount")
+    @PreAuthorize("hasRole('HOST')")
+    public ResponseEntity<?> myHotelCount() {
+        int count = hotelService.myHotelCount();
+        return new ResponseEntity<>(
+                CommonSuccessDto.builder()
+                        .result(count)
                         .status_code(HttpStatus.OK.value())
                         .status_message("호텔 리스트 조회")
                         .build(),
