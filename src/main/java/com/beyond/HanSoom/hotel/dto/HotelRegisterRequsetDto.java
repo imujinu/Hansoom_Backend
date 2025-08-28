@@ -26,7 +26,7 @@ public class HotelRegisterRequsetDto {
 
     private List<RoomRegisterRequestDto> rooms;
 
-    public Hotel toEntity(String hotelImageUrl, GeocoderService.Coordinate coordinate, User user) {
+    public Hotel toEntity(String hotelImageUrl, GeocoderService.HotelAddressDto coordinate, User user) {
         return Hotel.builder()
                 .hotelName(this.hotelName)
                 .address(this.address)

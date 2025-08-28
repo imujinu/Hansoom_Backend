@@ -69,8 +69,8 @@ public class HotelService {
                 ? s3Uploader.upload(hotelImage, "hotel")
                 : null;
         // 호텔 객체 저장
-        GeocoderService.Coordinate coord = geocoderService.getCoordinates(dto.getAddress());
-        Hotel hotel = hotelRepository.save(dto.toEntity(hotelImageUrl, coord, user));
+        GeocoderService.HotelAddressDto addressDto = geocoderService.parseAddress(dto.getAddress());
+        Hotel hotel = hotelRepository.save(dto.toEntity(hotelImageUrl, addressDto, user));
 
         // 객실 생성
         List<Room> rooms = dto.getRooms().stream().map(a -> a.toEntity(hotel)).toList();
@@ -150,12 +150,12 @@ public class HotelService {
         try {
             // 2. 주소로 좌표 조회
             dto.setAddress(normalizeAddress(dto.getAddress()));
-            GeocoderService.Coordinate coord = geocoderService.getCoordinates(dto.getAddress());
+            GeocoderService.HotelAddressDto hotelAddressDto = geocoderService.parseAddress(dto.getAddress());
 
             // 3. 호텔 기본 정보 업데이트
             hotel.updateBasicInfo(dto.getHotelName(), dto.getAddress(),
                     dto.getPhoneNumber(), dto.getDescription(), dto.getType(),
-                    coord.getLatitude(), coord.getLongitude());
+                    hotelAddressDto.getLatitude(), hotelAddressDto.getLongitude());
 
             // 4. 호텔 이미지 업데이트
             updateHotelImage(hotel, hotelImage, imageUrls);
@@ -410,6 +410,15 @@ public class HotelService {
             roomDto.add(RoomDetailResponseDto.fromEntity(r, roomImages, r.getRoomCount()));
         }
         return HotelDetailResponseDto.fromEntity(hotel, roomDto);
+    }
+
+    public int myHotelCount() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("등록된 사용자가 없습니다."));
+
+        int count = hotelRepository.countByUser(user);
+
+        return count;
     }
 
 //    Admin의 호텔 단건 조회
