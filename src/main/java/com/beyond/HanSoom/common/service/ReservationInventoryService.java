@@ -31,7 +31,6 @@ public class ReservationInventoryService {
 
         for (String key : keys) {
             Map<Object, Object> members = redisTemplate.opsForHash().entries(key);
-
             int stock = maxStock - members.size();
             minStock = Math.min(minStock, stock);
         }

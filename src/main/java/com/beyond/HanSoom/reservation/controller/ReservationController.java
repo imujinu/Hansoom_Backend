@@ -68,10 +68,11 @@ public class ReservationController {
     }
 
 
+
     //예약 취소
     @PatchMapping("/cancel/{reservationId}")
     public ResponseEntity<?> cancel(@PathVariable Long reservationId){
-        String reserveId= reservationService.cancel(reservationId);
+        String reserveId= reservationPaymentService.cancel(reservationId);
         return new ResponseEntity<>(reserveId, HttpStatus.ACCEPTED);
     }
 
