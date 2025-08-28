@@ -106,6 +106,20 @@ public class HotelController {
         );
     }
 
+    @GetMapping("/myhotelcount")
+    @PreAuthorize("hasRole('HOST')")
+    public ResponseEntity<?> myHotelCount() {
+        int count = hotelService.myHotelCount();
+        return new ResponseEntity<>(
+                CommonSuccessDto.builder()
+                        .result(count)
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("호텔 리스트 조회")
+                        .build(),
+                HttpStatus.OK
+        );
+    }
+
     @GetMapping("/admin/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> findHotelAdmin(@PathVariable Long id) {
