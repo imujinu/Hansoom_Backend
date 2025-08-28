@@ -37,6 +37,8 @@ public class ChatMessage extends BaseTimeEntity {
     @Builder.Default
     private List<ChatReadStatus> readStatusList = new ArrayList<>();
 
+    @Builder.Default
+    private boolean isNotice =false;
     public ChatMessage toEntity(ChatMessageResDto dto, ChatRoom chatRoom, User user){
         return ChatMessage.builder()
                 .chatRoom(chatRoom)

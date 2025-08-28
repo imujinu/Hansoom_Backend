@@ -75,14 +75,19 @@ public class ChatService {
 
      }
     public Long createChatRoom(Long reservationId) {
+        System.out.println("로직 실행중");
         Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(()->new EntityNotFoundException("예약 내역이 존재하지 않습니다."));
         User host = reservation.getHotel().getUser();
         User guest = getUser();
+        System.out.println("로직 실행중1");
         Optional<ChatRoom> chatRoom = chatParticipantRepository.findExistingChatRoom(guest.getId(), host.getId());
 
+        System.out.println("로직 실행중2");
         if(chatRoom.isPresent()){
+            System.out.println("로직 실행중3");
             return chatRoom.get().getId();
         }
+        System.out.println("로직 실행중4");
         ChatRoom newRoom = ChatRoom.builder()
                 .hotel(reservation.getHotel())
                 .reservation(reservation)
@@ -91,6 +96,7 @@ public class ChatService {
         addParticipantChatRoom(newRoom, host);
         addParticipantChatRoom(newRoom, guest);
         chatRoomRepository.save(newRoom);
+        System.out.println("로직 실행중5");
         return newRoom.getId();
     }
 

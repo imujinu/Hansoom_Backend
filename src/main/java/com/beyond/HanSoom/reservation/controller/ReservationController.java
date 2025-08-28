@@ -44,7 +44,7 @@ public class ReservationController {
     public ResponseEntity<?> reservation(@RequestBody ReservationReqDto dto){
         ReservationResponse result = reservationPaymentService.confirm(dto);
         System.out.println("response :::::::: " + result);
-        return new ResponseEntity<>(new CommonSuccessDto(result, HttpStatus.ACCEPTED.value(), "결제 요청 중 "), HttpStatus.ACCEPTED);
+        return new ResponseEntity<>(new CommonSuccessDto(result, HttpStatus.ACCEPTED.value(), "결제 confirm "), HttpStatus.ACCEPTED);
     }
 
     //예약 확정
@@ -73,7 +73,7 @@ public class ReservationController {
     @PatchMapping("/cancel/{reservationId}")
     public ResponseEntity<?> cancel(@PathVariable Long reservationId){
         String reserveId= reservationPaymentService.cancel(reservationId);
-        return new ResponseEntity<>(reserveId, HttpStatus.ACCEPTED);
+        return new ResponseEntity<>(new CommonSuccessDto(reserveId, HttpStatus.OK.value(), "삭제 완료"), HttpStatus.OK);
     }
 
     @PostMapping("/enter")

@@ -71,6 +71,7 @@ public class ReservationPaymentService {
 
         try{
             // 값 유효성 검증
+            System.out.println(dto);
             User user = getUser();
             Hotel hotel = hotelRepository.findById(dto.getHotelId()).orElseThrow(()->new EntityNotFoundException("해당 호텔이 존재하지 않습니다."));;
             Room room = roomRepository.findByIdAndHotel(dto.getRoomId(),hotel).orElseThrow(()-> new EntityNotFoundException("해당 객실이 존재하지 않습니다."));
@@ -107,15 +108,13 @@ public class ReservationPaymentService {
         
         if (result == -2) {
 
-
-
-            return ReservationResponse.fail("재고가 없습니다.");
+            return ReservationResponse.fail(reservation, "재고가 부족합니다.");
         } else if (result == -1) {
-            return ReservationResponse.fail("기존 예약 내역이 존재합니다.");
+            return ReservationResponse.fail(reservation, "기존 예약 내역이 존재합니다.");
         }
         else  {
                 Reservation pendingReservation = reservationRepository.save(reservation);
-                return ReservationResponse.success(pendingReservation.getUuid());
+                return ReservationResponse.success(pendingReservation);
         }
     }
 
