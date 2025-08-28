@@ -1,6 +1,7 @@
 package com.beyond.HanSoom.notification.dto;
 
 import com.beyond.HanSoom.notification.domain.Notification;
+import com.beyond.HanSoom.notification.domain.NotificationType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +20,7 @@ public class NotificationListResDto {
     private LocalDateTime createdTime;
     private String title;
     private String body;
+    private NotificationType type;
 
     public static NotificationListResDto fromEntity(Notification notification) {
         return NotificationListResDto
@@ -29,6 +31,7 @@ public class NotificationListResDto {
                 .createdTime(notification.getCreatedTime())
                 .title(notification.getTitle())
                 .body(notification.getBody())
+                .type(notification.getType())
                 .build();
     }
 }
