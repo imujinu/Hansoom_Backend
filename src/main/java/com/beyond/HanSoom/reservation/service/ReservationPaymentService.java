@@ -157,6 +157,18 @@ public class ReservationPaymentService {
             throw new IllegalStateException("결제가 완료되지 않은 주문 입니다.");
         }
     }
+    public String cancel(Long reservationId){
+        User user = getUser();
+        Reservation reservation = reservationRepository.findByIdAndUser(reservationId,user);
+        reservation.changeState(State.FAILED);
+        List<String> keys = new ArrayList<>();
+        generateQueueKey(reservation,reservation.getCheckInDate(),reservation.getCheckOutDate(), keys);
+        for(int i=0; i<keys.size(); i++){
+            queueReservationService.removeMember(keys.get(i), String.valueOf(user.getId()));
+        }
+        notificationService.cancelAllNotificationsByReservation(reservationId);
+        return reservation.getUuid();
+    }
 
     private static long getTotalPrice(ReservationReqDto dto, Room room) {
         LocalDate date = dto.getCheckIn();

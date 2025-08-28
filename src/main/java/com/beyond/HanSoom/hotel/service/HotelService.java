@@ -382,7 +382,10 @@ public class HotelService {
                     .checkOut(searchDto.getCheckOut())
                     .maxStock(r.getRoomCount())
                     .build();
+            System.out.println(reservationDto);
             int remainRoom = reservationInventoryService.getInventory(reservationDto);
+            System.out.println("========remainRoom");
+            System.out.println(remainRoom);
             if(remainRoom == 0) continue;
 
             List<RoomImageResponseDto> roomImages = r.getRoomImages().stream().map(a -> RoomImageResponseDto.fromEntity(a)).toList();

@@ -1,5 +1,7 @@
 package com.beyond.HanSoom.reservation.service;
 
+import com.beyond.HanSoom.chat.domain.ChatRoom;
+import com.beyond.HanSoom.chat.repository.ChatRoomRepository;
 import com.beyond.HanSoom.common.service.ReservationCacheService;
 import com.beyond.HanSoom.notification.service.NotificationService;
 import com.beyond.HanSoom.reservation.domain.Reservation;
@@ -31,20 +33,19 @@ public class ReservationService {
     private final ReservationCacheService reservationCacheService;
     private final ReviewRepository reviewRepository;
     private final NotificationService notificationService;
+    private final ChatRoomRepository chatRoomRepository;
 
-
-
-    public ReservationService(ReservationRepository reservationRepository, UserRepository userRepository,ReservationCacheService reservationCacheService, ReviewRepository reviewRepository, NotificationService notificationService) {
+    public ReservationService(ReservationRepository reservationRepository, UserRepository userRepository, ReservationCacheService reservationCacheService, ReviewRepository reviewRepository, NotificationService notificationService, ChatRoomRepository chatRoomRepository) {
         this.reservationRepository = reservationRepository;
         this.userRepository = userRepository;
         this.reservationCacheService = reservationCacheService;
         this.reviewRepository = reviewRepository;
         this.notificationService = notificationService;
+        this.chatRoomRepository = chatRoomRepository;
     }
 
     public List<ReservationResDto> findAll() {
-        User user = getUser(); //todo : 추후 수정
-//        User user = userRepository.findById(1L).orElseThrow(()->new EntityNotFoundException("유저가 없습니다"));
+        User user = getUser();
 
         List<Reservation> reservation = reservationRepository.findAllByUser(user);
         List<ReservationResDto> reservationList = new ArrayList<>();
@@ -52,9 +53,8 @@ public class ReservationService {
         for(Reservation r : reservation){
 //            BigDecimal hotelRating = reviewRepository.findByHotel(r.getHotel()).getRating(); // todo : 리뷰없어서 에러 뜸
             String status = getStatus(r, now);
-
-
-            reservationList.add(new ReservationResDto().fromEntity(r, BigDecimal.valueOf(4.5), status));
+            Long chatRoomId = chatRoomRepository.findByReservationAndIsGroupChat(r, "N").getId();
+            reservationList.add(new ReservationResDto().fromEntity(r, BigDecimal.valueOf(4.5), status, chatRoomId));
         }
         return reservationList;
     }
@@ -83,7 +83,8 @@ public class ReservationService {
                 List<Review> reviewList = reviewRepository.findAllByHotel(reservation.getHotel());
                 LocalDate now = LocalDate.now();
                 String state = getStatus(reservation,now);
-                ReservationCacheResDto cacheResDto = new ReservationCacheResDto().fromEntity(reservation,state  ,reviewList);
+                Long chatRoomId = chatRoomRepository.findByReservationAndIsGroupChat(reservation,"N").getId();
+                ReservationCacheResDto cacheResDto = new ReservationCacheResDto().fromEntity(reservation,state  ,reviewList, chatRoomId);
                 if(reservation.getState() == State.RESERVED){
                 reservationCacheService.saveCacheReservation(cacheResDto);
                 return cacheResDto;
@@ -98,17 +99,6 @@ public class ReservationService {
             throw new EntityNotFoundException("해당 예약이 존재하지 않습니다.");
         }
     }
-
-
-    public String cancel(Long reservationId){
-        User user = getUser();
-        Reservation reservation = reservationRepository.findByIdAndUser(reservationId,user);
-        reservation.cancel();
-        notificationService.cancelAllNotificationsByReservation(reservationId);
-        return reservation.getUuid();
-    }
-
-
 
     public User getUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();

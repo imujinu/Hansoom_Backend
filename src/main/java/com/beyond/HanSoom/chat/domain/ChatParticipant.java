@@ -34,6 +34,8 @@ public class ChatParticipant extends BaseTimeEntity {
     @Builder.Default
     private boolean participationYn = true;
 
+    @Builder.Default
+    private boolean isFirstEntry = true;
     public void updateOnlineState(String state){
         this.isOnline = state;
     }
