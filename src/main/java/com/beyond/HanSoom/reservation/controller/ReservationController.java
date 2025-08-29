@@ -15,6 +15,10 @@ import com.beyond.HanSoom.reservation.service.ReservationService;
 import com.beyond.HanSoom.user.domain.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -55,8 +59,8 @@ public class ReservationController {
     }
     //예약 전체 조회
     @GetMapping("/findAll")
-    public ResponseEntity<?> findAll(){
-        List<ReservationResDto> resDtos = reservationService.findAll();
+    public ResponseEntity<?> findAll(@PageableDefault(value = 5, sort = "id", direction = Sort.Direction.DESC)Pageable pageable, @RequestParam(defaultValue = "upcoming") String status){
+        Page<ReservationResDto> resDtos = reservationService.findAll(status,pageable);
         return new ResponseEntity<>(resDtos, HttpStatus.OK);
     }
 

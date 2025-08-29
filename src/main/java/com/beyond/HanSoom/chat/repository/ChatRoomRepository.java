@@ -1,6 +1,7 @@
 package com.beyond.HanSoom.chat.repository;
 
 import com.beyond.HanSoom.chat.domain.ChatMessage;
+import com.beyond.HanSoom.chat.domain.ChatParticipant;
 import com.beyond.HanSoom.chat.domain.ChatRoom;
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.reservation.domain.Reservation;
@@ -20,4 +21,8 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom,Long> {
 
 
     ChatRoom findByReservationAndIsGroupChat(Reservation r, String n);
+
+    ChatRoom findByHotelAndReservationAndIsGroupChat(Hotel hotel, Reservation reservation, String n);
+
+    List<ChatRoom> findAllByHotelAndIsGroupChat(Hotel hotel, String n);
 }
