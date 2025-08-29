@@ -109,6 +109,12 @@ public class UserController {
         return new ResponseEntity<>(new CommonSuccessDto(userId, HttpStatus.OK.value(), "사용자 탈퇴 성공"), HttpStatus.OK);
     }
 
-    // 회원 탈퇴 (관리자 기준) // Todo - 필요할까?
+    // 회원 탈퇴 (관리자 기준)
+    @DeleteMapping("/admin/delete/{inputId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> deleteUser(@PathVariable Long inputId) {
+        Long userId = userService.deleteUserByAdmin(inputId);
+        return new ResponseEntity<>(new CommonSuccessDto(userId, HttpStatus.OK.value(), "사용자 탈퇴 성공"), HttpStatus.OK);
+    }
 
 }
