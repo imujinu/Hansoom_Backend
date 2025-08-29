@@ -374,6 +374,10 @@ public class ChatService {
          Hotel hotel = reservation.getHotel();
          ChatRoom chatRoom = chatRoomRepository.findByHotelAndIsGroupChat(hotel, "Y");
          User user = getUser();
+         Optional<ChatParticipant> chatParticipant = chatParticipantRepository.findByChatRoomAndUser(chatRoom,user);
+         if(chatParticipant.isPresent()){
+             return chatRoom.getId();
+         }
          addParticipantChatRoom(chatRoom, user);
          return chatRoom.getId();
     }
