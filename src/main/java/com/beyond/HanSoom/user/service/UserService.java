@@ -223,4 +223,14 @@ public class UserService {
 
         return user.getId();
     }
+
+    // 회원 탈퇴 (관리자 기준)
+    public Long deleteUserByAdmin(Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("없는 사용자입니다."));
+        user.setState(UserState.WITHDRAW);
+
+        log.info("[HANSOOM][INFO] - UserService/deleteUserByAdmin - 회원탈퇴 성공, id={}", id);
+
+        return user.getId();
+    }
 }
