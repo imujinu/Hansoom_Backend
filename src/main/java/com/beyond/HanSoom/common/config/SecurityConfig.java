@@ -3,6 +3,7 @@ package com.beyond.HanSoom.common.config;
 import com.beyond.HanSoom.common.auth.JwtAutenticationHandler;
 import com.beyond.HanSoom.common.auth.JwtAuthorizationHandler;
 import com.beyond.HanSoom.common.auth.JwtTokenFilter;
+import com.beyond.HanSoom.common.auth.OriginRefererCsrfFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,6 +28,7 @@ public class SecurityConfig {
     private final JwtTokenFilter jwtTokenFilter;
     private final JwtAutenticationHandler jwtAutenticationHandler;
     private final JwtAuthorizationHandler jwtAuthorizationHandler;
+    private final OriginRefererCsrfFilter originRefererCsrfFilter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
@@ -35,6 +37,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                .addFilterBefore(originRefererCsrfFilter, UsernamePasswordAuthenticationFilter.class)
                 // token을 검증하고, token검증을 통해 Authentication 객체 생성
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class)
 
