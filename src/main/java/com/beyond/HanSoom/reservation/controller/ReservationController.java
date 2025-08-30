@@ -15,6 +15,10 @@ import com.beyond.HanSoom.reservation.service.ReservationService;
 import com.beyond.HanSoom.user.domain.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -44,7 +48,7 @@ public class ReservationController {
     public ResponseEntity<?> reservation(@RequestBody ReservationReqDto dto){
         ReservationResponse result = reservationPaymentService.confirm(dto);
         System.out.println("response :::::::: " + result);
-        return new ResponseEntity<>(new CommonSuccessDto(result, HttpStatus.ACCEPTED.value(), "결제 요청 중 "), HttpStatus.ACCEPTED);
+        return new ResponseEntity<>(new CommonSuccessDto(result, HttpStatus.ACCEPTED.value(), "결제 confirm "), HttpStatus.ACCEPTED);
     }
 
     //예약 확정
@@ -55,8 +59,8 @@ public class ReservationController {
     }
     //예약 전체 조회
     @GetMapping("/findAll")
-    public ResponseEntity<?> findAll(){
-        List<ReservationResDto> resDtos = reservationService.findAll();
+    public ResponseEntity<?> findAll(@PageableDefault(value = 5, sort = "id", direction = Sort.Direction.DESC)Pageable pageable, @RequestParam(defaultValue = "upcoming") String status){
+        Page<ReservationResDto> resDtos = reservationService.findAll(status,pageable);
         return new ResponseEntity<>(resDtos, HttpStatus.OK);
     }
 
@@ -68,11 +72,12 @@ public class ReservationController {
     }
 
 
+
     //예약 취소
     @PatchMapping("/cancel/{reservationId}")
     public ResponseEntity<?> cancel(@PathVariable Long reservationId){
-        String reserveId= reservationService.cancel(reservationId);
-        return new ResponseEntity<>(reserveId, HttpStatus.ACCEPTED);
+        String reserveId= reservationPaymentService.cancel(reservationId);
+        return new ResponseEntity<>(new CommonSuccessDto(reserveId, HttpStatus.OK.value(), "삭제 완료"), HttpStatus.OK);
     }
 
     @PostMapping("/enter")

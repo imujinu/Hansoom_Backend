@@ -57,4 +57,6 @@ public interface HotelRepository extends JpaRepository<Hotel, Long> {
     Page<Hotel> findByState(Pageable pageable, HotelState hotelState);
 
     List<Hotel> findAllByUser(User host);
+
+    int countByUser(User user);
 }

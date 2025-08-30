@@ -71,10 +71,13 @@
 | ---------- | ---------------------------------------------- |
 | 다양한 로그인 방식 | 자체 로그인 외에 구글, 카카오 소셜 로그인을 도입하여 사용자의 편의성을 높였습니다. |
 | Redis를 활용한 토큰 관리 | 로그인 시 발급되는 토큰을 Redis에 저장하고 관리함으로써, 빠르고 안정적인 사용자 인증 시스템을 구축했습니다. |
-| Redis를 통한 동시성 제어 | 여러 사용자가 동시에 같은 객실에 접근할 경우, Redis를 활용한 분산 락(Distributed Lock)으로 객실 수량을 정확하게 제어하여 이중 예약을 방지했습니다. |
+| Redis를 통한 대기열 구성 | 특정 객실이 특가로 나왔을 경우를 시나리오로 설정해 예약 페이지 접속 시 대기열을 설정해 사용자 접속 수를 제한할 수 있습니다. |
+| Redis를 통한 동시성 제어 | 여러 사용자가 동시에 같은 객실에 접근할 경우, luascript를 활용해 Redis의 조회-예약 과정의 원자성을 보장할 수 있도록 했습니다. |
 | SSE를 활용한 실시간 알림 | SSE(Server-Sent Events)를 이용해 사용자에게 예약/취소 등 중요한 이벤트 알림을 실시간으로 전달하는 기능을 구현했습니다. |
 | 카카오지도 API 연동 | 카카오지도 API의 주소-좌표 변환(Geocoding) 기능을 이용해 호텔 주소를 좌표로 변환하고, 이를 바탕으로 지도를 구현하여 사용자가 호텔 위치를 쉽게 찾을 수 있도록 했습니다. |
 | 토스페이먼츠 API 결제 | 간편하고 안전한 결제 환경을 위해 토스페이먼츠 API를 연동하여 사용자가 편리하게 결제할 수 있도록 했습니다. |
+| Stomp를 활용한 실시간 채팅 기능 | Stomp를 통해 클라이언트간의 실시간 채팅이 가능하도록 했습니다. |
+| Redis Stream을 통한 메시지 저장 | 추후 확장성을 생각해 Redis Stream을 통해 메시지가 발행되도록 하였습니다. Pub/Sub에서 메시지가 소실되던 문제를 해결하였습니다. |
 
 ### 📄 핵심 기능 플로우
 <details>
@@ -247,7 +250,9 @@ https://github.com/user-attachments/assets/6a1d76a8-97aa-4b83-9adc-b0c2834d966a
 <details>
   <summary>구글 회원가입 / 로그인</summary>
   <div align="center">
-    <img src="https://github.com/your-repo/demo/google.gif" alt="구글 회원가입/로그인 시연" width="600"/>
+    
+  ![구글로그인](https://github.com/user-attachments/assets/29923e10-4d45-4461-b04c-d56d4b4c266e)
+  
   </div>
 </details>
 
@@ -441,7 +446,10 @@ https://github.com/user-attachments/assets/8b5edf44-99bb-459c-a17e-109dce570c06
 <details>
   <summary>호스트 그룹 채팅 관리</summary>
   <div align="center">
-    
+
+   ![호스트 채팅관리](https://github.com/user-attachments/assets/664e4e2d-c731-44fc-be71-2817bc6d08ad)
+
+
   </div>
 </details>
 </details>

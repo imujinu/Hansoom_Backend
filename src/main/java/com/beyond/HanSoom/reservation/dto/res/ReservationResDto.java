@@ -20,7 +20,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 public class ReservationResDto {
+    private Long id;
     private Long hotelId;
+    private Long chatRoomId;
     private String hotelName;
     private String hotelImage;
     private BigDecimal hotelRating;
@@ -34,11 +36,14 @@ public class ReservationResDto {
     private String reservationNumber;
     private String address;
 
-    public ReservationResDto fromEntity(Reservation reservation, BigDecimal hotelRating, String status){
+    public ReservationResDto fromEntity(Reservation reservation, BigDecimal hotelRating, String status, Long chatRoomId){
         Hotel hotel = reservation.getHotel();
         Room room = reservation.getRoom();
+
         return ReservationResDto.builder()
+                .id(reservation.getId())
                 .hotelId(hotel.getId())
+                .chatRoomId(chatRoomId)
                 .hotelName(hotel.getHotelName())
                 .hotelImage(hotel.getImage())
                 .hotelRating(hotelRating)

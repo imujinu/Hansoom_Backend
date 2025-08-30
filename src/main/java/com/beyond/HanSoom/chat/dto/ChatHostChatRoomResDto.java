@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 @Builder
 public class ChatHostChatRoomResDto {
     private Long id;
+    private Long hotelId;
     private String name;
     private String userName;
     private int participantCount;
@@ -30,6 +31,7 @@ public class ChatHostChatRoomResDto {
         LocalDateTime timestamp = chatMessage != null ? chatMessage.getCreatedTime() : null;
         return ChatHostChatRoomResDto.builder()
                 .id(chatRoom.getId())
+                .hotelId(chatRoom.getHotel().getId())
                 .name(chatRoom.getHotel().getHotelName()+ " 단체 채팅방")
                 .userName("")
                 .participantCount(chatRoom.getParticipantList().size())
@@ -46,6 +48,7 @@ public class ChatHostChatRoomResDto {
         LocalDateTime timestamp = chatMessage != null ? chatMessage.getCreatedTime() : null;
         return ChatHostChatRoomResDto.builder()
                 .id(chatRoom.getId())
+                .hotelId(chatRoom.getHotel().getId())
                 .name(userName+ "님과의 개인 채팅방")
                 .userName(userName)
                 .participantCount(chatRoom.getParticipantList().size())

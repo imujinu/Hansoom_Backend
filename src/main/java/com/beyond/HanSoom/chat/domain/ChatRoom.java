@@ -2,6 +2,7 @@ package com.beyond.HanSoom.chat.domain;
 
 import com.beyond.HanSoom.common.domain.BaseTimeEntity;
 import com.beyond.HanSoom.hotel.domain.Hotel;
+import com.beyond.HanSoom.reservation.domain.Reservation;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,6 +23,10 @@ public class ChatRoom extends BaseTimeEntity {
     private Long id;
     @Builder.Default
     private String isGroupChat="N";
+
+    @ManyToOne
+    @JoinColumn(name = "reservation_id")
+    private Reservation reservation;
 
     @ManyToOne
     @JoinColumn(name = "hotel_id")

@@ -69,8 +69,8 @@ public class HotelService {
                 ? s3Uploader.upload(hotelImage, "hotel")
                 : null;
         // 호텔 객체 저장
-        GeocoderService.Coordinate coord = geocoderService.getCoordinates(dto.getAddress());
-        Hotel hotel = hotelRepository.save(dto.toEntity(hotelImageUrl, coord, user));
+        GeocoderService.HotelAddressDto addressDto = geocoderService.parseAddress(dto.getAddress());
+        Hotel hotel = hotelRepository.save(dto.toEntity(hotelImageUrl, addressDto, user));
 
         // 객실 생성
         List<Room> rooms = dto.getRooms().stream().map(a -> a.toEntity(hotel)).toList();
@@ -150,12 +150,12 @@ public class HotelService {
         try {
             // 2. 주소로 좌표 조회
             dto.setAddress(normalizeAddress(dto.getAddress()));
-            GeocoderService.Coordinate coord = geocoderService.getCoordinates(dto.getAddress());
+            GeocoderService.HotelAddressDto hotelAddressDto = geocoderService.parseAddress(dto.getAddress());
 
             // 3. 호텔 기본 정보 업데이트
             hotel.updateBasicInfo(dto.getHotelName(), dto.getAddress(),
                     dto.getPhoneNumber(), dto.getDescription(), dto.getType(),
-                    coord.getLatitude(), coord.getLongitude());
+                    hotelAddressDto.getLatitude(), hotelAddressDto.getLongitude());
 
             // 4. 호텔 이미지 업데이트
             updateHotelImage(hotel, hotelImage, imageUrls);
@@ -382,7 +382,10 @@ public class HotelService {
                     .checkOut(searchDto.getCheckOut())
                     .maxStock(r.getRoomCount())
                     .build();
+            System.out.println(reservationDto);
             int remainRoom = reservationInventoryService.getInventory(reservationDto);
+            System.out.println("========remainRoom");
+            System.out.println(remainRoom);
             if(remainRoom == 0) continue;
 
             List<RoomImageResponseDto> roomImages = r.getRoomImages().stream().map(a -> RoomImageResponseDto.fromEntity(a)).toList();
@@ -407,6 +410,15 @@ public class HotelService {
             roomDto.add(RoomDetailResponseDto.fromEntity(r, roomImages, r.getRoomCount()));
         }
         return HotelDetailResponseDto.fromEntity(hotel, roomDto);
+    }
+
+    public int myHotelCount() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("등록된 사용자가 없습니다."));
+
+        int count = hotelRepository.countByUser(user);
+
+        return count;
     }
 
 //    Admin의 호텔 단건 조회
@@ -441,7 +453,7 @@ public class HotelService {
         Page<Hotel> hotelPage = hotelRepository.findAll(spec, pageable);
 
         // 2. Page<Hotel>의 getContent()로 가져온 리스트에 대해 추가 비즈니스 로직 필터링 및 DTO 변환을 수행합니다.
-        List<HotelListResponseDto> dtoList = hotelPage.getContent().stream()
+        List<HotelListResponseDto> dtoList = new ArrayList<>(hotelPage.getContent().stream()
                 // 호텔에 객실이 존재하는지, 그리고 해당 객실에 예약 가능한 재고가 있는지 확인합니다.
                 .filter(hotel -> hotel.getRooms().stream().anyMatch(room ->
                         isRoomAvailable(room, hotel.getId(), searchDto)
@@ -468,7 +480,7 @@ public class HotelService {
                             ? Stream.of(HotelListResponseDto.fromEntity(hotel, minAvgPrice.getAsInt()))
                             : Stream.empty();
                 })
-                .toList();
+                .toList());
 
         // 3. 정렬 조건에 따라 결과 리스트를 정렬합니다.
         // 이 정렬은 DB에서 처리하는 것이 아니므로, 결과 리스트를 직접 정렬해야 합니다.

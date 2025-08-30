@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class UserListDto {
+    private Long id;
     private String email;
     private String name;
     private String phoneNumber;
@@ -24,6 +25,7 @@ public class UserListDto {
 
     public static UserListDto fromEntity(User user) {
         return builder()
+                .id(user.getId())
                 .email(user.getEmail())
                 .name(user.getName())
                 .phoneNumber(user.getPhoneNumber())

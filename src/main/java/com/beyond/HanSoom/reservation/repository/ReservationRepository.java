@@ -5,6 +5,8 @@ import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.reservation.domain.State;
 import com.beyond.HanSoom.room.domain.Room;
 import com.beyond.HanSoom.user.domain.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,6 +21,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
 
     List<Reservation> findAllByUser(User user);
+    Page<Reservation> findAllByUser(User user, Pageable pageable);
 
     Reservation findByUser(User user);
 
