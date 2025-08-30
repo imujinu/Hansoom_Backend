@@ -86,21 +86,87 @@ public class UserController {
     @PostMapping("/google/login")
     public ResponseEntity<?> googleLogin(@RequestBody RedirectDto dto) {
         UserLoginResDto userLoginResDto = userService.googleLogin(dto);
-        return new ResponseEntity<>(new CommonSuccessDto(userLoginResDto, HttpStatus.OK.value(), "google 로그인 성공"), HttpStatus.OK);
+
+        String accessToken = userLoginResDto.getAccessToken();
+        String refreshToken = userLoginResDto.getRefreshToken();
+
+        ResponseCookie rtCookie = cookieUtil.buildRefreshTokenCookie(
+                "refreshToken",
+                refreshToken,
+                cookieDomain,
+                cookiePath,
+                cookieSameSite,
+                cookieSecure,
+                cookieHttpOnly,
+                refreshTokenExpiryDays
+        );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, rtCookie.toString());
+
+        return new ResponseEntity<>(
+                new CommonSuccessDto(accessToken, HttpStatus.OK.value(), "google 로그인 성공"),
+                headers,
+                HttpStatus.OK
+        );
     }
 
     // 구글 연동 로그인
     @PostMapping("/google/reLogin")
     public ResponseEntity<?> googleReLogin(@RequestBody RedirectLinkTicketDto dto) {
         UserLoginResDto userLoginResDto = userService.googleReLogin(dto);
-        return new ResponseEntity<>(new CommonSuccessDto(userLoginResDto, HttpStatus.OK.value(), "google 연동 성공"), HttpStatus.OK);
+
+        String accessToken = userLoginResDto.getAccessToken();
+        String refreshToken = userLoginResDto.getRefreshToken();
+
+        ResponseCookie rtCookie = cookieUtil.buildRefreshTokenCookie(
+                "refreshToken",
+                refreshToken,
+                cookieDomain,
+                cookiePath,
+                cookieSameSite,
+                cookieSecure,
+                cookieHttpOnly,
+                refreshTokenExpiryDays
+        );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, rtCookie.toString());
+
+        return new ResponseEntity<>(
+                new CommonSuccessDto(accessToken, HttpStatus.OK.value(), "google 연동 성공"),
+                headers,
+                HttpStatus.OK
+        );
     }
 
     // 카카오 로그인 (정보 없으면 회원가입까지)
     @PostMapping("/kakao/login")
     public ResponseEntity<?> kakaoLogin(@RequestBody RedirectDto dto) {
         UserLoginResDto userLoginResDto = userService.kakaoLogin(dto);
-        return new ResponseEntity<>(new CommonSuccessDto(userLoginResDto, HttpStatus.OK.value(), "kakao 로그인 성공"), HttpStatus.OK);
+
+        String accessToken = userLoginResDto.getAccessToken();
+        String refreshToken = userLoginResDto.getRefreshToken();
+
+        ResponseCookie rtCookie = cookieUtil.buildRefreshTokenCookie(
+                "refreshToken",
+                refreshToken,
+                cookieDomain,
+                cookiePath,
+                cookieSameSite,
+                cookieSecure,
+                cookieHttpOnly,
+                refreshTokenExpiryDays
+        );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, rtCookie.toString());
+
+        return new ResponseEntity<>(
+                new CommonSuccessDto(accessToken, HttpStatus.OK.value(), "kakao 연동 성공"),
+                headers,
+                HttpStatus.OK
+        );
     }
 
     // 로그아웃
