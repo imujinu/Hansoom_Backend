@@ -1,12 +1,15 @@
 package com.beyond.HanSoom.user.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserLogoutResDto {
+@Builder
+public class UserTokensDto {
+    private String accessToken;
     private String refreshToken;
 }

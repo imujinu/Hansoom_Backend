@@ -1,20 +1,28 @@
 package com.beyond.HanSoom.user.controller;
 
+import com.beyond.HanSoom.common.auth.CookieUtil;
 import com.beyond.HanSoom.common.dto.CommonSuccessDto;
 import com.beyond.HanSoom.user.dto.*;
 import com.beyond.HanSoom.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.json.HTTP;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.time.Duration;
+import java.time.Instant;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,6 +30,14 @@ import org.springframework.web.multipart.MultipartFile;
 @Transactional
 public class UserController {
     private final UserService userService;
+    private final CookieUtil cookieUtil;
+
+    @Value("${app.auth.cookie.domain:}")          private String cookieDomain;
+    @Value("${app.auth.cookie.path:/auth}")       private String cookiePath;
+    @Value("${app.auth.cookie.same-site:Lax}")    private String cookieSameSite;
+    @Value("${app.auth.cookie.secure:false}")     private boolean cookieSecure;
+    @Value("${app.auth.cookie.http-only:true}")   private boolean cookieHttpOnly;
+    @Value("${jwt.refreshTokenExpiryDays}")       private int refreshTokenExpiryDays;
 
     // 회원가입
     @PostMapping("/create")
@@ -35,13 +51,34 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody @Valid UserLoginReqDto dto) {
         UserLoginResDto userLoginResDto = userService.login(dto);
-        return new ResponseEntity<>(new CommonSuccessDto(userLoginResDto, HttpStatus.OK.value(), "로그인 성공"), HttpStatus.OK);
+        String accessToken = userLoginResDto.getAccessToken();
+        String refreshToken = userLoginResDto.getRefreshToken();
+
+        ResponseCookie rtCookie = cookieUtil.buildRefreshTokenCookie(
+                "refreshToken",
+                refreshToken,
+                cookieDomain,
+                cookiePath,
+                cookieSameSite,
+                cookieSecure,
+                cookieHttpOnly,
+                refreshTokenExpiryDays
+        );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, rtCookie.toString());
+
+        return new ResponseEntity<>(
+                new CommonSuccessDto(accessToken, HttpStatus.OK.value(), "로그인 성공"),
+                headers,
+                HttpStatus.OK
+        );
     }
 
     // 토큰 재발급
     @PostMapping("/auth/refresh")
-    public ResponseEntity<?> tokenRefresh(@RequestBody @Valid RefreshTokenDto dto) {
-        UserLoginResDto userLoginResDto = userService.tokenRefresh(dto);
+    public ResponseEntity<?> tokenRefresh(@CookieValue("refreshToken") String refreshToken) {
+        UserLoginResDto userLoginResDto = userService.tokenRefresh(refreshToken);
         return new ResponseEntity<>(new CommonSuccessDto(userLoginResDto, HttpStatus.OK.value(), "access token 재발급 성공"), HttpStatus.OK);
     }
 
@@ -66,8 +103,29 @@ public class UserController {
         return new ResponseEntity<>(new CommonSuccessDto(userLoginResDto, HttpStatus.OK.value(), "kakao 로그인 성공"), HttpStatus.OK);
     }
 
-
     // 로그아웃
+    @PostMapping("/auth/logout")
+    public ResponseEntity<?> logout(@CookieValue("refreshToken") String refreshToken) {
+        String email = userService.logout(refreshToken);
+
+        ResponseCookie rtCookie = cookieUtil.deleteCookie(
+                "refreshToken",
+                cookieDomain,
+                cookiePath,
+                cookieSameSite,
+                cookieSecure,
+                cookieHttpOnly
+        );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, rtCookie.toString());
+
+        return new ResponseEntity<>(
+                new CommonSuccessDto(email, HttpStatus.OK.value(), "로그아웃 성공"),
+                headers,
+                HttpStatus.OK
+        );
+    }
 
     // 사용자 조회 (페이징, 검색 옵션) // Todo - 호텔 별 사용자 필터링
     @GetMapping("/list")
