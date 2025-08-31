@@ -150,10 +150,21 @@ public class UserService {
         return new UserLoginResDto(accessToken, refreshToken);
     }
 
+    // 로그아웃
+    public String logout(String refreshToken) {
+        String email = jwtTokenProvider.removeRt(refreshToken);
+
+        log.info("[HANSOOM][INFO] - UserService/logout - 로그아웃 성공, email={}", email);
+
+        return email;
+    }
+
     // 토큰 재발급
-    public UserLoginResDto tokenRefresh(RefreshTokenDto dto) {
-        User user = jwtTokenProvider.validateRt(dto.getRefreshToken());
+    public UserLoginResDto tokenRefresh(String refreshToken) {
+        User user = jwtTokenProvider.validateRt(refreshToken);
         String accessToken = jwtTokenProvider.createAtToken(user);
+
+        log.info("[HANSOOM][INFO] - UserService/tokenRefresh - refresh token 갱신 성공, user.id={}", user.getEmail());
 
         return new UserLoginResDto(accessToken, null);
     }
