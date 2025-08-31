@@ -38,6 +38,7 @@ public class ReservationCacheResDto {
     @NoArgsConstructor
     @Builder
     public static class ReservationDto{
+        private String id;
         private String reservationId;
         private LocalDate checkIn;
         private LocalDate checkOut;
@@ -46,6 +47,7 @@ public class ReservationCacheResDto {
         private String request;
         public static ReservationDto fromEntity(Reservation reservation){
             return ReservationDto.builder()
+                    .id(reservation.getUuid())
                     .reservationId(reservation.getUuid())
                     .checkIn(reservation.getCheckInDate())
                     .checkOut(reservation.getCheckOutDate())
