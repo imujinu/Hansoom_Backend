@@ -76,9 +76,13 @@ public class ReservationPaymentService {
             Hotel hotel = hotelRepository.findById(dto.getHotelId()).orElseThrow(()->new EntityNotFoundException("해당 호텔이 존재하지 않습니다."));;
             Room room = roomRepository.findByIdAndHotel(dto.getRoomId(),hotel).orElseThrow(()-> new EntityNotFoundException("해당 객실이 존재하지 않습니다."));
 
+            if(user.equals(hotel.getUser())){
+                throw new IllegalArgumentException("본인의 호텔은 예약이 불가능합니다.");
+            }
+
             // 예약 인원 검증
             if(dto.getPeople()>room.getMaximumPeople()){
-                throw new IllegalStateException("인원이 초과 되었습니다.");
+                throw new IllegalArgumentException("인원이 초과 되었습니다.");
             }
 
             // 실제 숙박비 계산
