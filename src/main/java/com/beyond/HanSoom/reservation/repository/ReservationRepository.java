@@ -56,4 +56,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
 
     List<Reservation> findAllByUserAndHotel(User user, Hotel hotel);
+
+    List<Reservation> findAllByHotel(Hotel hostHotel);
 }

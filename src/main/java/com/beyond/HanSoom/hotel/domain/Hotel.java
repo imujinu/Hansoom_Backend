@@ -36,6 +36,7 @@ public class Hotel extends BaseTimeEntity {
     private LocalDateTime answerTime;
     private double latitude;
     private double longitude;
+    private long reservationCount;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

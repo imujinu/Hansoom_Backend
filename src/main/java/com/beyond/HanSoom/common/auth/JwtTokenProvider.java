@@ -23,14 +23,16 @@ public class JwtTokenProvider {
     private final RedisTemplate<String, String> redisTemplate;
     private final UserRepository userRepository;
 
-    @Value("${jwt.expirationAt}")
-    private int expirationAt;
+    @Value("${jwt.accessTokenExpiryMinutes}")
+    private int accessTokenExpiryMinutes;
 
     @Value("${jwt.secretKeyAt}")
     private String secretKeyAt;
 
-    @Value("${jwt.expirationRt}")
-    private int expirationRt;
+    @Value("${jwt.refreshTokenExpiryDaysNonPersistent}")
+    private int refreshTokenExpiryDaysNonPersistent;
+    @Value("${jwt.refreshTokenExpiryDaysPersistent}")
+    private int refreshTokenExpiryDaysPersistent;
 
     @Value("${jwt.secretKeyRt}")
     private String secretKeyRt;
@@ -62,17 +64,18 @@ public class JwtTokenProvider {
         String accessToken = Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(now)
-                .setExpiration(new Date(now.getTime() + expirationAt*60*1000L))
+                .setExpiration(new Date(now.getTime() + accessTokenExpiryMinutes*60*1000L))
                 .signWith(secret_at_key)
                 .compact();
 
         return accessToken;
     }
 
-    public String createRtToken(User user) {
+    public String createRtToken(User user, boolean rememberMe) {
         String email = user.getEmail();
         String role = user.getUserRole().toString();
         Long userId = user.getId();;
+        int refreshTokenExpiryDays = rememberMe ? refreshTokenExpiryDaysPersistent : refreshTokenExpiryDaysNonPersistent;
         Claims claims = Jwts.claims().setSubject(email);
         claims.put("role", role);
         claims.put("userId", userId);
@@ -80,12 +83,12 @@ public class JwtTokenProvider {
         String refreshToken = Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(now)
-                .setExpiration(new Date(now.getTime() + expirationRt*60*1000L)) // 30분을 세팅
+                .setExpiration(new Date(now.getTime() + refreshTokenExpiryDays * 24 * 60 * 60 * 1000L))
                 .signWith(secret_rt_key)
                 .compact();
 
         // rt 토큰을 redis에 저장
-        redisTemplate.opsForValue().set(user.getEmail(), refreshToken, 200, TimeUnit.DAYS); // 200일 ttl
+        redisTemplate.opsForValue().set(user.getEmail(), refreshToken, refreshTokenExpiryDays, TimeUnit.DAYS);
 
         return refreshToken;
     }
@@ -107,5 +110,20 @@ public class JwtTokenProvider {
         }
 
         return user;
+    }
+
+    public String removeRt(String refreshToken) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(secret_rt_key)
+                .build()
+                .parseClaimsJws(refreshToken)
+                .getBody();
+
+        String email = claims.getSubject();
+        userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("없는 사용자입니다."));
+
+        redisTemplate.delete(email);
+
+        return email;
     }
 }

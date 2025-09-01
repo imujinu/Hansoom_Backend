@@ -67,4 +67,6 @@ public interface HotelRepository extends JpaRepository<Hotel, Long> {
             "LEFT JOIN FETCH h.hotelReviewSummary " +
             "WHERE h.id IN :hotelIds")
     List<Hotel> findByIdInWithRoomsAndReviewSummary(@Param("hotelIds") List<Long> hotelIds);
+
+    Hotel findByUser(User user);
 }

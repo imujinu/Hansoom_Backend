@@ -5,6 +5,7 @@ import com.beyond.HanSoom.chat.domain.ChatRoom;
 import com.beyond.HanSoom.chat.repository.ChatRoomRepository;
 import com.beyond.HanSoom.common.service.ReservationCacheService;
 import com.beyond.HanSoom.hotel.domain.Hotel;
+import com.beyond.HanSoom.hotel.repository.HotelRepository;
 import com.beyond.HanSoom.notification.service.NotificationService;
 import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.reservation.domain.State;
@@ -15,9 +16,11 @@ import com.beyond.HanSoom.review.domain.Review;
 import com.beyond.HanSoom.review.repository.HotelReviewSummaryRepository;
 import com.beyond.HanSoom.review.repository.ReviewRepository;
 import com.beyond.HanSoom.user.domain.User;
+import com.beyond.HanSoom.user.domain.UserRole;
 import com.beyond.HanSoom.user.repository.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -34,6 +37,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 @Slf4j
+@RequiredArgsConstructor
 public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
@@ -42,31 +46,26 @@ public class ReservationService {
     private final HotelReviewSummaryRepository hotelReviewSummaryRepository;
     private final NotificationService notificationService;
     private final ChatRoomRepository chatRoomRepository;
+    private final HotelRepository hotelRepository;
 
-    public ReservationService(ReservationRepository reservationRepository, UserRepository userRepository, ReservationCacheService reservationCacheService, ReviewRepository reviewRepository, HotelReviewSummaryRepository hotelReviewSummaryRepository, NotificationService notificationService, ChatRoomRepository chatRoomRepository) {
-        this.reservationRepository = reservationRepository;
-        this.userRepository = userRepository;
-        this.reservationCacheService = reservationCacheService;
-        this.reviewRepository = reviewRepository;
-        this.hotelReviewSummaryRepository = hotelReviewSummaryRepository;
-        this.notificationService = notificationService;
-        this.chatRoomRepository = chatRoomRepository;
-    }
 
-    public Page<ReservationResDto> findAll(String status, Pageable pageable) {
+
+    public Page<ReservationResDto> findAll(Pageable pageable) {
+        String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().iterator().next().getAuthority().split("_")[1];
+        if(role.equals(UserRole.USER) || role.equals(UserRole.ADMIN)){
+
         User user = getUser();
         LocalDate now = LocalDate.now();
-        System.out.println("tab======"+status);
+
 
         // 1️⃣ 유저 예약 전체 조회
         List<Reservation> allReservations = reservationRepository.findAllByUser(user);
 
         // 2️⃣ 상태 필터 후 DTO 변환
         List<ReservationResDto> allDtos = allReservations.stream()
-                .filter(r -> getStatus(r, now).equals(status) || status.equals("all"))
                 .map(r -> {
                     Hotel hotel = r.getHotel();
-
+                    String status = getStatus(r,now);
                     List<ChatRoom> chatRooms = chatRoomRepository.findAllByHotelAndIsGroupChat(hotel,"N");
                     ChatRoom chatRoom = null;
                     for (ChatRoom cr : chatRooms) {
@@ -96,14 +95,63 @@ public class ReservationService {
         }
 
         return new PageImpl<>(pageList, pageable, allDtos.size());
+        }
+
+
+        else{
+            User user = getUser();
+            LocalDate now = LocalDate.now();
+            Hotel hostHotel = hotelRepository.findByUser(user);
+
+            // 1️⃣ 유저 예약 전체 조회
+            List<Reservation> allReservations = reservationRepository.findAllByHotel(hostHotel);
+
+            // 2️⃣ 상태 필터 후 DTO 변환
+            List<ReservationResDto> allDtos = allReservations.stream()
+                    .map(r -> {
+                        Hotel hotel = r.getHotel();
+                        String status = getStatus(r,now);
+                        List<ChatRoom> chatRooms = chatRoomRepository.findAllByHotelAndIsGroupChat(hotel,"N");
+                        ChatRoom chatRoom = null;
+                        for (ChatRoom cr : chatRooms) {
+                            for (ChatParticipant cp : cr.getParticipantList()) {
+                                if (cp.getUser().equals(user)) {
+                                    chatRoom = cr;
+                                    break;
+                                }
+                            }
+                        }
+                        BigDecimal hotelRating = hotelReviewSummaryRepository.findByHotel(hotel).getRatingSum();
+                        Long chatRoomId = chatRoom != null ? chatRoom.getId() : null;
+
+                        return new ReservationResDto().fromEntity(r, hotelRating, status, chatRoomId);
+                    })
+                    .collect(Collectors.toList());
+
+            // 3️⃣ Pageable 적용
+            int start = (int) pageable.getOffset();
+            int end = Math.min(start + pageable.getPageSize(), allDtos.size());
+
+            List<ReservationResDto> pageList;
+            if (start > allDtos.size()) {
+                pageList = Collections.emptyList();
+            } else {
+                pageList = allDtos.subList(start, end);
+            }
+
+            return new PageImpl<>(pageList, pageable, allDtos.size());
+        }
     }
 
 
     private static String getStatus(Reservation r, LocalDate now) {
         String status = "";
-        if(r.getCheckInDate().isAfter(now)){
+        if(now.isBefore(r.getCheckInDate())){
             status = "upcoming";
-        }else{
+        }else if ((now.isEqual(r.getCheckInDate()) || now.isAfter(r.getCheckInDate()))
+                && now.isBefore(r.getCheckOutDate())) {
+            status = "ongoing";
+        }else if (now.isAfter(r.getCheckOutDate())) {
             status = "completed";
         }
 
