@@ -6,7 +6,6 @@ import com.beyond.HanSoom.user.dto.*;
 import com.beyond.HanSoom.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.json.HTTP;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,9 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.Duration;
-import java.time.Instant;
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/user")
@@ -37,7 +33,8 @@ public class UserController {
     @Value("${app.auth.cookie.same-site:Lax}")    private String cookieSameSite;
     @Value("${app.auth.cookie.secure:false}")     private boolean cookieSecure;
     @Value("${app.auth.cookie.http-only:true}")   private boolean cookieHttpOnly;
-    @Value("${jwt.refreshTokenExpiryDays}")       private int refreshTokenExpiryDays;
+    @Value("${jwt.refreshTokenExpiryDaysNonPersistent}")       private int refreshTokenExpiryDaysNonPersistent;
+    @Value("${jwt.refreshTokenExpiryDaysPersistent}")       private int refreshTokenExpiryDaysPersistent;
 
     // 회원가입
     @PostMapping("/create")
@@ -62,7 +59,7 @@ public class UserController {
                 cookieSameSite,
                 cookieSecure,
                 cookieHttpOnly,
-                refreshTokenExpiryDays
+                dto.isRememberMe() ? refreshTokenExpiryDaysPersistent : refreshTokenExpiryDaysNonPersistent
         );
 
         HttpHeaders headers = new HttpHeaders();
@@ -98,7 +95,7 @@ public class UserController {
                 cookieSameSite,
                 cookieSecure,
                 cookieHttpOnly,
-                refreshTokenExpiryDays
+                refreshTokenExpiryDaysNonPersistent
         );
 
         HttpHeaders headers = new HttpHeaders();
@@ -127,7 +124,7 @@ public class UserController {
                 cookieSameSite,
                 cookieSecure,
                 cookieHttpOnly,
-                refreshTokenExpiryDays
+                refreshTokenExpiryDaysNonPersistent
         );
 
         HttpHeaders headers = new HttpHeaders();
@@ -156,7 +153,7 @@ public class UserController {
                 cookieSameSite,
                 cookieSecure,
                 cookieHttpOnly,
-                refreshTokenExpiryDays
+                refreshTokenExpiryDaysNonPersistent
         );
 
         HttpHeaders headers = new HttpHeaders();

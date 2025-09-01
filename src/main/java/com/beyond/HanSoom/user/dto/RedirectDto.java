@@ -9,4 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RedirectDto {
     private String code;
+    private boolean rememberMe = false;
 }
