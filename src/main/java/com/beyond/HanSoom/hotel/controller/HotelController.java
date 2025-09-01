@@ -164,7 +164,7 @@ public class HotelController {
 
     @GetMapping("/list")
     public ResponseEntity<?> findAll(Pageable pageable, HotelListSearchDto searchDto) {
-        Page<HotelListResponseDto> dto = hotelService.findAll(pageable, searchDto);
+        Page<HotelListResponseDto> dto = hotelService.findByElasticsearch(pageable, searchDto);
         return new ResponseEntity<>(
                 CommonSuccessDto.builder()
                         .result(dto)

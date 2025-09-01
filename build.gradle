@@ -66,6 +66,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 	//redis LocalDate 저장 의존성
 	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+	//ElasticSearch 의존성
+	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+	implementation 'org.elasticsearch:elasticsearch:8.16.2'  // 버전은 Spring Boot와 호환되는 버전
 
 }
 
