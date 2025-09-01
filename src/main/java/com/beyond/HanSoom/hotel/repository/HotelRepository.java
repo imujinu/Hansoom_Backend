@@ -59,4 +59,6 @@ public interface HotelRepository extends JpaRepository<Hotel, Long> {
     List<Hotel> findAllByUser(User host);
 
     int countByUser(User user);
+
+    Hotel findByUser(User user);
 }

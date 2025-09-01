@@ -59,8 +59,8 @@ public class ReservationController {
     }
     //예약 전체 조회
     @GetMapping("/findAll")
-    public ResponseEntity<?> findAll(@PageableDefault(value = 5, sort = "id", direction = Sort.Direction.DESC)Pageable pageable, @RequestParam(defaultValue = "upcoming") String status){
-        Page<ReservationResDto> resDtos = reservationService.findAll(status,pageable);
+    public ResponseEntity<?> findAll(@PageableDefault(value = 5, sort = "id", direction = Sort.Direction.DESC)Pageable pageable){
+        Page<ReservationResDto> resDtos = reservationService.findAll(pageable);
         return new ResponseEntity<>(resDtos, HttpStatus.OK);
     }
 
