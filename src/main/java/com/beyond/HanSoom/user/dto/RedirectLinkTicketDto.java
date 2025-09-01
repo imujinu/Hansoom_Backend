@@ -9,4 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RedirectLinkTicketDto {
     private String linkTicket;
+    private boolean rememberMe;
 }

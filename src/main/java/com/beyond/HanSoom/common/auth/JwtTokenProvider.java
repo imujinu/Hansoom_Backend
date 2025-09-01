@@ -29,8 +29,10 @@ public class JwtTokenProvider {
     @Value("${jwt.secretKeyAt}")
     private String secretKeyAt;
 
-    @Value("${jwt.refreshTokenExpiryDays}")
-    private int refreshTokenExpiryDays;
+    @Value("${jwt.refreshTokenExpiryDaysNonPersistent}")
+    private int refreshTokenExpiryDaysNonPersistent;
+    @Value("${jwt.refreshTokenExpiryDaysPersistent}")
+    private int refreshTokenExpiryDaysPersistent;
 
     @Value("${jwt.secretKeyRt}")
     private String secretKeyRt;
@@ -69,10 +71,11 @@ public class JwtTokenProvider {
         return accessToken;
     }
 
-    public String createRtToken(User user) {
+    public String createRtToken(User user, boolean rememberMe) {
         String email = user.getEmail();
         String role = user.getUserRole().toString();
         Long userId = user.getId();;
+        int refreshTokenExpiryDays = rememberMe ? refreshTokenExpiryDaysPersistent : refreshTokenExpiryDaysNonPersistent;
         Claims claims = Jwts.claims().setSubject(email);
         claims.put("role", role);
         claims.put("userId", userId);

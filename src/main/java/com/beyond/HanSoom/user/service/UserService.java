@@ -62,7 +62,7 @@ public class UserService {
 
         // 토큰 생성해서 반환
         String accessToken = jwtTokenProvider.createAtToken(user);
-        String refreshToken = jwtTokenProvider.createRtToken(user);
+        String refreshToken = jwtTokenProvider.createRtToken(user, dto.isRememberMe());
 
         log.info("[HANSOOM][INFO] - UserService/login - 로그인 성공, email={}", dto.getEmail());
 
@@ -95,7 +95,7 @@ public class UserService {
 
         // 토큰 생성해서 반환
         String accessToken = jwtTokenProvider.createAtToken(user);
-        String refreshToken = jwtTokenProvider.createRtToken(user);
+        String refreshToken = jwtTokenProvider.createRtToken(user, dto.isRememberMe());
 
         log.info("[HANSOOM][INFO] - UserService/googleLogin - google 로그인 성공, email={}", user.getEmail());
 
@@ -117,7 +117,7 @@ public class UserService {
 
         // 토큰 생성해서 반환
         String accessToken = jwtTokenProvider.createAtToken(user);
-        String refreshToken = jwtTokenProvider.createRtToken(user);
+        String refreshToken = jwtTokenProvider.createRtToken(user, dto.isRememberMe());
 
         log.info("[HANSOOM][INFO] - UserService/googleLogin - google 연동 및 로그인 성공, email={}", user.getEmail());
 
@@ -143,7 +143,7 @@ public class UserService {
 
         // 토큰 생성해서 반환
         String accessToken = jwtTokenProvider.createAtToken(user);
-        String refreshToken = jwtTokenProvider.createRtToken(user);
+        String refreshToken = jwtTokenProvider.createRtToken(user, dto.isRememberMe());
 
         log.info("[HANSOOM][INFO] - UserService/googleLogin - kakao 로그인 성공, email={}", user.getEmail());
 
