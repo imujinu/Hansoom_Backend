@@ -101,10 +101,10 @@ public class ReservationService {
 
     private static String getStatus(Reservation r, LocalDate now) {
         String status = "";
-        if(r.getCheckInDate().isAfter(now)){
-            status = "upcoming";
-        }else{
+        if(r.getCheckOutDate().isBefore(now)){
             status = "completed";
+        }else{
+            status = "upcoming";
         }
 
         if(r.getState() == State.CANCELLED){
