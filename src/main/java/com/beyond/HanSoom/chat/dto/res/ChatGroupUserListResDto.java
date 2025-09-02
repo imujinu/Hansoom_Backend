@@ -1,4 +1,4 @@
-package com.beyond.HanSoom.chat.dto;
+package com.beyond.HanSoom.chat.dto.res;
 
 import com.beyond.HanSoom.chat.domain.ChatParticipant;
 import com.beyond.HanSoom.user.domain.UserRole;

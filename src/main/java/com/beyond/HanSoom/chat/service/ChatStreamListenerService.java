@@ -1,12 +1,9 @@
 package com.beyond.HanSoom.chat.service;
 
-import com.beyond.HanSoom.chat.dto.ChatMessageResDto;
-import com.beyond.HanSoom.chat.repository.ChatMessageRepository;
+import com.beyond.HanSoom.chat.dto.res.ChatMessageResDto;
 import com.beyond.HanSoom.user.domain.User;
 import com.beyond.HanSoom.user.repository.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.InitializingBean;
@@ -18,7 +15,6 @@ import org.springframework.data.redis.stream.StreamListener;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 import org.springframework.data.redis.stream.Subscription;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;

@@ -1,4 +1,4 @@
-package com.beyond.HanSoom.chat.dto;
+package com.beyond.HanSoom.chat.dto.res;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
