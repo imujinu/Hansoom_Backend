@@ -25,4 +25,5 @@ public class ChatAnnouncement {
 
     @Column(nullable = false, length = 500)
     private String content;
+    private String isActive;
 }
