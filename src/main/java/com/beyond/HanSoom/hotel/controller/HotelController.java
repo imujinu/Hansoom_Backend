@@ -191,4 +191,30 @@ public class HotelController {
         );
     }
 
+    @GetMapping("/popular")
+    public ResponseEntity<?> popularHotel(HotelPopularRequestDto dto) {
+        List<HotelListResponseDto> result = hotelService.popularHotel(dto);
+        return new ResponseEntity<>(
+                CommonSuccessDto.builder()
+                        .result(result)
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("가까운 호텔 리스트 조회")
+                        .build(),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/place")
+    public ResponseEntity<?> popularPlaceHotel(HotelPopularRequestDto dto) {
+        List<List<HotelListResponseDto>> result = hotelService.popularPlaceHotel(dto);
+        return new ResponseEntity<>(
+                CommonSuccessDto.builder()
+                        .result(result)
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("가까운 호텔 리스트 조회")
+                        .build(),
+                HttpStatus.OK
+        );
+    }
+
 }
