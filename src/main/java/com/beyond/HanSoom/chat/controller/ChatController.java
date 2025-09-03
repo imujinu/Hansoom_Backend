@@ -105,21 +105,31 @@ public class ChatController {
         return new ResponseEntity<>(new CommonSuccessDto(dtos, HttpStatus.OK.value(), "공지사항 추가 완료"), HttpStatus.OK);
     }
 
+    //공지사항 조회
     @GetMapping("/host/announcements")
     public ResponseEntity<?> getChatAnnouncements(){
         List<ChatAnnouncementResDto> dtos = chatService.getChatAnnouncements();
         return new ResponseEntity<>(new CommonSuccessDto(dtos, HttpStatus.OK.value(), "공지사항 조회 완료"), HttpStatus.OK);
     }
 
+    //공지사항 삭제
     @DeleteMapping("/host/announcement/delete")
     public ResponseEntity<?> deleteChatAnnouncements(@RequestParam Long id){
         chatService.deleteChatAnnouncements(id);
         return new ResponseEntity<>(new CommonSuccessDto("", HttpStatus.OK.value(), "공지사항 삭제 성공"), HttpStatus.OK);
     }
 
+    // 공지사항 활성화 정보 업데이트
     @PatchMapping("/host/announcements/activate")
     public ResponseEntity<?> activateChatAnnouncements(@RequestBody ChatActivateReqDto dto){
         chatService.activateChatAnnouncements(dto);
-        return new ResponseEntity<>(new CommonSuccessDto("", HttpStatus.OK.value(), "공지사항 비활성화 성공"), HttpStatus.OK);
+        return new ResponseEntity<>(new CommonSuccessDto("", HttpStatus.OK.value(), "공지사항 활성화 정보 업데이트"), HttpStatus.OK);
+    }
+
+    //특정 채팅방의 공지사항 목록 가져오기
+    @GetMapping("/announcements/{roomId}")
+    public ResponseEntity<?> getChatRoomAnnouncements(@PathVariable Long roomId){
+        List<ChatAnnouncementResDto> dtos = chatService.getChatRoomAnnouncements(roomId);
+        return new ResponseEntity<>(new CommonSuccessDto(dtos, HttpStatus.OK.value(), "공지사항 조회 완료"), HttpStatus.OK);
     }
 }

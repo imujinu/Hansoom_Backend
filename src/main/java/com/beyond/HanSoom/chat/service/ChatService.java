@@ -405,7 +405,14 @@ public class ChatService {
     public void activateChatAnnouncements(ChatActivateReqDto dto) {
          for(Long id : dto.getIds()){
              ChatAnnouncement chatAnnouncement = chatAnnouncementRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("존재하지 않는 공지사항 입니다."));
-             chatAnnouncement.changeActive(dto.getActive());
+             chatAnnouncement.changeActive(dto.getIsActive());
          }
+    }
+
+    public List<ChatAnnouncementResDto> getChatRoomAnnouncements(Long roomId) {
+         ChatRoom chatRoom = chatRoomRepository.findById(roomId).orElseThrow(()-> new EntityNotFoundException("존재하지 않는 채팅방입니다."));
+         Hotel hotel = chatRoom.getHotel();
+         List<ChatAnnouncement> chatAnnouncementList = chatAnnouncementRepository.findAllByHotel(hotel);
+        return chatAnnouncementList.stream().map(ca->new ChatAnnouncementResDto().fromEntity(ca,hotel)).collect(Collectors.toList());
     }
 }
