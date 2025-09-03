@@ -141,45 +141,76 @@ public class HotelSearchQueryBuilder {
     // 지역명 오타 대응 검색 쿼리 (Fuzzy Search)
     public Query buildFlexibleAddressQuery(HotelListSearchDto dto) {
         String address = dto.getAddress().trim();
+        log.info("지역명 오타 대응 검색: '{}'", address);
 
-        String queryJson = String.format("""
-        {
-          "bool": {
-            "should": [
-              {
-                "match": {
-                  "address": {
-                    "query": "%s",
-                    "fuzziness": "AUTO"
-                  }
-                }
-              },
-              {
-                "wildcard": {
-                  "address": "*%s*"
-                }
-              }
-            ],
-            "minimum_should_match": 1,
-            "filter": [
-              {
-                "term": {
-                  "state": "APPLY"
-                }
-              },
-              {
-                "range": {
-                  "rooms.maximumPeople": {
-                    "gte": %d
-                  }
-                }
-              }
-            ]
-          }
-        }
-        """, address, address, dto.getPeople());
+    // 입력 주소가 너무 짧으면 정확한 매치만 허용
+        boolean isShortAddress = address.length() <= 2;
 
-        return new StringQuery(queryJson);
+        return NativeQuery.builder()
+                .withQuery(q -> q
+                        .bool(b -> b
+                                .must(m -> m
+                                        .bool(innerB -> {
+                                            // 1. 정확한 매치 (최고 점수)
+                                            innerB.should(s -> s.match(match -> match
+                                                    .field("address")
+                                                    .query(address)
+                                                    .boost(10.0f)  // 정확한 매치 점수 높임
+                                            ));
+
+                                            // 짧은 주소가 아닐 때만 오타 허용 검색 실행
+                                            if (!isShortAddress) {
+                                                // 2-1. 첫 글자 일치 + 1개 오타 허용
+                                                innerB.should(s -> s.fuzzy(fuzzy -> fuzzy
+                                                        .field("address")
+                                                        .value(address)
+                                                        .fuzziness("1")
+                                                        .prefixLength(1)  // 첫 글자는 반드시 일치
+                                                        .maxExpansions(10)
+                                                        .boost(5.0f)
+                                                ));
+
+                                                // 2-2. 첫 글자 일치 + 더 관대한 오타 허용 (한글 오타 대응)
+                                                innerB.should(s -> s.fuzzy(fuzzy -> fuzzy
+                                                        .field("address")
+                                                        .value(address)
+                                                        .fuzziness("AUTO")  // 길이에 따라 자동 조정
+                                                        .prefixLength(1)
+                                                        .maxExpansions(15)
+                                                        .boost(4.5f)
+                                                ));
+
+                                                // 3. 2개 오타 허용 (더 엄격한 조건)
+                                                if (address.length() >= 5) {  // 5글자 이상일 때만
+                                                    innerB.should(s -> s.fuzzy(fuzzy -> fuzzy
+                                                            .field("address")
+                                                            .value(address)
+                                                            .fuzziness("2")
+                                                            .prefixLength(2)  // 첫 2글자는 반드시 일치
+                                                            .maxExpansions(5)  // 더 제한적
+                                                            .boost(3.0f)
+                                                    ));
+                                                }
+
+                                                // 4. 부분 매치 (더 엄격한 조건)
+                                                if (address.length() >= 4) {  // 4글자 이상일 때만
+                                                    innerB.should(s -> s.match(match -> match
+                                                            .field("address")
+                                                            .query(address)
+                                                            .operator(co.elastic.clients.elasticsearch._types.query_dsl.Operator.And)  // 모든 단어 포함
+                                                            .fuzziness("1")
+                                                            .boost(2.0f)
+                                                    ));
+                                                }
+                                            }
+
+                                            return innerB.minimumShouldMatch("1");
+                                        })
+                                )
+                                .must(m -> m.term(t -> t.field("state.keyword").value("APPLY")))
+                        )
+                )
+                .build();
     }
 
     // 타입 필터 추가
