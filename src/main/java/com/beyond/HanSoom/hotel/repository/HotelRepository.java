@@ -61,4 +61,6 @@ public interface HotelRepository extends JpaRepository<Hotel, Long> {
     int countByUser(User user);
 
     Hotel findByUser(User user);
+
+    List<Hotel> findTop30ByStateOrderByReservationCountDesc(HotelState state);
 }
