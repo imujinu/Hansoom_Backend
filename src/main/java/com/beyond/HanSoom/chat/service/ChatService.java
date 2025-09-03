@@ -1,7 +1,9 @@
 package com.beyond.HanSoom.chat.service;
 
 import com.beyond.HanSoom.chat.domain.*;
+import com.beyond.HanSoom.chat.dto.req.ChatActivateReqDto;
 import com.beyond.HanSoom.chat.dto.req.ChatAnnouncementReqDto;
+import com.beyond.HanSoom.chat.dto.res.ChatAnnouncementResDto;
 import com.beyond.HanSoom.chat.dto.res.*;
 import com.beyond.HanSoom.chat.repository.*;
 import com.beyond.HanSoom.hotel.domain.Hotel;
@@ -381,12 +383,29 @@ public class ChatService {
     }
 
 
-    public List<ChatAnnouncement> addChatAnnouncement(ChatAnnouncementReqDto dto) {
-         ChatRoom chatRoom = chatRoomRepository.findById(dto.getChatRoomId()).orElseThrow(()-> new EntityNotFoundException("존재하지 않는 채팅방입니다."));
-         ChatAnnouncement chatAnnouncement = new ChatAnnouncementReqDto().toEntity(dto,chatRoom);
-         chatAnnouncementRepository.save(chatAnnouncement);
-         List<ChatAnnouncement> list = chatAnnouncementRepository.findAllByChatRoom(chatRoom);
+    public ChatAnnouncementResDto addChatAnnouncement(ChatAnnouncementReqDto dto) {
+         Hotel hotel = hotelRepository.findById(dto.getHotelId()).orElseThrow(()-> new EntityNotFoundException("존재하지 않는 호텔입니다."));
+         ChatAnnouncement chatAnnouncement = new ChatAnnouncementReqDto().toEntity(dto,hotel);
+         ChatAnnouncement ch = chatAnnouncementRepository.save(chatAnnouncement);
+         return new ChatAnnouncementResDto().fromEntity(ch, hotel);
 
-         return list;
+
+    }
+
+    public List<ChatAnnouncementResDto> getChatAnnouncements() {
+         Hotel hotel = hotelRepository.findByUser(getUser());
+         List<ChatAnnouncement> chatAnnouncements = chatAnnouncementRepository.findAllByHotel(hotel);
+         return chatAnnouncements.stream().map(ca->new ChatAnnouncementResDto().fromEntity(ca,hotel)).collect(Collectors.toList());
+    }
+
+    public void deleteChatAnnouncements(Long id) {
+         chatAnnouncementRepository.deleteById(id);
+    }
+
+    public void activateChatAnnouncements(ChatActivateReqDto dto) {
+         for(Long id : dto.getIds()){
+             ChatAnnouncement chatAnnouncement = chatAnnouncementRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("존재하지 않는 공지사항 입니다."));
+             chatAnnouncement.changeActive(dto.getActive());
+         }
     }
 }

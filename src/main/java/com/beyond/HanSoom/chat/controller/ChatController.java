@@ -1,7 +1,8 @@
 package com.beyond.HanSoom.chat.controller;
 
-import com.beyond.HanSoom.chat.domain.ChatAnnouncement;
+import com.beyond.HanSoom.chat.dto.req.ChatActivateReqDto;
 import com.beyond.HanSoom.chat.dto.req.ChatAnnouncementReqDto;
+import com.beyond.HanSoom.chat.dto.res.ChatAnnouncementResDto;
 import com.beyond.HanSoom.chat.dto.res.*;
 import com.beyond.HanSoom.chat.service.ChatPublishService;
 import com.beyond.HanSoom.chat.service.ChatService;
@@ -99,8 +100,26 @@ public class ChatController {
     // 공지사항 추가
     @PostMapping("/host/announcement")
     public ResponseEntity<?> addChatAnnouncement(@RequestBody ChatAnnouncementReqDto dto){
-        List<ChatAnnouncement> dtos = chatService.addChatAnnouncement(dto);
+        ChatAnnouncementResDto dtos = chatService.addChatAnnouncement(dto);
 
         return new ResponseEntity<>(new CommonSuccessDto(dtos, HttpStatus.OK.value(), "공지사항 추가 완료"), HttpStatus.OK);
+    }
+
+    @GetMapping("/host/announcements")
+    public ResponseEntity<?> getChatAnnouncements(){
+        List<ChatAnnouncementResDto> dtos = chatService.getChatAnnouncements();
+        return new ResponseEntity<>(new CommonSuccessDto(dtos, HttpStatus.OK.value(), "공지사항 조회 완료"), HttpStatus.OK);
+    }
+
+    @DeleteMapping("/host/announcement/delete")
+    public ResponseEntity<?> deleteChatAnnouncements(@RequestParam Long id){
+        chatService.deleteChatAnnouncements(id);
+        return new ResponseEntity<>(new CommonSuccessDto("", HttpStatus.OK.value(), "공지사항 삭제 성공"), HttpStatus.OK);
+    }
+
+    @PatchMapping("/host/announcements/activate")
+    public ResponseEntity<?> activateChatAnnouncements(@RequestBody ChatActivateReqDto dto){
+        chatService.activateChatAnnouncements(dto);
+        return new ResponseEntity<>(new CommonSuccessDto("", HttpStatus.OK.value(), "공지사항 비활성화 성공"), HttpStatus.OK);
     }
 }
