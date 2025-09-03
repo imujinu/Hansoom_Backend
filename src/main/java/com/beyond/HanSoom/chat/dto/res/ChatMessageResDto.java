@@ -1,9 +1,6 @@
-package com.beyond.HanSoom.chat.dto;
+package com.beyond.HanSoom.chat.dto.res;
 
 import lombok.*;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor

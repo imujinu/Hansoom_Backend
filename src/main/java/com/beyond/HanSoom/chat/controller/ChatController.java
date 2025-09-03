@@ -1,10 +1,12 @@
 package com.beyond.HanSoom.chat.controller;
 
-import com.beyond.HanSoom.chat.dto.*;
+import com.beyond.HanSoom.chat.dto.req.ChatActivateReqDto;
+import com.beyond.HanSoom.chat.dto.req.ChatAnnouncementReqDto;
+import com.beyond.HanSoom.chat.dto.res.ChatAnnouncementResDto;
+import com.beyond.HanSoom.chat.dto.res.*;
 import com.beyond.HanSoom.chat.service.ChatPublishService;
 import com.beyond.HanSoom.chat.service.ChatService;
 import com.beyond.HanSoom.common.dto.CommonSuccessDto;
-import com.beyond.HanSoom.hotel.service.HotelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,13 +22,6 @@ public class ChatController {
     private final ChatService chatService;
     private final ChatPublishService producer;
     private final SimpMessageSendingOperations messageTemplate;
-
-//    @MessageMapping("/{roomId}")
-//    public void sendMessage(ChatMessageDto message) {
-//        // 서버 수신 시각 기준으로 timestamp 보정
-//        System.out.println(message);
-//       producer.publish(message);
-//    }
 
     // 예약완료 후 1:1 채팅방 생성
     @PostMapping("/room/create/{reservationId}")
@@ -53,14 +48,6 @@ public class ChatController {
         chatService.messageRead(roomId);
         return ResponseEntity.ok().build();
     }
-
-
-  /*  // 예약 완료 시 1:1 채팅방 생성
-    @PostMapping("/room/private/create")
-    public ResponseEntity<?> getOrCreatePrivateRoom(@RequestParam Long otherMemberId){
-        Long roomId = chatService.getOrCreatePrivateRoom(otherMemberId);
-        return new ResponseEntity<>(roomId, HttpStatus.OK);
-    }*/
 
     //나의 채팅 방 조회
     @GetMapping("/room/private/list")
@@ -96,13 +83,6 @@ public class ChatController {
         return new ResponseEntity<>(new CommonSuccessDto(dto, HttpStatus.OK.value(), "1:1 채팅 조회 완료"), HttpStatus.OK);
     }
 
-//    //호스트 호텔 그룹 채팅 내역 조회
-//    @GetMapping("/host/group-{hotelId}")
-//    public ResponseEntity<?> getHostGroupChatRoom(@PathVariable Long hotelId) {
-//        ChatHostChatRoomResDto dto = chatService.getChatHistory(hotelId);
-//        return new ResponseEntity<>(new CommonSuccessDto(dto, HttpStatus.OK.value(), "단체 채팅 조회 완료"), HttpStatus.OK);
-//    }
-
     //호스트 단체 채팅 생성
     @PostMapping("/host/{hotelId}")
     public ResponseEntity<?> createHostGroupChat(@PathVariable Long hotelId) {
@@ -117,4 +97,29 @@ public class ChatController {
         return new ResponseEntity<>(new CommonSuccessDto(dtos, HttpStatus.OK.value(), "단체 채팅 멤버 조회 완료"), HttpStatus.OK);
     }
 
+    // 공지사항 추가
+    @PostMapping("/host/announcement")
+    public ResponseEntity<?> addChatAnnouncement(@RequestBody ChatAnnouncementReqDto dto){
+        ChatAnnouncementResDto dtos = chatService.addChatAnnouncement(dto);
+
+        return new ResponseEntity<>(new CommonSuccessDto(dtos, HttpStatus.OK.value(), "공지사항 추가 완료"), HttpStatus.OK);
+    }
+
+    @GetMapping("/host/announcements")
+    public ResponseEntity<?> getChatAnnouncements(){
+        List<ChatAnnouncementResDto> dtos = chatService.getChatAnnouncements();
+        return new ResponseEntity<>(new CommonSuccessDto(dtos, HttpStatus.OK.value(), "공지사항 조회 완료"), HttpStatus.OK);
+    }
+
+    @DeleteMapping("/host/announcement/delete")
+    public ResponseEntity<?> deleteChatAnnouncements(@RequestParam Long id){
+        chatService.deleteChatAnnouncements(id);
+        return new ResponseEntity<>(new CommonSuccessDto("", HttpStatus.OK.value(), "공지사항 삭제 성공"), HttpStatus.OK);
+    }
+
+    @PatchMapping("/host/announcements/activate")
+    public ResponseEntity<?> activateChatAnnouncements(@RequestBody ChatActivateReqDto dto){
+        chatService.activateChatAnnouncements(dto);
+        return new ResponseEntity<>(new CommonSuccessDto("", HttpStatus.OK.value(), "공지사항 비활성화 성공"), HttpStatus.OK);
+    }
 }

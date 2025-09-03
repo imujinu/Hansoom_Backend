@@ -1,6 +1,6 @@
 package com.beyond.HanSoom.chat.domain;
 
-import com.beyond.HanSoom.chat.dto.ChatMessageResDto;
+import com.beyond.HanSoom.chat.dto.res.ChatMessageResDto;
 import com.beyond.HanSoom.common.domain.BaseTimeEntity;
 import com.beyond.HanSoom.user.domain.User;
 import jakarta.persistence.*;

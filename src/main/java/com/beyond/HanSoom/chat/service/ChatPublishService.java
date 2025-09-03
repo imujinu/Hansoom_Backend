@@ -1,6 +1,6 @@
 package com.beyond.HanSoom.chat.service;
 
-import com.beyond.HanSoom.chat.dto.ChatMessageReqDto;
+import com.beyond.HanSoom.chat.dto.res.ChatMessageReqDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -8,8 +8,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.stream.*;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-
-import java.util.Map;
 
 @Service
 public class ChatPublishService {

@@ -1,24 +1,19 @@
 package com.beyond.HanSoom.chat.service;
 
-import com.beyond.HanSoom.chat.domain.ChatMessage;
-import com.beyond.HanSoom.chat.domain.ChatReadStatus;
-import com.beyond.HanSoom.chat.domain.ChatRoom;
-import com.beyond.HanSoom.chat.domain.ChatParticipant;
-import com.beyond.HanSoom.chat.dto.*;
-import com.beyond.HanSoom.chat.repository.ChatMessageRepository;
-import com.beyond.HanSoom.chat.repository.ChatParticipantRepository;
-import com.beyond.HanSoom.chat.repository.ChatReadStatusRepository;
-import com.beyond.HanSoom.chat.repository.ChatRoomRepository;
+import com.beyond.HanSoom.chat.domain.*;
+import com.beyond.HanSoom.chat.dto.req.ChatActivateReqDto;
+import com.beyond.HanSoom.chat.dto.req.ChatAnnouncementReqDto;
+import com.beyond.HanSoom.chat.dto.res.ChatAnnouncementResDto;
+import com.beyond.HanSoom.chat.dto.res.*;
+import com.beyond.HanSoom.chat.repository.*;
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.hotel.repository.HotelRepository;
 import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.reservation.repository.ReservationRepository;
 import com.beyond.HanSoom.user.domain.User;
-import com.beyond.HanSoom.user.domain.UserRole;
 import com.beyond.HanSoom.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +23,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,6 +36,7 @@ public class ChatService {
      private final UserRepository userRepository;
      private final ReservationRepository reservationRepository;
      private final HotelRepository hotelRepository;
+     private final ChatAnnouncementRepository chatAnnouncementRepository;
 
 
      public void saveMessage(ChatMessageResDto dto) {
@@ -185,13 +180,18 @@ public class ChatService {
                     .stream()
                     .map(cp -> {
                         ChatRoom chatRoom = cp.getChatRoom();
-                        return ChatMyChatroomResDto.builder()
-                                .roomId(chatRoom.getId())
-                                .hotelName(chatRoom.getHotel().getHotelName())
-                                .isGroupChat(chatRoom.getIsGroupChat())
-                                .unReadCount(getUnReadCount(chatRoom, user))
-                                .participants(chatParticipantRepository.countByChatRoom(chatRoom))
-                                .build();
+                        Long unReadCount = getUnReadCount(chatRoom,user);
+                        Optional<ChatMessage> message = Optional.ofNullable(chatRoom.getChatMessageList()).filter(list -> !list.isEmpty()).map(list -> list.get(list.size()-1));
+                        LocalDateTime lastMessageTime = message.get().getCreatedTime();
+                        String lastMessage = message.get().getContent();
+
+                        String isOnline = chatRoom.getParticipantList().stream()
+                                .filter(p-> p.getUser().equals(chatRoom.getHotel().getUser()))
+                                .map(ChatParticipant::getIsOnline)
+                                .findFirst()
+                                .orElse(null);
+
+                        return new ChatMyChatroomResDto().fromEntity(chatRoom, unReadCount,lastMessage, lastMessageTime,isOnline);
                     })
                     .toList();
             System.out.println("호스트==========" + dtos);
@@ -244,7 +244,7 @@ public class ChatService {
              if(chatRoom!=null){
 
                  Long unReadCount = getUnReadCount(chatRoom, user);
-                 chatRooms.add(new ChatMyChatroomResDto().fromEntity(chatRoom,unReadCount));
+//                 chatRooms.add(new ChatMyChatroomResDto().fromEntity(chatRoom,unReadCount));
              }
              }
 
@@ -383,4 +383,29 @@ public class ChatService {
     }
 
 
+    public ChatAnnouncementResDto addChatAnnouncement(ChatAnnouncementReqDto dto) {
+         Hotel hotel = hotelRepository.findById(dto.getHotelId()).orElseThrow(()-> new EntityNotFoundException("존재하지 않는 호텔입니다."));
+         ChatAnnouncement chatAnnouncement = new ChatAnnouncementReqDto().toEntity(dto,hotel);
+         ChatAnnouncement ch = chatAnnouncementRepository.save(chatAnnouncement);
+         return new ChatAnnouncementResDto().fromEntity(ch, hotel);
+
+
+    }
+
+    public List<ChatAnnouncementResDto> getChatAnnouncements() {
+         Hotel hotel = hotelRepository.findByUser(getUser());
+         List<ChatAnnouncement> chatAnnouncements = chatAnnouncementRepository.findAllByHotel(hotel);
+         return chatAnnouncements.stream().map(ca->new ChatAnnouncementResDto().fromEntity(ca,hotel)).collect(Collectors.toList());
+    }
+
+    public void deleteChatAnnouncements(Long id) {
+         chatAnnouncementRepository.deleteById(id);
+    }
+
+    public void activateChatAnnouncements(ChatActivateReqDto dto) {
+         for(Long id : dto.getIds()){
+             ChatAnnouncement chatAnnouncement = chatAnnouncementRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("존재하지 않는 공지사항 입니다."));
+             chatAnnouncement.changeActive(dto.getActive());
+         }
+    }
 }

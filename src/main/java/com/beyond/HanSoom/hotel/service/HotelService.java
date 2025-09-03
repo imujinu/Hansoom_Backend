@@ -37,6 +37,7 @@ import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -806,6 +807,93 @@ public class HotelService {
 
         if (dayCount == 0) return 0; // 방어 코드
         return totalPrice / dayCount;
+    }
+
+    public List<HotelListResponseDto> popularHotel(HotelPopularRequestDto searchDto) {
+        List<Hotel> hotels = hotelRepository.findTop30ByStateOrderByReservationCountDesc(HotelState.APPLY);;
+
+        List<HotelListResponseDto> dtoList = new ArrayList<>(hotels.stream()
+                // 호텔에 객실이 존재하는지, 그리고 해당 객실에 예약 가능한 재고가 있는지 확인합니다.
+                .filter(hotel -> hotel.getRooms().stream().anyMatch(room ->
+                        isRoomAvailablePop(room, hotel.getId(), searchDto)
+                ))
+                // 각 호텔별로 가장 저렴한 객실 가격을 찾아 DTO로 변환합니다.
+                .flatMap(hotel -> {
+                    // 조건에 맞는 객실들 중 평균가가 가장 저렴한 객실을 찾습니다.
+                    OptionalInt minAvgPrice = hotel.getRooms().stream()
+                            .filter(room -> isRoomAvailablePop(room, hotel.getId(), searchDto))
+                            .mapToInt(room -> calculateAveragePrice(room, searchDto.getCheckIn(), searchDto.getCheckOut()))
+                            .min();
+
+                    return minAvgPrice.isPresent()
+                            ? Stream.of(HotelListResponseDto.fromEntity(hotel, minAvgPrice.getAsInt()))
+                            : Stream.empty();
+                })
+                .limit(10)
+                .toList());
+
+        return dtoList;
+    }
+
+    public List<List<HotelListResponseDto>> popularPlaceHotel(HotelPopularRequestDto searchDto) {
+        List<String> touristSpots = new ArrayList<>();
+        touristSpots.add("서울");
+        touristSpots.add("제주도");
+        touristSpots.add("부산");
+        touristSpots.add("경주");
+
+        List<List<HotelListResponseDto>> popularPlaceList = new ArrayList<>();
+
+        for(String s : touristSpots) {
+            searchDto.setAddress(s);
+            Specification<Hotel> spec = HotelSpecification.withSearchConditionsPop(searchDto);
+            Pageable pageable = PageRequest.of(0, 30, Sort.by("reservationCount").descending());
+            List<Hotel> hotels = hotelRepository.findAll(spec, pageable).getContent();
+
+            List<HotelListResponseDto> dtoList = new ArrayList<>(hotels.stream()
+                    // 호텔에 객실이 존재하는지, 그리고 해당 객실에 예약 가능한 재고가 있는지 확인합니다.
+                    .filter(hotel -> hotel.getRooms().stream().anyMatch(room ->
+                            isRoomAvailablePop(room, hotel.getId(), searchDto)
+                    ))
+                    // 각 호텔별로 가장 저렴한 객실 가격을 찾아 DTO로 변환합니다.
+                    .flatMap(hotel -> {
+                        // 조건에 맞는 객실들 중 평균가가 가장 저렴한 객실을 찾습니다.
+                        OptionalInt minAvgPrice = hotel.getRooms().stream()
+                                .filter(room -> isRoomAvailablePop(room, hotel.getId(), searchDto))
+                                .mapToInt(room -> calculateAveragePrice(room, searchDto.getCheckIn(), searchDto.getCheckOut()))
+                                .min();
+
+                        return minAvgPrice.isPresent()
+                                ? Stream.of(HotelListResponseDto.fromEntity(hotel, minAvgPrice.getAsInt()))
+                                : Stream.empty();
+                    })
+                    .limit(10)
+                    .toList());
+
+            popularPlaceList.add(dtoList);
+        }
+
+        return popularPlaceList;
+    }
+
+    private boolean isRoomAvailablePop(Room room, Long hotelId, HotelPopularRequestDto searchDto) {
+        if (room.getState() == HotelState.REMOVE) {
+            return false;
+        }
+        if (room.getMaximumPeople() < searchDto.getPeople()) {
+            return false;
+        }
+
+        ReservationDto dto = ReservationDto.builder()
+                .hotelId(hotelId)
+                .roomId(room.getId())
+                .checkIn(searchDto.getCheckIn())
+                .checkOut(searchDto.getCheckOut())
+                .maxStock(room.getRoomCount())
+                .build();
+
+        int available = reservationInventoryService.getInventory(dto);
+        return available > 0;
     }
 
 

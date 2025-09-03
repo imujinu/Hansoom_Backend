@@ -69,4 +69,6 @@ public interface HotelRepository extends JpaRepository<Hotel, Long> {
     List<Hotel> findByIdInWithRoomsAndReviewSummary(@Param("hotelIds") List<Long> hotelIds);
 
     Hotel findByUser(User user);
+
+    List<Hotel> findTop30ByStateOrderByReservationCountDesc(HotelState state);
 }
