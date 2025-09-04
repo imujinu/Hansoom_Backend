@@ -82,4 +82,8 @@ public class Hotel extends BaseTimeEntity {
     public void updateImage(String newHotelImageUrl) {
         this.image = newHotelImageUrl;
     }
+
+    public void updateCount(){
+        this.reservationCount++;
+    }
 }

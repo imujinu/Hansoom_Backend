@@ -27,7 +27,7 @@ public class ChatAnnouncementResDto {
                 .id(ch.getId())
                 .hotelId(hotel.getId())
                 .title(ch.getTitle())
-                .content(ch.getTitle())
+                .content(ch.getContent())
                 .isActive(ch.getIsActive())
                 .chatType(ch.getChatType())
                 .createdAt(ch.getCreatedTime())
