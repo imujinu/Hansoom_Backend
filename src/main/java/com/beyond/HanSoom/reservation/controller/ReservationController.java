@@ -63,7 +63,11 @@ public class ReservationController {
         Page<ReservationResDto> resDtos = reservationService.findAll(pageable);
         return new ResponseEntity<>(resDtos, HttpStatus.OK);
     }
-
+    @GetMapping("/host/findAll")
+    public ResponseEntity<?> findHostAll(@PageableDefault(value = 5, sort = "id", direction = Sort.Direction.DESC)Pageable pageable){
+        Page<ReservationResDto> resDtos = reservationService.hostFindAll(pageable);
+        return new ResponseEntity<>(resDtos, HttpStatus.OK);
+    }
     @PostMapping("/find")
     public ResponseEntity<?> find(@RequestBody ReservationFindReqDto dto){
         ReservationCacheResDto reservation = reservationService.find(dto.getReservationId());

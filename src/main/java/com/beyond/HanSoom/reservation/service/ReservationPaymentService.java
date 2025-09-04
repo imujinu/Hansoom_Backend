@@ -143,7 +143,7 @@ public class ReservationPaymentService {
                 queueReservationService.setTtl(keys.get(i),  ttlDate);
             }
             reservation.changeState(State.RESERVED);
-
+            reservation.getHotel().updateCount();
             // 사용자, 호스트 알림 저장 (전송은 호스트만)
             notificationService.createNotiNewBookingForHost(user, reservation);
             notificationService.createNotiBookingConfirmed(user, reservation);
