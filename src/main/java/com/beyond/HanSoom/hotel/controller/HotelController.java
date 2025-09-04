@@ -106,13 +106,13 @@ public class HotelController {
         );
     }
 
-    @GetMapping("/myhotelcount")
+    @GetMapping("/myhotelfind")
     @PreAuthorize("hasRole('HOST')")
-    public ResponseEntity<?> myHotelCount() {
-        int count = hotelService.myHotelCount();
+    public ResponseEntity<?> myHotelFind() {
+        HotelStateUpdateDto dto = hotelService.myHotelCount();
         return new ResponseEntity<>(
                 CommonSuccessDto.builder()
-                        .result(count)
+                        .result(dto)
                         .status_code(HttpStatus.OK.value())
                         .status_message("호텔 리스트 조회")
                         .build(),

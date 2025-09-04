@@ -410,13 +410,15 @@ public class HotelService {
         return HotelDetailResponseDto.fromEntity(hotel, roomDto);
     }
 
-    public int myHotelCount() {
+    public HotelStateUpdateDto myHotelCount() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("등록된 사용자가 없습니다."));
 
         int count = hotelRepository.countByUser(user);
+        if(count==0) return HotelStateUpdateDto.builder().hotelId(0L).build();
+        Hotel hotel = hotelRepository.findByUser(user);
 
-        return count;
+        return HotelStateUpdateDto.builder().hotelId(hotel.getId()).state(hotel.getState()).build();
     }
 
 //    Admin의 호텔 단건 조회
