@@ -1,5 +1,6 @@
 package com.beyond.HanSoom.chat.dto.res;
 
+import com.beyond.HanSoom.user.domain.User;
 import lombok.*;
 
 @Data
@@ -12,8 +13,12 @@ public class ChatMessageResDto {
     private String timestamp;
     private String senderEmail;
     private String senderName;
+    private String profileImage;
 
-    public void updateSenderName(String name){
-        this.senderName=name;
+
+
+    public void updateUser(User user) {
+        this.senderName=user.getName();
+        this.profileImage=user.getProfileImage();
     }
 }

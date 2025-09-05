@@ -132,4 +132,12 @@ public class ChatController {
         List<ChatAnnouncementResDto> dtos = chatService.getChatRoomAnnouncements(roomId);
         return new ResponseEntity<>(new CommonSuccessDto(dtos, HttpStatus.OK.value(), "공지사항 조회 완료"), HttpStatus.OK);
     }
+
+    //사용자가 가입된 모든 채팅방 번호 조회
+    @GetMapping("/user/rooms")
+    public ResponseEntity<?> getAllChatRooms(){
+        List<Long> chatRoomIds = chatService.getAllChatRooms();
+        return new ResponseEntity<>(new CommonSuccessDto(chatRoomIds, HttpStatus.OK.value(), "채팅방 아이디 조회 완료"), HttpStatus.OK);
+    }
+
 }
