@@ -52,11 +52,10 @@ public class ReservationService {
 
     public Page<ReservationResDto> findAll(Pageable pageable) {
         String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().iterator().next().getAuthority().split("_")[1];
-        if(role.equals(UserRole.USER) || role.equals(UserRole.ADMIN)){
+
 
         User user = getUser();
         LocalDate now = LocalDate.now();
-
 
         // 1️⃣ 유저 예약 전체 조회
         List<Reservation> allReservations = reservationRepository.findAllByUser(user);
@@ -95,54 +94,49 @@ public class ReservationService {
         }
 
         return new PageImpl<>(pageList, pageable, allDtos.size());
-        }
-
-
-        else{
-            User user = getUser();
-            LocalDate now = LocalDate.now();
-            Hotel hostHotel = hotelRepository.findByUser(user);
-
-            // 1️⃣ 유저 예약 전체 조회
-            List<Reservation> allReservations = reservationRepository.findAllByHotel(hostHotel);
-
-            // 2️⃣ 상태 필터 후 DTO 변환
-            List<ReservationResDto> allDtos = allReservations.stream()
-                    .map(r -> {
-                        Hotel hotel = r.getHotel();
-                        String status = getStatus(r,now);
-                        List<ChatRoom> chatRooms = chatRoomRepository.findAllByHotelAndIsGroupChat(hotel,"N");
-                        ChatRoom chatRoom = null;
-                        for (ChatRoom cr : chatRooms) {
-                            for (ChatParticipant cp : cr.getParticipantList()) {
-                                if (cp.getUser().equals(user)) {
-                                    chatRoom = cr;
-                                    break;
-                                }
-                            }
-                        }
-                        BigDecimal hotelRating = hotelReviewSummaryRepository.findByHotel(hotel).getRatingSum();
-                        Long chatRoomId = chatRoom != null ? chatRoom.getId() : null;
-
-                        return new ReservationResDto().fromEntity(r, hotelRating, status, chatRoomId);
-                    })
-                    .collect(Collectors.toList());
-
-            // 3️⃣ Pageable 적용
-            int start = (int) pageable.getOffset();
-            int end = Math.min(start + pageable.getPageSize(), allDtos.size());
-
-            List<ReservationResDto> pageList;
-            if (start > allDtos.size()) {
-                pageList = Collections.emptyList();
-            } else {
-                pageList = allDtos.subList(start, end);
-            }
-
-            return new PageImpl<>(pageList, pageable, allDtos.size());
-        }
     }
 
+    public Page<ReservationResDto> hostFindAll(Pageable pageable){
+        User user = getUser();
+        LocalDate now = LocalDate.now();
+        Hotel hostHotel = hotelRepository.findByUser(user);
+
+        List<Reservation> allReservations = reservationRepository.findAllByHotel(hostHotel);
+
+        List<ReservationResDto> allDtos = allReservations.stream()
+                .map(r -> {
+                    Hotel hotel = r.getHotel();
+                    String status = getStatus(r,now);
+                    List<ChatRoom> chatRooms = chatRoomRepository.findAllByHotelAndIsGroupChat(hotel,"N");
+                    ChatRoom chatRoom = null;
+                    for (ChatRoom cr : chatRooms) {
+                        for (ChatParticipant cp : cr.getParticipantList()) {
+                            if (cp.getUser().equals(user)) {
+                                chatRoom = cr;
+                                break;
+                            }
+                        }
+                    }
+                    BigDecimal hotelRating = hotelReviewSummaryRepository.findByHotel(hotel).getRatingSum();
+                    Long chatRoomId = chatRoom != null ? chatRoom.getId() : null;
+
+                    return new ReservationResDto().fromEntity(r, hotelRating, status, chatRoomId);
+                })
+                .collect(Collectors.toList());
+
+        // 3️⃣ Pageable 적용
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), allDtos.size());
+
+        List<ReservationResDto> pageList;
+        if (start > allDtos.size()) {
+            pageList = Collections.emptyList();
+        } else {
+            pageList = allDtos.subList(start, end);
+        }
+
+        return new PageImpl<>(pageList, pageable, allDtos.size());
+    }
 
     private static String getStatus(Reservation r, LocalDate now) {
         String status = "";

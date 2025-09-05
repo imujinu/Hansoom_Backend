@@ -13,5 +13,5 @@ import java.util.List;
 @Builder
 public class ChatActivateReqDto {
     private List<Long> ids;
-    private String active;
+    private String isActive;
 }
