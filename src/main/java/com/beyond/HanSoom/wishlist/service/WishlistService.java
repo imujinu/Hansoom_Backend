@@ -1,11 +1,15 @@
 package com.beyond.HanSoom.wishlist.service;
 
 import com.beyond.HanSoom.hotel.repository.HotelRepository;
+import com.beyond.HanSoom.user.domain.User;
 import com.beyond.HanSoom.user.repository.UserRepository;
 import com.beyond.HanSoom.wishlist.domain.Wishlist;
 import com.beyond.HanSoom.wishlist.dto.WishlistListDto;
 import com.beyond.HanSoom.wishlist.repository.WishlistRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +24,10 @@ public class WishlistService {
 
     // 찜 추가
     @Transactional
-    public void addWishlist(long userId, long hotelId) {
+    public void addWishlist(long hotelId) {
+        User user = userRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName()).orElseThrow(() -> new EntityNotFoundException("없는 회원입니다."));
+        Long userId = user.getId();
+
         boolean exists = wishlistRepository.findByUserIdAndHotelId(userId, hotelId).isPresent();
         if (!exists) {
             wishlistRepository.save(Wishlist.builder()
@@ -34,7 +41,10 @@ public class WishlistService {
 
     // 찜 해제
     @Transactional
-    public void removeWishlist(long userId, long hotelId) {
+    public void removeWishlist(long hotelId) {
+        User user = userRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName()).orElseThrow(() -> new EntityNotFoundException("없는 회원입니다."));
+        Long userId = user.getId();
+
         wishlistRepository.findByUserIdAndHotelId(userId, hotelId)
                 .ifPresent(wishlistRepository::delete);
     }
@@ -49,7 +59,10 @@ public class WishlistService {
 
     // 찜 상세조회
     @Transactional(readOnly = true)
-    public List<WishlistListDto> getWishlist(long userId) {
+    public List<WishlistListDto> getWishlist() {
+        User user = userRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName()).orElseThrow(() -> new EntityNotFoundException("없는 회원입니다."));
+        Long userId = user.getId();
+
         return wishlistRepository.findByUserId(userId).stream()
                 .map(WishlistListDto::fromEntity)
                 .toList();

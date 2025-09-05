@@ -21,31 +21,31 @@ public class WishlistController {
     // 찜하기 추가
     @PostMapping("/like")
     public ResponseEntity<?> like(@RequestBody WishlistLikeDto dto){
-        wishlistService.addWishlist(dto.getUserId(), dto.getHotelId());
+        wishlistService.addWishlist(dto.getHotelId());
         return new ResponseEntity<>(new CommonSuccessDto("OK",HttpStatus.CREATED.value(), "wishlist is added"), HttpStatus.CREATED);
     }
 
     // 찜하기 취소
-    @DeleteMapping("/dislike/{userId}")
+    @DeleteMapping("/dislike")
     public ResponseEntity<?> dislike(@RequestBody WishlistLikeDto dto){
-        wishlistService.removeWishlist(dto.getUserId(), dto.getHotelId());
+        wishlistService.removeWishlist(dto.getHotelId());
         return new ResponseEntity<>(new CommonSuccessDto("OK",HttpStatus.CREATED.value(), "wishlist is removed"), HttpStatus.CREATED);
     }
 
     // 찜 목록
-    @GetMapping("/list")
-    public ResponseEntity<?> getAllWishList(){
-        List<WishlistListDto> wishlist = wishlistService.getAllWishlist();
-        if (wishlist.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok(wishlist);
-    }
+//    @GetMapping("/list")
+//    public ResponseEntity<?> getAllWishList(){
+//        List<WishlistListDto> wishlist = wishlistService.getAllWishlist();
+//        if (wishlist.isEmpty()) {
+//            return ResponseEntity.noContent().build();
+//        }
+//        return ResponseEntity.ok(wishlist);
+//    }
 
     // 찜 상세목록
-    @GetMapping("/list/{userId}")
-    public ResponseEntity<?> getUserWishlist(@PathVariable Integer userId){
-        List<WishlistListDto> wishlist = wishlistService.getWishlist(userId);
+    @GetMapping("/list")
+    public ResponseEntity<?> getUserWishlist(){
+        List<WishlistListDto> wishlist = wishlistService.getWishlist();
         if (wishlist.isEmpty()){
             return ResponseEntity.noContent().build();
         }

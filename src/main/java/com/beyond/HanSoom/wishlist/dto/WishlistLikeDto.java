@@ -13,6 +13,5 @@ import lombok.NoArgsConstructor;
 @Builder
 
 public class WishlistLikeDto {
-    private long userId;
     private long hotelId;
 }
