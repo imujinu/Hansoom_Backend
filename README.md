@@ -304,6 +304,27 @@ https://github.com/user-attachments/assets/3b5c26c2-4f58-47d1-b29e-884fc1d94e79
 
   </div>
 </details>
+
+<details>
+  <summary>호스트 채팅 공지사항 등록</summary>
+  <div align="center">
+
+![호스트 공지 등록](https://github.com/user-attachments/assets/c3286910-76b3-4326-a13f-fb707545d000)
+
+<img width="926" height="289" alt="image" src="https://github.com/user-attachments/assets/7db8fdf2-3475-49cc-919b-c6dbf64f7a14" />
+
+  </div>
+</details>
+<details>
+  <summary>호스트 채팅 공지사항 비활성화</summary>
+  <div align="center">
+
+![공지 비활성화](https://github.com/user-attachments/assets/51cdcd50-359c-4aaa-9b6d-c4a9b22e9371)
+<img width="940" height="311" alt="image" src="https://github.com/user-attachments/assets/2b0a5003-22d8-4183-aeff-5b88e265c036" />
+
+  </div>
+</details>
+
 </details>
 
 <details>
@@ -370,36 +391,37 @@ https://github.com/user-attachments/assets/c0f0476c-1bf6-404b-b7a6-702d5695d98b
 
 <details>
 <summary>📅 예약</summary>
+
+
+
+<details>
+  <summary>예약 성공</summary>
+  <div align="center">
+  
+![예약](https://github.com/user-attachments/assets/14efca05-10bc-476e-b982-2ec7cf16b9ca)
+
+
+  </div>
+</details>
+
+
+<details>
+  <summary>예약 실패</summary>
+  <div align="center">
+    
+![예약실패 최종](https://github.com/user-attachments/assets/3d462ddb-8119-4073-8e02-e953c924f973)
+
+
+  </div>
+</details>
+
 <details>
   <summary>예약 대기열 생성</summary>
   <div align="center">
     
 
-https://github.com/user-attachments/assets/3527c99f-0700-465c-ab97-c37c2591f9ce
+![예약 대기열 (1)](https://github.com/user-attachments/assets/88cbbee9-2eb7-4185-9d29-bbb16f442242)
 
-
-  </div>
-</details>
-
-
-<details>
-  <summary>예약 - 결제 성공</summary>
-  <div align="center">
-   
-
-https://github.com/user-attachments/assets/947e51f7-0a34-434e-a06b-e72cafbb6952
-
-
-  </div>
-</details>
-
-
-<details>
-  <summary>예약 - 결제 실패</summary>
-  <div align="center">
-    
-
-https://github.com/user-attachments/assets/b1d031fe-6075-47ff-8933-9a99aa412c3e
 
 
   </div>
@@ -408,50 +430,59 @@ https://github.com/user-attachments/assets/b1d031fe-6075-47ff-8933-9a99aa412c3e
 <details>
   <summary>예약 내역 조회</summary>
   <div align="center">
-    <img src="https://github.com/your-repo/demo/payment.gif" alt="결제 성공 시연" width="600"/>
+
+![예약 내역](https://github.com/user-attachments/assets/31c34501-187e-4b74-b10c-8082f6a33b9d)
+
   </div>
 </details>
+
+<details>
+  <summary>예약 상세 내역 조회</summary>
+  <div align="center">
+  
+![예약 상세 내역](https://github.com/user-attachments/assets/1aa81a29-261e-4f26-9b2a-2d5728448eb7)
+
+  </div>
+</details>
+
+<details>
+  <summary>예약 호스트 연락 </summary>
+  <div align="center">
+
+
+  </div>
+</details>
+
+
+
+
+
 </details>
 
 <details>
 <summary>💬 채팅</summary>
 <details>
-  <summary>1:1 채팅 </summary>
+  <summary>채팅 </summary>
   <div align="center">
     
 
-
-
-https://github.com/user-attachments/assets/6711a4af-2a96-4c4e-bbea-d9ced595077c
-
+![채팅](https://github.com/user-attachments/assets/f9020b80-39f5-4e59-83db-0cc830e30083)
 
 
   </div>
 </details>
-
 <details>
-  <summary>그룹 채팅</summary>
+  <summary>채팅 알림 </summary>
   <div align="center">
+    
 
-
-
-
-https://github.com/user-attachments/assets/8b5edf44-99bb-459c-a17e-109dce570c06
+![채팅-알림 (1)](https://github.com/user-attachments/assets/c4c93492-c861-410b-a15c-df1674210174)
 
 
 
   </div>
 </details>
 
-<details>
-  <summary>호스트 그룹 채팅 관리</summary>
-  <div align="center">
-
-   ![호스트 채팅관리](https://github.com/user-attachments/assets/664e4e2d-c731-44fc-be71-2817bc6d08ad)
-
-
-  </div>
-</details>
 </details>
 
 <details>
