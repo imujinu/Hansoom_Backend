@@ -536,6 +536,7 @@ https://github.com/user-attachments/assets/c0f0476c-1bf6-404b-b7a6-702d5695d98b
   <summary>예약 호스트 연락 </summary>
   <div align="center">
 
+![예약-호스트 연락](https://github.com/user-attachments/assets/91d7552e-f1b7-4a9b-9b8b-e4b50edefc86)
 
   </div>
 </details>
