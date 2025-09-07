@@ -121,7 +121,7 @@ public class HotelController {
     }
 
     @GetMapping("/admin/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('HOST')")
     public ResponseEntity<?> findHotelAdmin(@PathVariable Long id) {
         HotelDetailResponseDto dto = hotelService.findHotelAdmin(id);
         return new ResponseEntity<>(
