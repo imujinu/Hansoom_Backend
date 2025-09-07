@@ -34,6 +34,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
@@ -899,4 +900,48 @@ public class HotelService {
     }
 
 
+    public List<AutoCompleteSuggestion> getAutoCompleteSuggestions(String query, String searchType, int size) {
+        try {
+            Query searchQuery = hotelSearchQueryBuilder.buildAutoCompleteQuery(query, searchType, size);
+
+
+            SearchHits<HotelDocument> searchHits = elasticsearchOperations.search(
+                    searchQuery, HotelDocument.class, IndexCoordinates.of("hotels")
+            );
+
+            return searchHits.getSearchHits().stream()
+                    .map(hit -> convertToSuggestion(hit, searchType)) // searchType 전달
+                    .filter(Objects::nonNull)
+                    .distinct() // 중복 제거
+                    .collect(Collectors.toList());
+
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
+    private AutoCompleteSuggestion convertToSuggestion(SearchHit<HotelDocument> hit, String searchType) {
+        HotelDocument hotel = hit.getContent();
+        String text = getTextBySearchType(hotel, searchType);
+
+        if (text == null || text.trim().isEmpty()) {
+            return null;
+        }
+
+        return AutoCompleteSuggestion.builder()
+                .text(text.trim())
+                .highlightedText(text.trim())
+                .build();
+    }
+
+    private String getTextBySearchType(HotelDocument hotel, String searchType) {
+        switch (searchType) {
+            case "hotel_name":
+                return hotel.getHotelName();
+            case "address":
+                return hotel.getAddressCity();
+            default:
+                return null;
+        }
+    }
 }

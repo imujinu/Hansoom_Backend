@@ -47,7 +47,7 @@ public class SecurityConfig {
                                 .accessDeniedHandler(jwtAuthorizationHandler) // 403의 경우
                 )
 
-                .authorizeHttpRequests(a -> a.requestMatchers("/user/create", "/user/login", "/user/auth/refresh", "/user/google/login", "/user/google/reLogin", "/user/kakao/login", "/payment/**","/reservation/**", "/hotel/detail/**", "/hotel/list", "/hotel/nearby", "/connect/**", "/review/hotel/**", "/reply/hotels/**", "/review/ratings/**", "/hotel/popular", "hotel/place").permitAll().anyRequest().authenticated())
+                .authorizeHttpRequests(a -> a.requestMatchers("/user/create", "/user/login", "/user/auth/refresh", "/user/google/login", "/user/google/reLogin", "/user/kakao/login", "/payment/**","/reservation/**", "/hotel/detail/**", "/hotel/list", "/hotel/nearby", "/connect/**", "/review/hotel/**", "/reply/hotels/**", "/review/ratings/**", "/hotel/popular", "/hotel/place", "/hotel/suggest").permitAll().anyRequest().authenticated())
                 .build();
     }
     // Todo - 프론트 연결

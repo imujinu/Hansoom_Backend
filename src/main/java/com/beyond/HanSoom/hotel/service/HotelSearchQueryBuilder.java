@@ -1,25 +1,18 @@
 package com.beyond.HanSoom.hotel.service;
 
-import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
-import co.elastic.clients.json.JsonData;
 import com.beyond.HanSoom.hotel.domain.HotelType;
 import com.beyond.HanSoom.hotel.dto.HotelListSearchDto;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.common.unit.Fuzziness;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.Operator;
-import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.core.query.StringQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
@@ -67,7 +60,7 @@ public class HotelSearchQueryBuilder {
                                                 .minimumShouldMatch("1")
                                         )
                                 )
-                                .must(m -> m.term(t -> t.field("state.keyword").value("APPLY")))
+                                .must(m -> m.term(t -> t.field("state").value("APPLY")))
                         )
                 )
                 .build();
@@ -94,7 +87,7 @@ public class HotelSearchQueryBuilder {
                                                 .minimumShouldMatch("1")
                                         )
                                 )
-                                .must(m -> m.term(t -> t.field("state.keyword").value("APPLY")))
+                                .must(m -> m.term(t -> t.field("state").value("APPLY")))
                         )
                 )
                 .build();
@@ -132,7 +125,7 @@ public class HotelSearchQueryBuilder {
                                                 .minimumShouldMatch("1")
                                         )
                                 )
-                                .must(m -> m.term(t -> t.field("state.keyword").value("APPLY")))
+                                .must(m -> m.term(t -> t.field("state").value("APPLY")))
                         )
                 )
                 .build();
@@ -207,7 +200,7 @@ public class HotelSearchQueryBuilder {
                                             return innerB.minimumShouldMatch("1");
                                         })
                                 )
-                                .must(m -> m.term(t -> t.field("state.keyword").value("APPLY")))
+                                .must(m -> m.term(t -> t.field("state").value("APPLY")))
                         )
                 )
                 .build();
@@ -226,5 +219,31 @@ public class HotelSearchQueryBuilder {
             return new CriteriaQuery(newCriteria);
         }
         return query;
+    }
+
+//    자동완성 쿼리 생성
+    public Query buildAutoCompleteQuery(String query, String searchType, int size) {
+        String fieldName = getFieldName(searchType);
+
+        return NativeQuery.builder()
+                .withQuery(q -> q
+                        .multiMatch(m -> m
+                                .query(query)
+                                .fields(fieldName, fieldName + "._2gram", fieldName + "._3gram")
+                                .type(co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType.BoolPrefix)
+                        )
+                )
+                .withFilter(f -> f
+                        .term(t -> t
+                                .field("state")
+                                .value("APPLY")
+                        )
+                )
+                .withPageable(PageRequest.of(0, size))
+                .build();
+    }
+
+    private String getFieldName(String searchType) {
+        return "hotel_name".equals(searchType) ? "hotel_name_suggest" : "address_city_suggest";
     }
 }
