@@ -60,5 +60,6 @@ public class StompEventListener {
 
         log.info("Session DisConnected : " + sessionId + "roomId : " + roomId);
         WebSocketSessionRegistry.unregister(accessor.getSessionId());
+        sessions.remove(accessor.getSessionId());
     }
 }

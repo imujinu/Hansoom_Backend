@@ -14,6 +14,8 @@ public class ChatMessageResDto {
     private String senderEmail;
     private String senderName;
     private String profileImage;
+    private Long remaining;
+    private boolean isWaring;
 
 
 

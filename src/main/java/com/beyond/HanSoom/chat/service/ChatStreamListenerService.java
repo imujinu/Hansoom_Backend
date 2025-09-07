@@ -1,6 +1,10 @@
 package com.beyond.HanSoom.chat.service;
 
+import com.beyond.HanSoom.chat.domain.ChatParticipant;
+import com.beyond.HanSoom.chat.domain.ChatRoom;
 import com.beyond.HanSoom.chat.dto.res.ChatMessageResDto;
+import com.beyond.HanSoom.chat.repository.ChatParticipantRepository;
+import com.beyond.HanSoom.chat.repository.ChatRoomRepository;
 import com.beyond.HanSoom.user.domain.User;
 import com.beyond.HanSoom.user.repository.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -34,11 +38,15 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
     private Subscription subscription;
     private final ChatService chatService;
     private final UserRepository userRepository;
-    public ChatStreamListenerService(@Qualifier("redisStream") RedisTemplate<String, String> redisTemplate, SimpMessagingTemplate messagingTemplate, ChatService chatService, UserRepository userRepository) {
+    private final ChatParticipantRepository chatParticipantRepository;
+    private final ChatRoomRepository chatRoomRepository;
+    public ChatStreamListenerService(@Qualifier("redisStream") RedisTemplate<String, String> redisTemplate, SimpMessagingTemplate messagingTemplate, ChatService chatService, UserRepository userRepository, ChatParticipantRepository chatParticipantRepository, ChatRoomRepository chatRoomRepository) {
         this.redisTemplate = redisTemplate;
         this.messagingTemplate = messagingTemplate;
         this.chatService = chatService;
         this.userRepository = userRepository;
+        this.chatParticipantRepository = chatParticipantRepository;
+        this.chatRoomRepository = chatRoomRepository;
     }
 
     @Override
@@ -52,8 +60,6 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
                         .pollTimeout(Duration.ofSeconds(1))
                         .build()
         );
-        System.out.println("=========listener 객체 확인 ========");
-        System.out.println("Listener Container isRunning: " + listenerContainer.isRunning());
 
 
         subscription = listenerContainer.receive(
@@ -62,11 +68,8 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
                 this
         );
 
-        System.out.println("=========subscription 객체 확인 ========");
 
         listenerContainer.start();
-        System.out.println("Subscription active:  "+subscription.isActive());
-        System.out.println("컨테이너 시작됨");
 
     }
 
@@ -112,8 +115,6 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
 
     @Override
     public void onMessage(ObjectRecord<String, String> message) {
-        System.out.println("===================");
-        System.out.println(message);
         String recordId = message.getId().getValue();
         ObjectMapper mapper = new ObjectMapper();
         ChatMessageResDto dto= null;
@@ -122,12 +123,18 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        User user = userRepository.findByEmail(dto.getSenderEmail()).orElseThrow(()->new EntityNotFoundException("존재하지 않는 유저입니다."));
 
+        User user = userRepository.findByEmail(dto.getSenderEmail()).orElseThrow(()->new EntityNotFoundException("존재하지 않는 유저입니다."));
         dto.updateUser(user);
+
+        if(dto.isWaring()){
+            ChatRoom chatroom = chatRoomRepository.findById(dto.getRoomId()).orElseThrow(()->new EntityNotFoundException("존재하지 않는 채팅방입니다."));
+            ChatParticipant chatParticipant = chatParticipantRepository.findByChatRoomAndUser(chatroom,user).orElseThrow(()->new EntityNotFoundException("존재하지 않는 채팅 참여자 입니다."));
+            chatParticipant.updateRemaining(dto.getRemaining());
+        }
         redisTemplate.opsForStream().acknowledge(streamKey, consumerGroupName, recordId);
         messagingTemplate.convertAndSend("/topic/" + dto.getRoomId(), dto);
-
+        System.out.println("메시지 수신 완료" + dto.getRoomId());
         chatService.saveMessage(dto);
 
     }
