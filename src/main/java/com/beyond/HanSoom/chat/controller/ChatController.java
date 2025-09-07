@@ -140,4 +140,12 @@ public class ChatController {
         return new ResponseEntity<>(new CommonSuccessDto(chatRoomIds, HttpStatus.OK.value(), "채팅방 아이디 조회 완료"), HttpStatus.OK);
     }
 
+    //채팅 금지 시간 조회
+    @GetMapping("/user/remaining/{roomId}")
+    public ResponseEntity<?> getRemaining(@PathVariable Long roomId){
+        Long remaining = chatService.getRemaining(roomId);
+        return new ResponseEntity<>(new CommonSuccessDto(remaining, HttpStatus.OK.value(), "채팅 금지 시간 조회 완료"), HttpStatus.OK);
+    }
+
+
 }

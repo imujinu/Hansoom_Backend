@@ -426,4 +426,11 @@ public class ChatService {
 
          return chatParticipants.stream().map(ch -> ch.getChatRoom().getId()).collect(Collectors.toList());
     }
+
+    public Long getRemaining(Long roomId) {
+         User user = getUser();
+         ChatRoom chatRoom = chatRoomRepository.findById(roomId).orElseThrow(()->new EntityNotFoundException("존재하지 않는 채팅방입니다."));
+         ChatParticipant chatParticipant = chatParticipantRepository.findByChatRoomAndUser(chatRoom,user).orElseThrow(()->new EntityNotFoundException("존재하지 않는 채팅유저입니다."));
+         return chatParticipant.getRemaining();
+    }
 }

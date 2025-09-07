@@ -12,6 +12,7 @@ import com.beyond.HanSoom.reservation.domain.State;
 import com.beyond.HanSoom.reservation.dto.res.ReservationCacheResDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResDto;
 import com.beyond.HanSoom.reservation.repository.ReservationRepository;
+import com.beyond.HanSoom.review.domain.HotelReviewSummary;
 import com.beyond.HanSoom.review.domain.Review;
 import com.beyond.HanSoom.review.repository.HotelReviewSummaryRepository;
 import com.beyond.HanSoom.review.repository.ReviewRepository;
@@ -30,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -57,10 +59,8 @@ public class ReservationService {
         User user = getUser();
         LocalDate now = LocalDate.now();
 
-        // 1️⃣ 유저 예약 전체 조회
         List<Reservation> allReservations = reservationRepository.findAllByUser(user);
 
-        // 2️⃣ 상태 필터 후 DTO 변환
         List<ReservationResDto> allDtos = allReservations.stream()
                 .map(r -> {
                     Hotel hotel = r.getHotel();
@@ -75,14 +75,13 @@ public class ReservationService {
                             }
                         }
                     }
-                    BigDecimal hotelRating = hotelReviewSummaryRepository.findByHotel(hotel).getRatingSum();
+                    BigDecimal hotelRating = hotelReviewSummaryRepository.findByHotel(hotel).getAverage();
                     Long chatRoomId = chatRoom != null ? chatRoom.getId() : null;
 
                     return new ReservationResDto().fromEntity(r, hotelRating, status, chatRoomId);
                 })
                 .collect(Collectors.toList());
 
-        // 3️⃣ Pageable 적용
         int start = (int) pageable.getOffset();
         int end = Math.min(start + pageable.getPageSize(), allDtos.size());
 
@@ -117,7 +116,7 @@ public class ReservationService {
                             }
                         }
                     }
-                    BigDecimal hotelRating = hotelReviewSummaryRepository.findByHotel(hotel).getRatingSum();
+                    BigDecimal hotelRating = hotelReviewSummaryRepository.findByHotel(hotel).getAverage();
                     Long chatRoomId = chatRoom != null ? chatRoom.getId() : null;
 
                     return new ReservationResDto().fromEntity(r, hotelRating, status, chatRoomId);
@@ -161,6 +160,7 @@ public class ReservationService {
             ReservationCacheResDto cacheReservation = reservationCacheService.getCacheReservation(id);
 
             if(cacheReservation == null){
+                System.out.println("db 정보 ");
                 Reservation reservation = reservationRepository.findById(id).orElseThrow(()->new EntityNotFoundException("예약 내역이 존재하지 않습니다."));
                 Hotel hotel = reservation.getHotel();
                 List<ChatRoom> chatRooms = chatRoomRepository.findAllByHotelAndIsGroupChat(hotel,"N");
@@ -179,10 +179,11 @@ public class ReservationService {
                     throw new EntityNotFoundException("채팅방이 존재하지 않습니다.");
                 }
 
-                List<Review> reviewList = reviewRepository.findAllByHotel(reservation.getHotel());
+                BigDecimal hotelRating = hotelReviewSummaryRepository.findByHotel(hotel).getAverage();
                 LocalDate now = LocalDate.now();
                 String state = getStatus(reservation,now);
-                ReservationCacheResDto cacheResDto = new ReservationCacheResDto().fromEntity(reservation,state  ,reviewList, chatRoom.getId());
+                int reviewCount = reviewRepository.findAllByHotel(hotel).size();
+                ReservationCacheResDto cacheResDto = new ReservationCacheResDto().fromEntity(reservation,state  ,hotelRating, reviewCount,chatRoom.getId());
                 if(reservation.getState() == State.RESERVED){
                 reservationCacheService.saveCacheReservation(cacheResDto);
                 return cacheResDto;
@@ -190,6 +191,7 @@ public class ReservationService {
                     throw new IllegalStateException("유효하지 않은 예약입니다.");
                 }
             }else{
+                System.out.println("캐싱 정보 리턴중");
                 return cacheReservation;
             }
         } catch (JsonProcessingException e) {

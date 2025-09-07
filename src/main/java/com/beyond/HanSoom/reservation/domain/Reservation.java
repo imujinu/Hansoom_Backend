@@ -60,7 +60,6 @@ public class Reservation {
     private State state = State.PENDING;
 
 
-    public void reserve(){this.state = State.RESERVED;}
 
 
     //PrePersit는 값이 DB에 저장되기 전 JPA가 감지하고 실행시켜주는 어노테이션
@@ -72,6 +71,9 @@ public class Reservation {
 
     public void changeState(State state){
         this.state = state;
+    }
+    public void stateFailed(){
+        this.state= State.FAILED;
     }
 
     public void updateCacheSet(User user, Hotel hotel , Room room){

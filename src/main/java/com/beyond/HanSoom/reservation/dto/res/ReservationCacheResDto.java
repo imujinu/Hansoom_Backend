@@ -29,7 +29,7 @@ public class ReservationCacheResDto {
     private UserDto userDto;
     private ReservationDto reservationDto;
     private String status;
-    private Long hotelRating;
+    private BigDecimal hotelRating;
     private int hotelReviewCount;
     private String roomType;
 
@@ -94,25 +94,13 @@ public class ReservationCacheResDto {
     }
 
     // Entity -> DTO 변환 메서드
-    public ReservationCacheResDto fromEntity(Reservation reservation, String status, List<Review> reviewList, Long chatRoomId) {
+    public ReservationCacheResDto fromEntity(Reservation reservation, String status, BigDecimal hotelRating, int reviews, Long chatRoomId) {
         Hotel hotel = reservation.getHotel();
         Room room = reservation.getRoom();
         User user = reservation.getUser();
         Long sum = 0L;
 
-        for(Review r : reviewList){
-            if (!reviewList.isEmpty()) {
-                sum = sum / reviewList.size();
-            } else {
-                sum = 0L; // 혹은 원하는 기본값
-            }
-        }
-        Long rating = 0L;
-        if(!reviewList.isEmpty()){
-        rating = (long) (Math.floor((sum / reviewList.size()) * 100) / 100.0);
-        }else{
-            rating = 0L;
-        }
+
         return ReservationCacheResDto.builder()
                 .reservationId(reservation.getId())
                 .chatRoomId(chatRoomId)
@@ -120,8 +108,8 @@ public class ReservationCacheResDto {
                 .hotelDto(new HotelDto().fromEntity(hotel))
                 .reservationDto(new ReservationDto().fromEntity(reservation))
                 .status(status)
-                .hotelRating(rating)
-                .hotelReviewCount(reviewList.size())
+                .hotelRating(hotelRating)
+                .hotelReviewCount(reviews)
                 .roomType(room.getType())
                 .build();
 
