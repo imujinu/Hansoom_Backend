@@ -59,12 +59,12 @@ public class ReservationController {
     }
     //예약 전체 조회
     @GetMapping("/findAll")
-    public ResponseEntity<?> findAll(@PageableDefault(value = 5, sort = "id", direction = Sort.Direction.DESC)Pageable pageable){
+    public ResponseEntity<?> findAll(@PageableDefault(value = 4, sort = "id", direction = Sort.Direction.DESC)Pageable pageable){
         Page<ReservationResDto> resDtos = reservationService.findAll(pageable);
         return new ResponseEntity<>(resDtos, HttpStatus.OK);
     }
     @GetMapping("/host/findAll")
-    public ResponseEntity<?> findHostAll(@PageableDefault(value = 5, sort = "id", direction = Sort.Direction.DESC)Pageable pageable){
+    public ResponseEntity<?> findHostAll(@PageableDefault(value = 4, sort = "id", direction = Sort.Direction.DESC)Pageable pageable){
         Page<ReservationResDto> resDtos = reservationService.hostFindAll(pageable);
         return new ResponseEntity<>(resDtos, HttpStatus.OK);
     }

@@ -9,6 +9,9 @@ import org.springframework.data.redis.connection.stream.*;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Service
 public class ChatPublishService {
     private final RedisTemplate<String, String> redisTemplate;
@@ -23,6 +26,8 @@ public class ChatPublishService {
 
     public RecordId publish(ChatMessageReqDto dto) {
         // payload를 JSON 문자열로 변환
+
+
         String json = null;
         try {
             json = new ObjectMapper().writeValueAsString(dto);
@@ -42,8 +47,9 @@ public class ChatPublishService {
         if (recordId == null) {
             throw new RuntimeException("Redis Stream record 처리 실패");
         }
-
+        System.out.println("메시지 발행완료!!");
         return recordId;
+
     }
 }
 

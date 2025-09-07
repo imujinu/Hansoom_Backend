@@ -11,11 +11,13 @@ import com.beyond.HanSoom.reservation.repository.ReservationRepository;
 import com.beyond.HanSoom.user.domain.User;
 import com.beyond.HanSoom.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -26,6 +28,7 @@ import java.util.*;
 
 @Service
 @Transactional
+@Slf4j
 public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final ReservationRepository reservationRepository;
@@ -47,7 +50,7 @@ public class PaymentService {
     }
 
     public PaymentResDto pay(PaymentReqDto paymentReqDto) {
-        String widgetSecretKey = "test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6";
+        String widgetSecretKey = "test_sk_yL0qZ4G1VOdAa6qg2GGoroWb2MQY";
         String basicAuth = "Basic " + Base64.getEncoder()
                 .encodeToString((widgetSecretKey + ":").getBytes(StandardCharsets.UTF_8));
         System.out.println(paymentReqDto.getOrderId());
@@ -56,22 +59,34 @@ public class PaymentService {
                 "amount", paymentReqDto.getAmount(),
                 "paymentKey", paymentReqDto.getPaymentKey()
         );
-
-        Map<String, Object> response = webClient.post()
-                .uri("/payments/confirm")
-                .header(HttpHeaders.AUTHORIZATION, basicAuth)
-                .bodyValue(requestBody)
-                .retrieve()
-                .bodyToMono(Map.class)
-                .block();
-
+        System.out.println(requestBody);
         Reservation reservation = reservationRepository.findByUuid(paymentReqDto.getOrderId()).orElseThrow(()->new EntityNotFoundException("예약이 없습니다."));
-        User user = reservation.getUser();// todo : 추후 수정
+        User user = reservation.getUser();
         LocalDate start = reservation.getCheckInDate();
         LocalDate end = reservation.getCheckOutDate();
         List<String> keys = new ArrayList<>();
         generateQueueKey(reservation, start,end, keys);
+            System.out.println("디버깅1");
+        Map<String, Object> response;
+        try {
+            response = webClient.post()
+                    .uri("/payments/confirm")
+                    .header(HttpHeaders.AUTHORIZATION, basicAuth)
+                    .bodyValue(requestBody)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
+        } catch (Exception e) {
+            // 실패 시 별도 트랜잭션에서 상태 변경
+            failReservation(reservation, keys, user);
+            log.error("결제 인증 도중 에러", e);
+            return PaymentResDto.builder()
+                    .isSuccess(false)
+                    .message("결제 인증 도중 에러 발생")
+                    .build();
+        }
 
+            System.out.println("디버깅2");
         // 1. Redis에서 모든 날짜 상태 조회 및 PROCESSING인지 확인
         for (LocalDate date = start; date.isBefore(end); date = date.plusDays(1)) {
             String statusKey = String.format("queue:hotel:%s:room:%s:date:%s",
@@ -115,9 +130,8 @@ public class PaymentService {
         } else {
             // 결제 실패시 상태 FAIL로 변경
 
-            for(int i=0; i<keys.size(); i++){
-
-                queueReservationService.removeMember(keys.get(i), user.getId().toString());
+            for(String key : keys) {
+                queueReservationService.removeMember(key, user.getId().toString());
             }
             reservation.changeState(State.FAILED);
         }
@@ -128,8 +142,17 @@ public class PaymentService {
                 .isSuccess(isSuccess)
                 .message(isSuccess ? "결제 성공" : "결제 실패")
                 .build();
+
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    private void failReservation(Reservation reservation, List<String> keys, User user) {
+        for (String key : keys) {
+            queueReservationService.removeMember(key, user.getId().toString());
+        }
+        reservation.changeState(State.FAILED);
+        reservationRepository.save(reservation);
+    }
 
     public static void generateQueueKey(Reservation reservation, LocalDate start, LocalDate end, List<String> keys) {
         for (LocalDate date = start; date.isBefore(end); date = date.plusDays(1)) {

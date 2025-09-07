@@ -14,4 +14,11 @@ public class ChatMessageReqDto {
     private String senderEmail;
     private String content;
     private String timestamp;
+    private Long remaining;
+    private boolean isWaring;
+
+    public void addWaring(Long remaining){
+        this.isWaring = true;
+        this.remaining=remaining;
+    }
 }
