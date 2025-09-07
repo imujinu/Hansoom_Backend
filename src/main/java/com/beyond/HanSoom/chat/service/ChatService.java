@@ -415,4 +415,15 @@ public class ChatService {
          List<ChatAnnouncement> chatAnnouncementList = chatAnnouncementRepository.findAllByHotel(hotel);
         return chatAnnouncementList.stream().map(ca->new ChatAnnouncementResDto().fromEntity(ca,hotel)).collect(Collectors.toList());
     }
+
+    public List<Long> getAllChatRooms() {
+         User user = getUser();
+         List<ChatParticipant> chatParticipants = chatParticipantRepository.findAllByUser(user);
+
+         if(chatParticipants.isEmpty()){
+             return null;
+         }
+
+         return chatParticipants.stream().map(ch -> ch.getChatRoom().getId()).collect(Collectors.toList());
+    }
 }

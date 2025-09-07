@@ -123,9 +123,11 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
             throw new RuntimeException(e);
         }
         User user = userRepository.findByEmail(dto.getSenderEmail()).orElseThrow(()->new EntityNotFoundException("존재하지 않는 유저입니다."));
-        dto.updateSenderName(user.getName());
+
+        dto.updateUser(user);
         redisTemplate.opsForStream().acknowledge(streamKey, consumerGroupName, recordId);
         messagingTemplate.convertAndSend("/topic/" + dto.getRoomId(), dto);
+
         chatService.saveMessage(dto);
 
     }
