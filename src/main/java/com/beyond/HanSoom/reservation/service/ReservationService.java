@@ -156,11 +156,11 @@ public class ReservationService {
 
     public ReservationCacheResDto find(Long id) {
         try {
+            System.out.println("reservation id ========" + id);
             //유저 검증 로직
             ReservationCacheResDto cacheReservation = reservationCacheService.getCacheReservation(id);
 
             if(cacheReservation == null){
-                System.out.println("db 정보 ");
                 Reservation reservation = reservationRepository.findById(id).orElseThrow(()->new EntityNotFoundException("예약 내역이 존재하지 않습니다."));
                 Hotel hotel = reservation.getHotel();
                 List<ChatRoom> chatRooms = chatRoomRepository.findAllByHotelAndIsGroupChat(hotel,"N");

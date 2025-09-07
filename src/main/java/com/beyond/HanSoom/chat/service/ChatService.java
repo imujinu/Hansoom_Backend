@@ -182,8 +182,8 @@ public class ChatService {
                         ChatRoom chatRoom = cp.getChatRoom();
                         Long unReadCount = getUnReadCount(chatRoom,user);
                         Optional<ChatMessage> message = Optional.ofNullable(chatRoom.getChatMessageList()).filter(list -> !list.isEmpty()).map(list -> list.get(list.size()-1));
-                        LocalDateTime lastMessageTime = message.get().getCreatedTime();
-                        String lastMessage = message.get().getContent();
+                        LocalDateTime lastMessageTime = message.map(ChatMessage::getCreatedTime).orElse(null);
+                        String lastMessage = message.map(ChatMessage::getContent).orElse("");
 
                         String isOnline = chatRoom.getParticipantList().stream()
                                 .filter(p-> p.getUser().equals(chatRoom.getHotel().getUser()))
