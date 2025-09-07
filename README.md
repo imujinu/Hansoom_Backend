@@ -35,6 +35,7 @@
   <img src="https://img.shields.io/badge/docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
   <img src="https://img.shields.io/badge/intellijidea-000000?style=for-the-badge&logo=intellijidea&logoColor=white" />
   <img src="https://img.shields.io/badge/luascript-2C2D72?style=for-the-badge&logo=lua&logoColor=white" />
+  <img src="https://img.shields.io/badge/STOMP/WebSocket-FF6B6B?style=for-the-badge&logo=socket.io&logoColor=white"/>
 </p>
 
 ### 🛠️ FRONTEND
@@ -47,6 +48,7 @@
   <img src="https://img.shields.io/badge/vuerouter-4FC08D?style=for-the-badge&logo=vuedotjs&logoColor=white" />
   <img src="https://img.shields.io/badge/vuetify-1867C0?style=for-the-badge&logo=vuetify&logoColor=white" />
   <img src="https://img.shields.io/badge/axios-5A29E4?style=for-the-badge&logo=axios&logoColor=white" />
+  <img src="https://img.shields.io/badge/Pinia-FFD859?style=for-the-badge&logo=vue.js&logoColor=black"/>
 </p>
 
 ### 🛠️ DB
@@ -64,6 +66,19 @@
 <p align="center">
   <img src="https://img.shields.io/badge/github-181717?style=for-the-badge&logo=github&logoColor=white" />
   <img src="https://img.shields.io/badge/discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" />
+</p>
+
+### 🛠️ Devops
+
+<p align="center">
+   <img src="https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white"/>
+  <img src="https://img.shields.io/badge/GitHub%20Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white"/>
+    <img src="https://img.shields.io/badge/AWS%20CloudFront-8C4FFF?style=for-the-badge&logo=amazonaws&logoColor=white"/>
+ <img src="https://img.shields.io/badge/AWS%20EC2-FF9900?style=for-the-badge&logo=amazonec2&logoColor=black"/>
+ <img src="https://img.shields.io/badge/AWS%20RDS-527FFF?style=for-the-badge&logo=amazonrds&logoColor=black"/>
+  <img src="https://img.shields.io/badge/AWS%20S3-569A31?style=for-the-badge&logo=amazons3&logoColor=black"/>
+
 </p>
 
 ### 🔍 사용한 핵심 기술
@@ -99,31 +114,103 @@ https://vivid-swallow-267.notion.site/ReadMe-25ab1da1d9f9801c9a53f57faf4d5029?so
 </details>
 
 <details>
-<summary> 임진우 트러블 슈팅(예약, 채팅)  </summary>
+<summary> 예약  </summary>
 
 <div>
 <details>
   <summary>
-    1. 예약 동시성 
+    1. 예약 동시성 처리
   </summary>
+<div>
+    
+1. **문제 상황**  
+    숙소 예약 서비스 특성상 재고관리가 필수적이었고 동시성 문제를 해결하기 위해 redis에서 재고관리를 진행했습니다.
+   redis에 저장된 예약건수를 확인한 후 DB에 저장되어있던 최대 재고수와 비교해서 예약의 진행 여부를 판단하도록 했습니다.
+   이 과정에서 redis 조회와, 업데이트가 동시에 이루어지는 것이 아니기 때문에 동시성 문제가 발생할 수 있음을 발견했습니다.
+   문제는 마지막 재고를 조회한 사용자가 값을 업데이트하기 전에 또 다른 사용자가 레디스에서 값을 조회한 탓에 발생한 것이었습니다.   
+    <img width="1053" height="402" alt="image" src="https://github.com/user-attachments/assets/909b4af8-1aea-476a-943d-0dd8a477bd58" />
+<figure>
+  <img width="1904" height="885" alt="image" src="https://github.com/user-attachments/assets/916b21dc-716f-479f-b9fc-5646cf669dd6" />
+  <figcaption>db재고는 500개지만 redis에는 502개의 예약이 들어간 모습</figcaption>
+</figure>
+    
+2. **해결 방안**  
+    redis 조회 - 업데이트의 원자성을 보장하기 위해 luascript를 도입했습니다. 모든 예약내역은 그 날짜가 지나면 삭제되어야 했기 때문에 날짜 정보를 hash형태로 저장한 뒤 각 키값에 ttl을 설정해 해당 날짜가 지나면 redis에서 삭제되도록 구현하였습니다.
+
+
+  </div>
 </details>
 
 <details>
   <summary>
     2. 서버 대기열
   </summary>
+  <div>
+    
+1. **문제 상황**  
+    1번 해결 방안으로 luascript를 사용한 탓에 조회-업데이트가 한번에 이뤄지는 구조이기 때문에 예약-결제-예약확정 구조가 서버에 부하를 줄 수 있다고 생각했습니다.
+   특히 숙소 예약 서비스 특성 상 특가 이벤트와 같은 경우에 특정 객실에 사용자가 몰리는 일이 발생할 수 있었고 그 결과 서버가 느려질 수 있지 않을까 하는 우려가 들었습니다.
+       
+2. **해결 방안**  
+    특정 객실이 특가로 나왔다고 테스트 시나리오를 세운 뒤 예약 페이지에 진입하는 모든 사용자가 대기열 큐에 올라가도록 하였습니다.
+   서버에서 설정한 대기열 순서보다 앞에 있는 사용자만 예약 페이지의 이용이 가능하도록 하였고 순번이 뒤인 사용자들은 자신들의 순번을 실시간으로 전달받으며 기다리도록 구현하였습니다.
+
+  </div>
 </details>
 
-<details>
-  <summary>
-    3. 메시지 소실
-  </summary>
-</details>
+
 
 
 </div>
 </details>
+<details>
+<summary> 채팅  </summary>
 
+<div>
+<details>
+  <summary>
+    1. 메시지 소실
+  </summary>
+  <div>
+    
+1. **문제 상황**  
+    기존 채팅 서비스는 웹소켓을 통해 사용자가 메시지를 전송하면 서버에서는 Redis pub/sub을 이용해 구독 중인 이용자들에게 메시지를 발행하는 구조였습니다.
+    추후 서버가 확장될 수 있음을 고려해 pub/sub을 이용했는데 문제는 이 경우 redis를 거치는 과정에서 메시지가 소실 될 우려가 있다는 부분이었습니다.
+    
+    
+2. **해결 방안**  
+    pub/sub 대신 로그 기반의 stream 기능을 이용하여 redis에 메시지가 저장된 뒤 발행되도록 하였습니다. 
+    consumer들은 메시지를 소비하는 것과 동시에 db에 메시지를 저장하며 싱크를 맞추게 됩니다.
+
+    <img width="1904" height="885" alt="image" src="https://github.com/user-attachments/assets/916b21dc-716f-479f-b9fc-5646cf669dd6" />
+
+  </div>
+</details>
+
+<details>
+  <summary>
+    2. 서버 과부화
+  </summary>
+  <div>
+   
+1. **문제 상황**  
+   채팅 서비스는 사용자가 메시지를 전송할 때마다 서버에 API 요청을 보내도록 설계되어 있습니다.  
+   그렇다 보니 짧은 시간 내에 악의적으로 메시지를 반복 전송할 경우 서버에 부하가 걸릴 수 있다는 문제가 내재되어 있었습니다.  
+   특히 단체 채팅 기능이 존재하기 때문에 사용자가 많아질수록 서버 부하가 커질 우려가 있었습니다.  
+
+2. **해결 방안**  
+   이 문제를 방지하기 위해서는 특정 시간 동안 사용자의 메시지 전송 횟수의 제한을 두는 편이 좋다고 생각했습니다.  
+   이를 위해 rateLimiter를 사용하였으며 사용자의 이메일을 키값으로, 메시지 전송 시간을 담아두는 리스트를 value 값으로 두어  
+   설정해둔 값을 넘어설 경우 일정 시간 동안 채팅 기능의 제한이 이루어지도록 하였습니다.  
+   테스트 케이스를 위해 1분에 10회의 채팅 제한을 두고, 채팅 제한 시간은 5분으로 설정하였습니다.  
+  </div>
+</details>
+
+
+
+
+</div>
+</details>
 <details>
 <summary> 최승휘 트러블 슈팅(호텔)  </summary>
 
