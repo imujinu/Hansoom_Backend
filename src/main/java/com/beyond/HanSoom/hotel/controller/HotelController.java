@@ -207,7 +207,7 @@ public class HotelController {
 
     @GetMapping("/place")
     public ResponseEntity<?> popularPlaceHotel(HotelPopularRequestDto dto) {
-        List<List<HotelListResponseDto>> result = hotelService.popularPlaceHotel(dto);
+        List<HotelListResponseDto> result = hotelService.popularPlaceHotel(dto);
         return new ResponseEntity<>(
                 CommonSuccessDto.builder()
                         .result(result)

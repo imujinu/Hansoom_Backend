@@ -1,14 +1,12 @@
 package com.beyond.HanSoom.hotel.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Builder
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode(of = "text") // 이 부분을 추가하세요.
 public class AutoCompleteSuggestion {
     private String text;
     private String highlightedText;

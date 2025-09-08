@@ -24,6 +24,7 @@ import com.beyond.HanSoom.roomImage.dto.RoomImageResponseDto;
 import com.beyond.HanSoom.roomImage.repository.RoomImageRepository;
 import com.beyond.HanSoom.user.domain.User;
 import com.beyond.HanSoom.user.repository.UserRepository;
+import io.micrometer.common.util.StringUtils;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -681,6 +682,8 @@ public class HotelService {
                 .filter(Objects::nonNull)
                 .toList();
 
+        List<HotelListResponseDto> finalSortedList = applySorting(sortedDtoList, searchDto.getSortOption());
+
         // 페이징 처리
         int startIndex = (int) pageable.getOffset();
         int endIndex = Math.min(startIndex + pageable.getPageSize(), sortedDtoList.size());
@@ -690,9 +693,36 @@ public class HotelService {
             return new PageImpl<>(Collections.emptyList(), pageable, searchHits.getTotalHits());
         }
 
-        List<HotelListResponseDto> pagedResult = sortedDtoList.subList(startIndex, endIndex);
+        List<HotelListResponseDto> pagedResult = finalSortedList.subList(startIndex, endIndex);
 
         return new PageImpl<>(pagedResult, pageable, searchHits.getTotalHits());
+    }
+
+    private List<HotelListResponseDto> applySorting(List<HotelListResponseDto> hotels, String sortOption) {
+        if (StringUtils.isEmpty(sortOption)) {
+            return hotels;
+        }
+
+        switch (sortOption) {
+            case "price,asc":
+                return hotels.stream()
+                        .sorted(Comparator.comparingInt(HotelListResponseDto::getPrice))
+                        .collect(Collectors.toList());
+            case "price,desc":
+                return hotels.stream()
+                        .sorted(Comparator.comparingInt(HotelListResponseDto::getPrice).reversed())
+                        .collect(Collectors.toList());
+            case "rating,desc":
+                return hotels.stream()
+                        .sorted(Comparator.comparing(HotelListResponseDto::getRating).reversed())
+                        .collect(Collectors.toList());
+            case "rating,asc":
+                return hotels.stream()
+                        .sorted(Comparator.comparing(HotelListResponseDto::getRating))
+                        .collect(Collectors.toList());
+            default:
+                return hotels;
+        }
     }
 
     // 헬퍼 메서드들로 가독성 향상
@@ -838,45 +868,32 @@ public class HotelService {
         return dtoList;
     }
 
-    public List<List<HotelListResponseDto>> popularPlaceHotel(HotelPopularRequestDto searchDto) {
-        List<String> touristSpots = new ArrayList<>();
-        touristSpots.add("서울");
-        touristSpots.add("제주도");
-        touristSpots.add("부산");
-        touristSpots.add("경주");
+    public List<HotelListResponseDto> popularPlaceHotel(HotelPopularRequestDto searchDto) {
+        Specification<Hotel> spec = HotelSpecification.withSearchConditionsPop(searchDto);
+        Pageable pageable = PageRequest.of(0, 30, Sort.by("reservationCount").descending());
+        List<Hotel> hotels = hotelRepository.findAll(spec, pageable).getContent();
 
-        List<List<HotelListResponseDto>> popularPlaceList = new ArrayList<>();
+        List<HotelListResponseDto> dtoList = new ArrayList<>(hotels.stream()
+                // 호텔에 객실이 존재하는지, 그리고 해당 객실에 예약 가능한 재고가 있는지 확인합니다.
+                .filter(hotel -> hotel.getRooms().stream().anyMatch(room ->
+                        isRoomAvailablePop(room, hotel.getId(), searchDto)
+                ))
+                // 각 호텔별로 가장 저렴한 객실 가격을 찾아 DTO로 변환합니다.
+                .flatMap(hotel -> {
+                    // 조건에 맞는 객실들 중 평균가가 가장 저렴한 객실을 찾습니다.
+                    OptionalInt minAvgPrice = hotel.getRooms().stream()
+                            .filter(room -> isRoomAvailablePop(room, hotel.getId(), searchDto))
+                            .mapToInt(room -> calculateAveragePrice(room, searchDto.getCheckIn(), searchDto.getCheckOut()))
+                            .min();
 
-        for(String s : touristSpots) {
-            searchDto.setAddress(s);
-            Specification<Hotel> spec = HotelSpecification.withSearchConditionsPop(searchDto);
-            Pageable pageable = PageRequest.of(0, 30, Sort.by("reservationCount").descending());
-            List<Hotel> hotels = hotelRepository.findAll(spec, pageable).getContent();
+                    return minAvgPrice.isPresent()
+                            ? Stream.of(HotelListResponseDto.fromEntity(hotel, minAvgPrice.getAsInt()))
+                            : Stream.empty();
+                })
+                .limit(4)
+                .toList());
 
-            List<HotelListResponseDto> dtoList = new ArrayList<>(hotels.stream()
-                    // 호텔에 객실이 존재하는지, 그리고 해당 객실에 예약 가능한 재고가 있는지 확인합니다.
-                    .filter(hotel -> hotel.getRooms().stream().anyMatch(room ->
-                            isRoomAvailablePop(room, hotel.getId(), searchDto)
-                    ))
-                    // 각 호텔별로 가장 저렴한 객실 가격을 찾아 DTO로 변환합니다.
-                    .flatMap(hotel -> {
-                        // 조건에 맞는 객실들 중 평균가가 가장 저렴한 객실을 찾습니다.
-                        OptionalInt minAvgPrice = hotel.getRooms().stream()
-                                .filter(room -> isRoomAvailablePop(room, hotel.getId(), searchDto))
-                                .mapToInt(room -> calculateAveragePrice(room, searchDto.getCheckIn(), searchDto.getCheckOut()))
-                                .min();
-
-                        return minAvgPrice.isPresent()
-                                ? Stream.of(HotelListResponseDto.fromEntity(hotel, minAvgPrice.getAsInt()))
-                                : Stream.empty();
-                    })
-                    .limit(10)
-                    .toList());
-
-            popularPlaceList.add(dtoList);
-        }
-
-        return popularPlaceList;
+        return dtoList;
     }
 
     private boolean isRoomAvailablePop(Room room, Long hotelId, HotelPopularRequestDto searchDto) {
@@ -910,9 +927,11 @@ public class HotelService {
             );
 
             return searchHits.getSearchHits().stream()
-                    .map(hit -> convertToSuggestion(hit, searchType)) // searchType 전달
+                    .map(hit -> convertToSuggestion(hit, searchType))
                     .filter(Objects::nonNull)
-                    .distinct() // 중복 제거
+                    .filter(suggestion -> suggestion.getText() != null && !suggestion.getText().trim().isEmpty())
+                    .distinct() // distinct() 메서드로 중복을 제거
+                    .limit(size)
                     .collect(Collectors.toList());
 
         } catch (Exception e) {

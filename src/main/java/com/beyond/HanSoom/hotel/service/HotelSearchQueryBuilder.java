@@ -1,5 +1,6 @@
 package com.beyond.HanSoom.hotel.service;
 
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import com.beyond.HanSoom.hotel.domain.HotelType;
 import com.beyond.HanSoom.hotel.dto.HotelListSearchDto;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import org.springframework.data.elasticsearch.core.query.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -55,12 +57,22 @@ public class HotelSearchQueryBuilder {
                         .bool(b -> b
                                 .must(m -> m
                                         .bool(innerB -> innerB
-                                                .should(s -> s.wildcard(wild -> wild.field("hotelName.keyword").value("*" + hotelName + "*")))
+                                                .should(s -> s.wildcard(wild -> wild.field("hotelName").value("*" + hotelName + "*")))
                                                 .should(s -> s.match(match -> match.field("hotelName").query(hotelName)))
                                                 .minimumShouldMatch("1")
                                         )
                                 )
                                 .must(m -> m.term(t -> t.field("state").value("APPLY")))
+                                .filter(f -> {
+                                    if (dto.getType() != null && !dto.getType().isEmpty()) {
+                                        return f.terms(terms -> terms
+                                                .field("type")
+                                                .terms(t -> t.value(dto.getType().stream()
+                                                        .map(co.elastic.clients.elasticsearch._types.FieldValue::of)
+                                                        .collect(Collectors.toList()))));
+                                    }
+                                    return f.matchAll(ma -> ma);
+                                })
                         )
                 )
                 .build();
@@ -76,7 +88,7 @@ public class HotelSearchQueryBuilder {
                                 .must(m -> m
                                         .bool(innerB -> innerB
                                                 // address 필드만 사용 (통합 필드)
-                                                .should(s -> s.wildcard(wild -> wild.field("address.keyword").value("*" + address + "*")))
+                                                .should(s -> s.wildcard(wild -> wild.field("address").value("*" + address + "*")))
 
                                                 // queryString으로 더 유연한 검색
                                                 .should(s -> s.queryString(qs -> qs
@@ -88,6 +100,16 @@ public class HotelSearchQueryBuilder {
                                         )
                                 )
                                 .must(m -> m.term(t -> t.field("state").value("APPLY")))
+                                .filter(f -> {
+                                    if (dto.getType() != null && !dto.getType().isEmpty()) {
+                                        return f.terms(terms -> terms
+                                                .field("type")
+                                                .terms(t -> t.value(dto.getType().stream()
+                                                        .map(co.elastic.clients.elasticsearch._types.FieldValue::of)
+                                                        .collect(Collectors.toList()))));
+                                    }
+                                    return f.matchAll(ma -> ma);
+                                })
                         )
                 )
                 .build();
@@ -102,30 +124,37 @@ public class HotelSearchQueryBuilder {
         return NativeQuery.builder()
                 .withQuery(q -> q
                         .bool(b -> b
-                                .must(m -> m
-                                        .bool(innerB -> innerB
-                                                // 정확한 검색
-                                                .should(s -> s.match(match -> match.field("hotelName").query(hotelName).boost(3.0f)))
+                                        .must(m -> m
+                                                .bool(innerB -> innerB
+                                                        // 1. 정확한 검색 (최고 점수)
+                                                        .should(s -> s.match(match -> match
+                                                                .field("hotelName")
+                                                                .query(hotelName)
+                                                                .boost(5.0f)
+                                                        ))
 
-                                                // 오타 허용 검색
-                                                .should(s -> s.fuzzy(fuzzy -> fuzzy
-                                                        .field("hotelName")
-                                                        .value(hotelName)
-                                                        .fuzziness("AUTO")
-                                                        .boost(2.0f)
-                                                ))
+                                                        // 2. 부분 검색 (wildcard)
+                                                        .should(s -> s.wildcard(wild -> wild
+                                                                .field("hotelName")
+                                                                .value("*" + hotelName + "*")
+                                                                .boost(4.0f)
+                                                        ))
 
-                                                // 부분 검색
-                                                .should(s -> s.wildcard(wild -> wild
-                                                        .field("hotelName.keyword")
-                                                        .value("*" + hotelName + "*")
-                                                        .boost(1.0f)
-                                                ))
+                                                        // 3. 엄격한 오타 허용 (1글자만)
+                                                        .should(s -> s.fuzzy(fuzzy -> fuzzy
+                                                                .field("hotelName")
+                                                                .value(hotelName)
+                                                                .fuzziness("1") // 1글자만 허용
+                                                                .prefixLength(1) // 첫글자 일치 필수
+                                                                .maxExpansions(5) // 확장 제한
+                                                                .boost(2.0f)
+                                                        ))
 
-                                                .minimumShouldMatch("1")
+                                                        .minimumShouldMatch("1")
+                                                )
                                         )
-                                )
-                                .must(m -> m.term(t -> t.field("state").value("APPLY")))
+                                        .must(m -> m.term(t -> t.field("state").value("APPLY")))
+                                // ... 나머지 필터 코드 동일
                         )
                 )
                 .build();
@@ -201,6 +230,16 @@ public class HotelSearchQueryBuilder {
                                         })
                                 )
                                 .must(m -> m.term(t -> t.field("state").value("APPLY")))
+                                .filter(f -> {
+                                    if (dto.getType() != null && !dto.getType().isEmpty()) {
+                                        return f.terms(terms -> terms
+                                                .field("type")
+                                                .terms(t -> t.value(dto.getType().stream()
+                                                        .map(co.elastic.clients.elasticsearch._types.FieldValue::of)
+                                                        .collect(Collectors.toList()))));
+                                    }
+                                    return f.matchAll(ma -> ma);
+                                })
                         )
                 )
                 .build();
@@ -221,16 +260,45 @@ public class HotelSearchQueryBuilder {
         return query;
     }
 
-//    자동완성 쿼리 생성
+    //    자동완성 쿼리 생성
     public Query buildAutoCompleteQuery(String query, String searchType, int size) {
         String fieldName = getFieldName(searchType);
 
         return NativeQuery.builder()
                 .withQuery(q -> q
-                        .multiMatch(m -> m
-                                .query(query)
-                                .fields(fieldName, fieldName + "._2gram", fieldName + "._3gram")
-                                .type(co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType.BoolPrefix)
+                        .bool(b -> b
+                                // 1. Wildcard 검색 (가장 확실한 방법)
+                                .should(s -> s
+                                        .wildcard(w -> w
+                                                .field(fieldName)
+                                                .value("*" + query + "*")
+                                                .boost(3.0f)
+                                        )
+                                )
+                                // 2. N-gram 필드 검색
+                                .should(s -> s
+                                        .match(m -> m
+                                                .field(fieldName + "._2gram")
+                                                .query(query)
+                                                .boost(2.0f)
+                                        )
+                                )
+                                .should(s -> s
+                                        .match(m -> m
+                                                .field(fieldName + "._3gram")
+                                                .query(query)
+                                                .boost(2.0f)
+                                        )
+                                )
+                                // 3. 일반 매치
+                                .should(s -> s
+                                        .match(m -> m
+                                                .field(fieldName)
+                                                .query(query)
+                                                .boost(1.0f)
+                                        )
+                                )
+                                .minimumShouldMatch("1")
                         )
                 )
                 .withFilter(f -> f
