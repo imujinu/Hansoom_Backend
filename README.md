@@ -36,6 +36,7 @@
   <img src="https://img.shields.io/badge/intellijidea-000000?style=for-the-badge&logo=intellijidea&logoColor=white" />
   <img src="https://img.shields.io/badge/luascript-2C2D72?style=for-the-badge&logo=lua&logoColor=white" />
   <img src="https://img.shields.io/badge/STOMP/WebSocket-FF6B6B?style=for-the-badge&logo=socket.io&logoColor=white"/>
+  <img src="https://img.shields.io/badge/STOMP/elasticsearch-005571?style=for-the-badge&logo=elasticsearch&logoColor=white"/>
 </p>
 
 ### 🛠️ FRONTEND
@@ -93,6 +94,8 @@
 | 토스페이먼츠 API 결제 | 간편하고 안전한 결제 환경을 위해 토스페이먼츠 API를 연동하여 사용자가 편리하게 결제할 수 있도록 했습니다. |
 | Stomp를 활용한 실시간 채팅 기능 | Stomp를 통해 클라이언트간의 실시간 채팅이 가능하도록 했습니다. |
 | Redis Stream을 통한 메시지 저장 | 추후 확장성을 생각해 Redis Stream을 통해 메시지가 발행되도록 하였습니다. Pub/Sub에서 메시지가 소실되던 문제를 해결하였습니다. |
+| Elastic Search를 통한 조회성능 향상 | 관계형 데이터베이스의 부하를 줄이기 위해 복잡한 조건의 데이터 조회를 엘라스틱서치로 분산시켜 애플리케이션의 성능을 크게 개선했습니다. |
+| Elastic Search를 통한 자동완성 기능구현 | Search-as-you-type 필드 타입을 적용하여 실시간 자동 완성 기능을 제공함으로써 사용자가 원하는 정보를 더 빠르고 편리하게 찾을 수 있도록 사용자 경험(UX)을 향상시켰습니다. |
 
 ### 📄 핵심 기능 플로우
 <details>
@@ -212,7 +215,7 @@ https://vivid-swallow-267.notion.site/ReadMe-25ab1da1d9f9801c9a53f57faf4d5029?so
 </div>
 </details>
 <details>
-<summary> 최승휘 트러블 슈팅(호텔)  </summary>
+<summary> 호텔 트러블 슈팅 </summary>
 
 <div>
 <details>
