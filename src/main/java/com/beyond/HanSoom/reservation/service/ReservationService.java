@@ -156,7 +156,6 @@ public class ReservationService {
 
     public ReservationCacheResDto find(Long id) {
         try {
-            System.out.println("reservation id ========" + id);
             //유저 검증 로직
             ReservationCacheResDto cacheReservation = reservationCacheService.getCacheReservation(id);
 
@@ -179,17 +178,13 @@ public class ReservationService {
                     throw new EntityNotFoundException("채팅방이 존재하지 않습니다.");
                 }
 
-                BigDecimal hotelRating = hotelReviewSummaryRepository.findByHotel(hotel).getAverage();
+                HotelReviewSummary hotelReviewSummary = hotelReviewSummaryRepository.findByHotel(hotel).getHotel().getHotelReviewSummary();
+                System.out.println("호텔 평점======" +  hotelReviewSummary.getAverage());
                 LocalDate now = LocalDate.now();
                 String state = getStatus(reservation,now);
-                int reviewCount = reviewRepository.findAllByHotel(hotel).size();
-                ReservationCacheResDto cacheResDto = new ReservationCacheResDto().fromEntity(reservation,state  ,hotelRating, reviewCount,chatRoom.getId());
-                if(reservation.getState() == State.RESERVED){
+                ReservationCacheResDto cacheResDto = new ReservationCacheResDto().fromEntity(reservation,state  ,hotelReviewSummary.getAverage(), hotelReviewSummary.getRatingCount(),chatRoom.getId());
                 reservationCacheService.saveCacheReservation(cacheResDto);
                 return cacheResDto;
-                }else{
-                    throw new IllegalStateException("유효하지 않은 예약입니다.");
-                }
             }else{
                 System.out.println("캐싱 정보 리턴중");
                 return cacheReservation;
