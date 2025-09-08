@@ -13,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -164,7 +165,7 @@ public class HotelController {
 
     @GetMapping("/list")
     public ResponseEntity<?> findAll(Pageable pageable, HotelListSearchDto searchDto) {
-        Page<HotelListResponseDto> dto = hotelService.findAll(pageable, searchDto);
+        Page<HotelListResponseDto> dto = hotelService.findByElasticsearch(pageable, searchDto);
         return new ResponseEntity<>(
                 CommonSuccessDto.builder()
                         .result(dto)
@@ -198,7 +199,7 @@ public class HotelController {
                 CommonSuccessDto.builder()
                         .result(result)
                         .status_code(HttpStatus.OK.value())
-                        .status_message("가까운 호텔 리스트 조회")
+                        .status_message("인기호텔")
                         .build(),
                 HttpStatus.OK
         );
@@ -206,12 +207,36 @@ public class HotelController {
 
     @GetMapping("/place")
     public ResponseEntity<?> popularPlaceHotel(HotelPopularRequestDto dto) {
-        List<List<HotelListResponseDto>> result = hotelService.popularPlaceHotel(dto);
+        List<HotelListResponseDto> result = hotelService.popularPlaceHotel(dto);
         return new ResponseEntity<>(
                 CommonSuccessDto.builder()
                         .result(result)
                         .status_code(HttpStatus.OK.value())
-                        .status_message("가까운 호텔 리스트 조회")
+                        .status_message("인기지역")
+                        .build(),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/suggest")
+    public ResponseEntity<?> getAutoComplete(
+            @RequestParam("query") String query,
+            @RequestParam("type") String searchType,
+            @RequestParam(value = "size", defaultValue = "10") int size
+    ) {
+        if (query == null || query.trim().isEmpty()) {
+            return ResponseEntity.ok(Collections.emptyList());
+        }
+
+        List<AutoCompleteSuggestion> suggestions = hotelService.getAutoCompleteSuggestions(
+                query.trim(), searchType, size
+        );
+
+        return new ResponseEntity<>(
+                CommonSuccessDto.builder()
+                        .result(suggestions)
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("자동완성")
                         .build(),
                 HttpStatus.OK
         );

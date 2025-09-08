@@ -60,6 +60,14 @@ public interface HotelRepository extends JpaRepository<Hotel, Long> {
 
     int countByUser(User user);
 
+    List<Hotel> findByIdIn(List<Long> hotelIds);
+
+    @Query("SELECT DISTINCT h FROM Hotel h " +
+            "LEFT JOIN FETCH h.rooms r " +
+            "LEFT JOIN FETCH h.hotelReviewSummary " +
+            "WHERE h.id IN :hotelIds")
+    List<Hotel> findByIdInWithRoomsAndReviewSummary(@Param("hotelIds") List<Long> hotelIds);
+
     Hotel findByUser(User user);
 
     List<Hotel> findTop30ByStateOrderByReservationCountDesc(HotelState state);

@@ -4,14 +4,17 @@ import com.beyond.HanSoom.common.dto.ReservationDto;
 import com.beyond.HanSoom.common.service.ReservationInventoryService;
 import com.beyond.HanSoom.common.service.S3Uploader;
 import com.beyond.HanSoom.hotel.domain.Hotel;
+import com.beyond.HanSoom.hotel.domain.HotelDocument;
 import com.beyond.HanSoom.hotel.domain.HotelState;
 import com.beyond.HanSoom.hotel.dto.*;
+import com.beyond.HanSoom.hotel.repository.HotelDocumentRepository;
 import com.beyond.HanSoom.hotel.repository.HotelRepository;
 import com.beyond.HanSoom.notification.service.NotificationService;
 import com.beyond.HanSoom.notification.service.SseAlarmService;
 import com.beyond.HanSoom.review.domain.HotelReviewSummary;
 import com.beyond.HanSoom.review.repository.HotelReviewSummaryRepository;
 import com.beyond.HanSoom.room.domain.Room;
+import com.beyond.HanSoom.room.domain.RoomDocument;
 import com.beyond.HanSoom.room.dto.RoomDetailResponseDto;
 import com.beyond.HanSoom.room.dto.RoomDetailSearchResponseDto;
 import com.beyond.HanSoom.room.dto.RoomUpdateDto;
@@ -21,9 +24,21 @@ import com.beyond.HanSoom.roomImage.dto.RoomImageResponseDto;
 import com.beyond.HanSoom.roomImage.repository.RoomImageRepository;
 import com.beyond.HanSoom.user.domain.User;
 import com.beyond.HanSoom.user.repository.UserRepository;
+import io.micrometer.common.util.StringUtils;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.Criteria;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -31,11 +46,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.processing.Completion;
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -54,6 +71,10 @@ public class HotelService {
     private final NotificationService notificationService;
     private final SseAlarmService sseAlarmService;
     private final HotelReviewSummaryRepository hotelReviewSummaryRepository;
+    private final HotelDocumentRepository hotelDocumentRepository;
+    private final ElasticsearchOperations elasticsearchOperations;
+    private final HotelSearchQueryBuilder hotelSearchQueryBuilder;
+
 
     public void registerHotel(HotelRegisterRequsetDto dto, MultipartFile hotelImage, List<MultipartFile> roomImages) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -94,6 +115,10 @@ public class HotelService {
             hotel.getRooms().add(room); // 호텔에 객실 추가
         }
 
+        Hotel savedHotel = hotelRepository.save(hotel);
+
+        saveToElasticsearch(savedHotel, addressDto);
+
         // 호텔등록 알림 생성
         // 관리자 고정
         User admin = userRepository.findById(1L).orElseThrow(() -> new EntityNotFoundException("없는 회원입니다."));
@@ -101,6 +126,45 @@ public class HotelService {
         sseAlarmService.publishReserved(admin.getEmail(), "hotelSubmitted");
 
         hotelRepository.save(hotel);
+    }
+
+    // Elasticsearch 저장 로직 분리
+    private void saveToElasticsearch(Hotel hotel, GeocoderService.HotelAddressDto addressDto) {
+        try {
+            // Room Entity를 RoomDocument로 변환
+            List<RoomDocument> roomDocuments = hotel.getRooms().stream()
+                    .map(room -> RoomDocument.builder()
+                            .id(room.getId())
+                            .maximumPeople(room.getMaximumPeople())
+                            .state(room.getState().name()) // Enum을 String으로 변환
+                            .build())
+                    .collect(Collectors.toList());
+
+            // HotelDocument 생성
+            HotelDocument hotelDocument = HotelDocument.builder()
+                    .id(hotel.getId())
+                    .hotelName(hotel.getHotelName())
+                    .addressCity(addressDto.getAddressCity())
+                    .addressDetail(addressDto.getAddressDetail())
+                    .address(hotel.getAddress())
+                    // suggest 필드에는 동일한 값을 저장 (Search As You Type이 자동으로 n-gram 처리)
+                    .hotelNameSuggest(hotel.getHotelName())
+                    .addressCitySuggest(addressDto.getAddressCity())
+                    .state(hotel.getState().toString()) // Enum을 String으로 변환
+                    .type(hotel.getType().toString())   // Enum을 String으로 변환
+                    .rooms(roomDocuments)
+                    .build();
+
+            // Elasticsearch에 저장
+            hotelDocumentRepository.save(hotelDocument);
+            log.info("[HANSOOM][INFO] Elasticsearch에 호텔 인덱싱 완료: ID = {}, 호텔명 = {}",
+                    hotel.getId(), hotel.getHotelName());
+
+        } catch (Exception e) {
+            log.error("[HANSOOM][ERROR] Elasticsearch 저장 실패: 호텔 ID = {}, 오류 = {}", hotel.getId(), e.getMessage());
+            // Elasticsearch 저장 실패해도 JPA 저장은 유지 (선택적)
+            // 만약 Elasticsearch 저장이 필수라면 RuntimeException을 던져서 전체 트랜잭션 롤백
+        }
     }
 
     private String normalizeAddress(String address) {
@@ -130,6 +194,15 @@ public class HotelService {
         for(Room r : hotel.getRooms()) {
             r.updateState(dto.getState());
         }
+
+        // 2. JPA 엔티티 저장 (데이터베이스에 반영)
+        Hotel savedHotel = hotelRepository.save(hotel);
+
+        GeocoderService.HotelAddressDto addressDto = geocoderService.parseAddress(hotel.getAddress());
+
+        // 3. ElasticSearch Document 업데이트
+        // JPA 엔티티의 최신 상태를 바탕으로 새로운 Document 객체 생성
+        saveToElasticsearch(savedHotel, addressDto);
     }
 
     private int extractRoomIndex(String filename) {
@@ -148,12 +221,12 @@ public class HotelService {
         try {
             // 2. 주소로 좌표 조회
             dto.setAddress(normalizeAddress(dto.getAddress()));
-            GeocoderService.HotelAddressDto hotelAddressDto = geocoderService.parseAddress(dto.getAddress());
+            GeocoderService.HotelAddressDto addressDto = geocoderService.parseAddress(dto.getAddress());
 
             // 3. 호텔 기본 정보 업데이트
             hotel.updateBasicInfo(dto.getHotelName(), dto.getAddress(),
                     dto.getPhoneNumber(), dto.getDescription(), dto.getType(),
-                    hotelAddressDto.getLatitude(), hotelAddressDto.getLongitude());
+                    addressDto.getLatitude(), addressDto.getLongitude());
 
             // 4. 호텔 이미지 업데이트
             updateHotelImage(hotel, hotelImage, imageUrls);
@@ -162,7 +235,10 @@ public class HotelService {
             updateRoomsWithImages(hotel, dto.getRooms(), roomImages, imageUrls);
 
             // 6. 저장
-            hotelRepository.save(hotel);
+            Hotel savedHotel = hotelRepository.save(hotel);
+
+            // 7. Elastic Search Document 업데이트
+            saveToElasticsearch(savedHotel, addressDto);
 
             log.info("[HANSOOM][INFO] 호텔 업데이트 성공 - ID: {}", hotel.getId());
 
@@ -532,6 +608,154 @@ public class HotelService {
         return available > 0;
     }
 
+    // 개선된 고객 조회 메서드
+    public Page<HotelListResponseDto> findByElasticsearch(Pageable pageable, HotelListSearchDto searchDto) {
+        log.info("=== ElasticSearch 검색 시작 ===");
+        log.info("[HANSOOM][INFO] searchDto: {}", searchDto); // toString() 메서드 확인
+
+        final int fetchSize = pageable.getPageSize() * 3;
+        Pageable elasticPageable = PageRequest.of(pageable.getPageNumber(), fetchSize);
+
+        Query searchQuery = hotelSearchQueryBuilder.buildImprovedFuzzySearchQuery(searchDto);
+        searchQuery.setPageable(elasticPageable);
+        SearchHits<HotelDocument> searchHits  = elasticsearchOperations.search(searchQuery, HotelDocument.class);
+        log.info("[HANSOOM][INFO] 1단계 정확한 검색 결과: {}", searchHits.getTotalHits());
+
+        if (searchHits.getTotalHits() == 0) {
+            log.info("[HANSOOM][INFO] 2단계 오타 대응 검색 시작");
+            if (searchDto.getHotelName() != null) {
+                searchQuery = hotelSearchQueryBuilder.buildFlexibleHotelNameQuery(searchDto);
+                searchQuery.setPageable(elasticPageable);
+                searchHits = elasticsearchOperations.search(searchQuery, HotelDocument.class);
+            } else {
+                searchQuery = hotelSearchQueryBuilder.buildFlexibleAddressQuery(searchDto);
+                searchQuery.setPageable(elasticPageable);
+                searchHits = elasticsearchOperations.search(searchQuery, HotelDocument.class);
+            }
+            log.info("[HANSOOM][INFO] 2단계 오타 대응 검색 결과: {}", searchHits.getTotalHits());
+        }
+
+        log.info("[HANSOOM][INFO] ElasticSearch 검색 결과 총 개수: {}", searchHits.getTotalHits());
+
+        // 검색된 각 결과의 상세 정보 로그
+        searchHits.getSearchHits().forEach(hit -> {
+            HotelDocument doc = hit.getContent();
+            log.info("[HANSOOM][INFO] 검색된 호텔 - ID: {}, 이름: '{}', 도시: '{}', 상세주소: '{}'",
+                    doc.getId(), doc.getHotelName(), doc.getAddressCity(), doc.getAddressDetail());
+        });
+
+        List<Long> hotelIds = searchHits.getSearchHits().stream()
+                .map(SearchHit::getContent)
+                .filter(hotelDoc -> hotelDoc.getRooms().stream()
+                        .anyMatch(room ->
+                                "APPLY".equals(room.getState()) &&
+                                        room.getMaximumPeople() >= searchDto.getPeople()
+                        ))
+                .map(HotelDocument::getId)
+                .toList();
+
+        log.info("[HANSOOM][INFO] 추출된 호텔 ID 목록: {}", hotelIds);
+        log.info("=== ElasticSearch 검색 완료 ===");
+
+        // hotelIds가 비어있으면 빈 페이지 반환
+        if (hotelIds.isEmpty()) {
+            return new PageImpl<>(Collections.emptyList(), pageable, 0);
+        }
+
+        // 2. ID 목록으로 JPA에서 호텔 정보 조회 (페치 조인으로 N+1 문제 해결)
+        List<Hotel> hotels = hotelRepository.findByIdInWithRoomsAndReviewSummary(hotelIds);
+
+        // 3. JPA 조회 결과에 대한 2차 필터링 및 DTO 변환
+        List<HotelListResponseDto> filteredDtoList = hotels.stream()
+                .filter(hotel -> hasAvailableRooms(hotel, searchDto))
+                .map(hotel -> createHotelDto(hotel, searchDto))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toList());
+
+        // ElasticSearch 정렬 순서 유지
+        Map<Long, HotelListResponseDto> dtoMap = filteredDtoList.stream()
+                .collect(Collectors.toMap(HotelListResponseDto::getId, Function.identity()));
+
+        List<HotelListResponseDto> sortedDtoList = hotelIds.stream()
+                .map(dtoMap::get)
+                .filter(Objects::nonNull)
+                .toList();
+
+        List<HotelListResponseDto> finalSortedList = applySorting(sortedDtoList, searchDto.getSortOption());
+
+        // 페이징 처리
+        int startIndex = (int) pageable.getOffset();
+        int endIndex = Math.min(startIndex + pageable.getPageSize(), sortedDtoList.size());
+
+        // 인덱스 범위 검증
+        if (startIndex >= sortedDtoList.size()) {
+            return new PageImpl<>(Collections.emptyList(), pageable, searchHits.getTotalHits());
+        }
+
+        List<HotelListResponseDto> pagedResult = finalSortedList.subList(startIndex, endIndex);
+
+        return new PageImpl<>(pagedResult, pageable, searchHits.getTotalHits());
+    }
+
+    private List<HotelListResponseDto> applySorting(List<HotelListResponseDto> hotels, String sortOption) {
+        if (StringUtils.isEmpty(sortOption)) {
+            return hotels;
+        }
+
+        switch (sortOption) {
+            case "price,asc":
+                return hotels.stream()
+                        .sorted(Comparator.comparingInt(HotelListResponseDto::getPrice))
+                        .collect(Collectors.toList());
+            case "price,desc":
+                return hotels.stream()
+                        .sorted(Comparator.comparingInt(HotelListResponseDto::getPrice).reversed())
+                        .collect(Collectors.toList());
+            case "rating,desc":
+                return hotels.stream()
+                        .sorted(Comparator.comparing(HotelListResponseDto::getRating).reversed())
+                        .collect(Collectors.toList());
+            case "rating,asc":
+                return hotels.stream()
+                        .sorted(Comparator.comparing(HotelListResponseDto::getRating))
+                        .collect(Collectors.toList());
+            default:
+                return hotels;
+        }
+    }
+
+    // 헬퍼 메서드들로 가독성 향상
+    private boolean hasAvailableRooms(Hotel hotel, HotelListSearchDto searchDto) {
+        return hotel.getRooms().stream()
+                .anyMatch(room -> isRoomAvailable(room, hotel.getId(), searchDto));
+    }
+
+    private Optional<HotelListResponseDto> createHotelDto(Hotel hotel, HotelListSearchDto searchDto) {
+        // 평점 필터링
+        if (searchDto.getRating() != null &&
+                hotel.getHotelReviewSummary().getAverage().compareTo(searchDto.getRating()) < 0) {
+            return Optional.empty();
+        }
+
+        // 가격 계산 및 필터링
+        OptionalInt minAvgPrice = hotel.getRooms().stream()
+                .filter(room -> isRoomAvailable(room, hotel.getId(), searchDto))
+                .mapToInt(room -> calculateAveragePrice(room, searchDto.getCheckIn(), searchDto.getCheckOut()))
+                .filter(avgPrice -> isPriceInRange(avgPrice, searchDto))
+                .min();
+
+        return minAvgPrice.isPresent()
+                ? Optional.of(HotelListResponseDto.fromEntity(hotel, minAvgPrice.getAsInt()))
+                : Optional.empty();
+    }
+
+    private boolean isPriceInRange(int avgPrice, HotelListSearchDto searchDto) {
+        return avgPrice >= searchDto.getMinPrice() && avgPrice <= searchDto.getMaxPrice();
+    }
+
+
+
 //    가까운 호텔 조회
     @Transactional(readOnly = true)
     public Page<HotelLocationListResponseDto> findNearbyHotels(LocationHotelSearchDto dto, Pageable pageable) {
@@ -644,45 +868,32 @@ public class HotelService {
         return dtoList;
     }
 
-    public List<List<HotelListResponseDto>> popularPlaceHotel(HotelPopularRequestDto searchDto) {
-        List<String> touristSpots = new ArrayList<>();
-        touristSpots.add("서울");
-        touristSpots.add("제주도");
-        touristSpots.add("부산");
-        touristSpots.add("경주");
+    public List<HotelListResponseDto> popularPlaceHotel(HotelPopularRequestDto searchDto) {
+        Specification<Hotel> spec = HotelSpecification.withSearchConditionsPop(searchDto);
+        Pageable pageable = PageRequest.of(0, 30, Sort.by("reservationCount").descending());
+        List<Hotel> hotels = hotelRepository.findAll(spec, pageable).getContent();
 
-        List<List<HotelListResponseDto>> popularPlaceList = new ArrayList<>();
+        List<HotelListResponseDto> dtoList = new ArrayList<>(hotels.stream()
+                // 호텔에 객실이 존재하는지, 그리고 해당 객실에 예약 가능한 재고가 있는지 확인합니다.
+                .filter(hotel -> hotel.getRooms().stream().anyMatch(room ->
+                        isRoomAvailablePop(room, hotel.getId(), searchDto)
+                ))
+                // 각 호텔별로 가장 저렴한 객실 가격을 찾아 DTO로 변환합니다.
+                .flatMap(hotel -> {
+                    // 조건에 맞는 객실들 중 평균가가 가장 저렴한 객실을 찾습니다.
+                    OptionalInt minAvgPrice = hotel.getRooms().stream()
+                            .filter(room -> isRoomAvailablePop(room, hotel.getId(), searchDto))
+                            .mapToInt(room -> calculateAveragePrice(room, searchDto.getCheckIn(), searchDto.getCheckOut()))
+                            .min();
 
-        for(String s : touristSpots) {
-            searchDto.setAddress(s);
-            Specification<Hotel> spec = HotelSpecification.withSearchConditionsPop(searchDto);
-            Pageable pageable = PageRequest.of(0, 30, Sort.by("reservationCount").descending());
-            List<Hotel> hotels = hotelRepository.findAll(spec, pageable).getContent();
+                    return minAvgPrice.isPresent()
+                            ? Stream.of(HotelListResponseDto.fromEntity(hotel, minAvgPrice.getAsInt()))
+                            : Stream.empty();
+                })
+                .limit(4)
+                .toList());
 
-            List<HotelListResponseDto> dtoList = new ArrayList<>(hotels.stream()
-                    // 호텔에 객실이 존재하는지, 그리고 해당 객실에 예약 가능한 재고가 있는지 확인합니다.
-                    .filter(hotel -> hotel.getRooms().stream().anyMatch(room ->
-                            isRoomAvailablePop(room, hotel.getId(), searchDto)
-                    ))
-                    // 각 호텔별로 가장 저렴한 객실 가격을 찾아 DTO로 변환합니다.
-                    .flatMap(hotel -> {
-                        // 조건에 맞는 객실들 중 평균가가 가장 저렴한 객실을 찾습니다.
-                        OptionalInt minAvgPrice = hotel.getRooms().stream()
-                                .filter(room -> isRoomAvailablePop(room, hotel.getId(), searchDto))
-                                .mapToInt(room -> calculateAveragePrice(room, searchDto.getCheckIn(), searchDto.getCheckOut()))
-                                .min();
-
-                        return minAvgPrice.isPresent()
-                                ? Stream.of(HotelListResponseDto.fromEntity(hotel, minAvgPrice.getAsInt()))
-                                : Stream.empty();
-                    })
-                    .limit(10)
-                    .toList());
-
-            popularPlaceList.add(dtoList);
-        }
-
-        return popularPlaceList;
+        return dtoList;
     }
 
     private boolean isRoomAvailablePop(Room room, Long hotelId, HotelPopularRequestDto searchDto) {
@@ -706,4 +917,50 @@ public class HotelService {
     }
 
 
+    public List<AutoCompleteSuggestion> getAutoCompleteSuggestions(String query, String searchType, int size) {
+        try {
+            Query searchQuery = hotelSearchQueryBuilder.buildAutoCompleteQuery(query, searchType, size);
+
+
+            SearchHits<HotelDocument> searchHits = elasticsearchOperations.search(
+                    searchQuery, HotelDocument.class, IndexCoordinates.of("hotels")
+            );
+
+            return searchHits.getSearchHits().stream()
+                    .map(hit -> convertToSuggestion(hit, searchType))
+                    .filter(Objects::nonNull)
+                    .filter(suggestion -> suggestion.getText() != null && !suggestion.getText().trim().isEmpty())
+                    .distinct() // distinct() 메서드로 중복을 제거
+                    .limit(size)
+                    .collect(Collectors.toList());
+
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
+    private AutoCompleteSuggestion convertToSuggestion(SearchHit<HotelDocument> hit, String searchType) {
+        HotelDocument hotel = hit.getContent();
+        String text = getTextBySearchType(hotel, searchType);
+
+        if (text == null || text.trim().isEmpty()) {
+            return null;
+        }
+
+        return AutoCompleteSuggestion.builder()
+                .text(text.trim())
+                .highlightedText(text.trim())
+                .build();
+    }
+
+    private String getTextBySearchType(HotelDocument hotel, String searchType) {
+        switch (searchType) {
+            case "hotel_name":
+                return hotel.getHotelName();
+            case "address":
+                return hotel.getAddressCity();
+            default:
+                return null;
+        }
+    }
 }
