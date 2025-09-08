@@ -190,11 +190,10 @@ public class ChatService {
                                 .map(ChatParticipant::getIsOnline)
                                 .findFirst()
                                 .orElse(null);
-
-                        return new ChatMyChatroomResDto().fromEntity(chatRoom, unReadCount,lastMessage, lastMessageTime,isOnline);
+                            String ChatParticipantName = chatRoom.getParticipantList().stream().filter(p->!p.getUser().equals(user)).map(cpn -> cpn.getUser().getName()).findFirst().orElse(null);
+                            return new ChatMyChatroomResDto().fromEntity(chatRoom, unReadCount,lastMessage, lastMessageTime,isOnline, ChatParticipantName);
                     })
                     .toList();
-            System.out.println("호스트==========" + dtos);
             return dtos;
     }
 

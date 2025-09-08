@@ -23,10 +23,11 @@ public class ChatMyChatroomResDto {
     private String isGroupChat;
     private Long unReadCount;
     private Long participants;
+    private String guestName;
     @Builder.Default
     private String isOnline = "N";
 
-    public ChatMyChatroomResDto fromEntity(ChatRoom chatRoom, Long unReadCount, String lastMessage, LocalDateTime lastMessageTime, String isOnline){
+    public ChatMyChatroomResDto fromEntity(ChatRoom chatRoom, Long unReadCount, String lastMessage, LocalDateTime lastMessageTime, String isOnline, String guestName){
         Hotel hotel =chatRoom.getHotel();
         return ChatMyChatroomResDto.builder()
                 .roomId(chatRoom.getId())
@@ -40,6 +41,7 @@ public class ChatMyChatroomResDto {
                 .hotelName(chatRoom.getHotel().getHotelName())
                 .isGroupChat(chatRoom.getIsGroupChat())
                 .unReadCount(unReadCount)
+                .guestName(guestName)
                 .build();
     }
 }
