@@ -119,7 +119,7 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
         ObjectMapper mapper = new ObjectMapper();
         ChatMessageResDto dto= null;
         try {
-           dto = mapper.readValue(message.getValue(), ChatMessageResDto.class);
+            dto = mapper.readValue(message.getValue(), ChatMessageResDto.class);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -140,4 +140,3 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
     }
 
 }
-

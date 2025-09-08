@@ -162,7 +162,7 @@ public class ReservationPaymentService {
     public String cancel(Long reservationId){
         User user = getUser();
         Reservation reservation = reservationRepository.findByIdAndUser(reservationId,user);
-        reservation.changeState(State.FAILED);
+        reservation.changeState(State.CANCELLED);
         List<String> keys = new ArrayList<>();
         generateQueueKey(reservation,reservation.getCheckInDate(),reservation.getCheckOutDate(), keys);
         for(int i=0; i<keys.size(); i++){

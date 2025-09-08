@@ -68,9 +68,9 @@ public class ReservationController {
         Page<ReservationResDto> resDtos = reservationService.hostFindAll(pageable);
         return new ResponseEntity<>(resDtos, HttpStatus.OK);
     }
-    @PostMapping("/find")
-    public ResponseEntity<?> find(@RequestBody ReservationFindReqDto dto){
-        ReservationCacheResDto reservation = reservationService.find(dto.getReservationId());
+    @PostMapping("/find/{reservationId}")
+    public ResponseEntity<?> find(@PathVariable Long reservationId){
+        ReservationCacheResDto reservation = reservationService.find(reservationId);
 
         return new ResponseEntity<>(reservation, HttpStatus.OK);
     }
