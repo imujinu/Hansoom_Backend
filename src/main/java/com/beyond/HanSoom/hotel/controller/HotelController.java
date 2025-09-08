@@ -176,6 +176,19 @@ public class HotelController {
         );
     }
 
+    @GetMapping("/wishlist")
+    public ResponseEntity<?> findAllWishList(@PageableDefault(size = 10) Pageable pageable) {
+        Page<HotelListResponseDto> dto = hotelService.findAllWishList(pageable);
+        return new ResponseEntity<>(
+                CommonSuccessDto.builder()
+                        .result(dto)
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("호텔 위시리스트 조회")
+                        .build(),
+                HttpStatus.OK
+        );
+    }
+
     @GetMapping("/nearby")
     public ResponseEntity<?> findNearbyHotels( @PageableDefault(size = 10) Pageable pageable,
                                                LocationHotelSearchDto searchDto
