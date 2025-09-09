@@ -40,7 +40,7 @@ public class ChatParticipant extends BaseTimeEntity {
 
     private String publicKey;
     private String privateKey;
-
+    private String iv;
     public void updateOnlineState(String state){
         this.isOnline = state;
     }

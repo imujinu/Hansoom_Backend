@@ -22,6 +22,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -57,7 +58,7 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
                 redisTemplate.getConnectionFactory(),
                 StreamMessageListenerContainer.StreamMessageListenerContainerOptions.builder()
                         .targetType(String.class)
-                        .pollTimeout(Duration.ofSeconds(1))
+                        .pollTimeout(Duration.ofMillis(200))
                         .build()
         );
 
@@ -125,8 +126,11 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
         }
 
         User user = userRepository.findByEmail(dto.getSenderEmail()).orElseThrow(()->new EntityNotFoundException("존재하지 않는 유저입니다."));
+        ChatRoom chatRoom = chatRoomRepository.findById(dto.getRoomId()).orElseThrow(()-> new EntityNotFoundException("존재하지 않는 채팅방입니다."));
+        ChatParticipant me = chatParticipantRepository.findByChatRoomAndUser(chatRoom,user).orElseThrow(()-> new EntityNotFoundException("존재하지 않는 채팅 유저 입니다."));
+        ChatParticipant host = getChatParticipant(chatRoom.getParticipantList(), user);
         dto.updateUser(user);
-
+        dto.updateKeySet(me, host);
         if(dto.isWaring()){
             ChatRoom chatroom = chatRoomRepository.findById(dto.getRoomId()).orElseThrow(()->new EntityNotFoundException("존재하지 않는 채팅방입니다."));
             ChatParticipant chatParticipant = chatParticipantRepository.findByChatRoomAndUser(chatroom,user).orElseThrow(()->new EntityNotFoundException("존재하지 않는 채팅 참여자 입니다."));
@@ -140,5 +144,11 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
         chatService.saveMessage(dto);
 
     }
-
+    private static ChatParticipant getChatParticipant(List<ChatParticipant> list, User user) {
+        ChatParticipant hostParticipant = list.stream()
+                .filter(cp -> !cp.getUser().equals(user))
+                .findFirst()
+                .orElse(null);
+        return hostParticipant;
+    }
 }

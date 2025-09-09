@@ -21,9 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -231,13 +229,22 @@ public class ChatService {
         // 특정 room 에대한 message
         List<ChatMessage> chatMessages = chatMessageRepository.findByChatRoomOrderByCreatedTimeAsc(chatRoom);
         List<ChatMessageResDto> chatMessageDtos = new ArrayList<>();
+        ChatParticipant me = chatParticipantRepository.findByChatRoomAndUser(chatRoom,user).orElseThrow(()->new EntityNotFoundException("존재하지 않는 유저입니다."));
+        ChatParticipant host = getChatParticipant(chatParticipants, user);
         for(ChatMessage c : chatMessages){
+            Map<String, String> keysMap = new HashMap<>();
+            keysMap.put("me", me.getPrivateKey());
+            keysMap.put("other", host.getPrivateKey());
+
             ChatMessageResDto chatMessageDto = ChatMessageResDto.builder()
                     .roomId(chatRoom.getId())
-                    .timestamp(String.valueOf(c.getCreatedTime()))
                     .content(c.getContent())
-                    .senderName(c.getUser().getName())
+                    .timestamp(String.valueOf(c.getCreatedTime()))
                     .senderEmail(c.getUser().getEmail())
+                    .senderName(c.getUser().getName())
+                    .profileImage(c.getUser().getProfileImage())
+                    .keys(keysMap)
+                    .iv(me.getIv())
                     .build();
             chatMessageDtos.add(chatMessageDto);
         }
