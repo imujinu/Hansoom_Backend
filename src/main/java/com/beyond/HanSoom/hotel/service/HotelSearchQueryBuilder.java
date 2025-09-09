@@ -62,11 +62,11 @@ public class HotelSearchQueryBuilder {
                                                 .minimumShouldMatch("1")
                                         )
                                 )
-                                .must(m -> m.term(t -> t.field("state").value("APPLY")))
+                                .must(m -> m.term(t -> t.field("state.keyword").value("APPLY")))
                                 .filter(f -> {
                                     if (dto.getType() != null && !dto.getType().isEmpty()) {
                                         return f.terms(terms -> terms
-                                                .field("type")
+                                                .field("type.keyword")
                                                 .terms(t -> t.value(dto.getType().stream()
                                                         .map(co.elastic.clients.elasticsearch._types.FieldValue::of)
                                                         .collect(Collectors.toList()))));
@@ -99,11 +99,11 @@ public class HotelSearchQueryBuilder {
                                                 .minimumShouldMatch("1")
                                         )
                                 )
-                                .must(m -> m.term(t -> t.field("state").value("APPLY")))
+                                .must(m -> m.term(t -> t.field("state.keyword").value("APPLY")))
                                 .filter(f -> {
                                     if (dto.getType() != null && !dto.getType().isEmpty()) {
                                         return f.terms(terms -> terms
-                                                .field("type")
+                                                .field("type.keyword")
                                                 .terms(t -> t.value(dto.getType().stream()
                                                         .map(co.elastic.clients.elasticsearch._types.FieldValue::of)
                                                         .collect(Collectors.toList()))));
@@ -124,37 +124,46 @@ public class HotelSearchQueryBuilder {
         return NativeQuery.builder()
                 .withQuery(q -> q
                         .bool(b -> b
-                                        .must(m -> m
-                                                .bool(innerB -> innerB
-                                                        // 1. 정확한 검색 (최고 점수)
-                                                        .should(s -> s.match(match -> match
-                                                                .field("hotelName")
-                                                                .query(hotelName)
-                                                                .boost(5.0f)
-                                                        ))
+                                .must(m -> m
+                                        .bool(innerB -> innerB
+                                                // 1. 정확한 검색 (최고 점수)
+                                                .should(s -> s.match(match -> match
+                                                        .field("hotelName")
+                                                        .query(hotelName)
+                                                        .boost(5.0f)
+                                                ))
 
-                                                        // 2. 부분 검색 (wildcard)
-                                                        .should(s -> s.wildcard(wild -> wild
-                                                                .field("hotelName")
-                                                                .value("*" + hotelName + "*")
-                                                                .boost(4.0f)
-                                                        ))
+                                                // 2. 부분 검색 (wildcard)
+                                                .should(s -> s.wildcard(wild -> wild
+                                                        .field("hotelName")
+                                                        .value("*" + hotelName + "*")
+                                                        .boost(4.0f)
+                                                ))
 
-                                                        // 3. 엄격한 오타 허용 (1글자만)
-                                                        .should(s -> s.fuzzy(fuzzy -> fuzzy
-                                                                .field("hotelName")
-                                                                .value(hotelName)
-                                                                .fuzziness("1") // 1글자만 허용
-                                                                .prefixLength(1) // 첫글자 일치 필수
-                                                                .maxExpansions(5) // 확장 제한
-                                                                .boost(2.0f)
-                                                        ))
+                                                // 3. 엄격한 오타 허용 (1글자만)
+                                                .should(s -> s.fuzzy(fuzzy -> fuzzy
+                                                        .field("hotelName")
+                                                        .value(hotelName)
+                                                        .fuzziness("1") // 1글자만 허용
+                                                        .prefixLength(1) // 첫글자 일치 필수
+                                                        .maxExpansions(5) // 확장 제한
+                                                        .boost(2.0f)
+                                                ))
 
-                                                        .minimumShouldMatch("1")
-                                                )
+                                                .minimumShouldMatch("1")
                                         )
-                                        .must(m -> m.term(t -> t.field("state").value("APPLY")))
-                                // ... 나머지 필터 코드 동일
+                                )
+                                .must(m -> m.term(t -> t.field("state.keyword").value("APPLY")))
+                                .filter(f -> {
+                                    if (dto.getType() != null && !dto.getType().isEmpty()) {
+                                        return f.terms(terms -> terms
+                                                .field("type.keyword")
+                                                .terms(t -> t.value(dto.getType().stream()
+                                                        .map(co.elastic.clients.elasticsearch._types.FieldValue::of)
+                                                        .collect(Collectors.toList()))));
+                                    }
+                                    return f.matchAll(ma -> ma);
+                                })
                         )
                 )
                 .build();
@@ -229,11 +238,11 @@ public class HotelSearchQueryBuilder {
                                             return innerB.minimumShouldMatch("1");
                                         })
                                 )
-                                .must(m -> m.term(t -> t.field("state").value("APPLY")))
+                                .must(m -> m.term(t -> t.field("state.keyword").value("APPLY")))
                                 .filter(f -> {
                                     if (dto.getType() != null && !dto.getType().isEmpty()) {
                                         return f.terms(terms -> terms
-                                                .field("type")
+                                                .field("type.keyword")
                                                 .terms(t -> t.value(dto.getType().stream()
                                                         .map(co.elastic.clients.elasticsearch._types.FieldValue::of)
                                                         .collect(Collectors.toList()))));
@@ -274,7 +283,7 @@ public class HotelSearchQueryBuilder {
                 )
                 .withFilter(f -> f
                         .term(t -> t
-                                .field("state")
+                                .field("state.keyword")
                                 .value("APPLY")
                         )
                 )
