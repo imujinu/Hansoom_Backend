@@ -266,39 +266,10 @@ public class HotelSearchQueryBuilder {
 
         return NativeQuery.builder()
                 .withQuery(q -> q
-                        .bool(b -> b
-                                // 1. Wildcard 검색 (가장 확실한 방법)
-                                .should(s -> s
-                                        .wildcard(w -> w
-                                                .field(fieldName)
-                                                .value("*" + query + "*")
-                                                .boost(3.0f)
-                                        )
-                                )
-                                // 2. N-gram 필드 검색
-                                .should(s -> s
-                                        .match(m -> m
-                                                .field(fieldName + "._2gram")
-                                                .query(query)
-                                                .boost(2.0f)
-                                        )
-                                )
-                                .should(s -> s
-                                        .match(m -> m
-                                                .field(fieldName + "._3gram")
-                                                .query(query)
-                                                .boost(2.0f)
-                                        )
-                                )
-                                // 3. 일반 매치
-                                .should(s -> s
-                                        .match(m -> m
-                                                .field(fieldName)
-                                                .query(query)
-                                                .boost(1.0f)
-                                        )
-                                )
-                                .minimumShouldMatch("1")
+                        .matchPhrasePrefix(mp -> mp
+                                .field(fieldName)
+                                .query(query)
+                                .maxExpansions(10)
                         )
                 )
                 .withFilter(f -> f
