@@ -15,6 +15,7 @@ import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.reservation.domain.State;
 import com.beyond.HanSoom.reservation.dto.req.ReservationCompleteReqDto;
 import com.beyond.HanSoom.reservation.dto.req.ReservationReqDto;
+import com.beyond.HanSoom.reservation.dto.res.ReservationCompleteResDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResponse;
 import com.beyond.HanSoom.reservation.repository.ReservationRepository;
 import com.beyond.HanSoom.room.domain.Room;
@@ -128,7 +129,7 @@ public class ReservationPaymentService {
         }
     }
 
-    public Long complete(ReservationCompleteReqDto dto) {
+    public ReservationCompleteResDto complete(ReservationCompleteReqDto dto) {
         Reservation reservation = reservationRepository.findByUuid(dto.getReservationId()).orElseThrow(()->new EntityNotFoundException("존재하지 않는 예약 내역 입니다."));
         Payment payment = paymentRepository.findByReservationId(reservation.getId());
         User user = getUser();
@@ -150,7 +151,7 @@ public class ReservationPaymentService {
             notificationService.createNotiReviewRequest(user, reservation);
             sseAlarmService.publishReserved(reservation.getHotel().getUser().getEmail(), "reserved");
 
-            return reservation.getId();
+            return new ReservationCompleteResDto().fromEntity(reservation.getId(), reservation.getHotel().getUser().getId(), user.getId());
         }else{
             for(int i=0; i<keys.size(); i++){
                 queueReservationService.removeMember(keys.get(i), String.valueOf(user.getId()));

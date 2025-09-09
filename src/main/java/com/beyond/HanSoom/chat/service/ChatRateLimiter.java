@@ -12,13 +12,17 @@ public class ChatRateLimiter {
 
     private final Map<String, List<Long>> userMessageTimes = new ConcurrentHashMap<>();
     private final Map<String, Long> userBlockedUntil = new ConcurrentHashMap<>();
-    private static final int LIMIT = 10; // 1분에 60회
+    private static final int LIMIT = 5; // 1분에 60회
     private static final long WINDOW_MS = 60_000; // 1분
-    private static final long BLOCK_MS = 5 * 60_000; // 5분 차단
+    private static final long BLOCK_MS = 1 * 60_000; // 5분 차단
 
     public boolean canSendMessage(String email) {
         long now = System.currentTimeMillis();
 
+        if (userBlockedUntil.containsKey(email) && userBlockedUntil.get(email) <= now) {
+            userBlockedUntil.remove(email);
+            userMessageTimes.remove(email);
+        }
         // 차단 중인지 확인
         if (userBlockedUntil.containsKey(email) && userBlockedUntil.get(email) > now) {
             return false;
@@ -39,6 +43,7 @@ public class ChatRateLimiter {
 
     public long getBlockedRemaining(String email) {
         long now = System.currentTimeMillis();
-        return userBlockedUntil.getOrDefault(email, 0L) - now;
+        long blockedUntil = userBlockedUntil.getOrDefault(email, 0L);
+        return Math.max(0, blockedUntil);
     }
 }

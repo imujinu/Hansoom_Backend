@@ -130,7 +130,9 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
         if(dto.isWaring()){
             ChatRoom chatroom = chatRoomRepository.findById(dto.getRoomId()).orElseThrow(()->new EntityNotFoundException("존재하지 않는 채팅방입니다."));
             ChatParticipant chatParticipant = chatParticipantRepository.findByChatRoomAndUser(chatroom,user).orElseThrow(()->new EntityNotFoundException("존재하지 않는 채팅 참여자 입니다."));
+            System.out.println("채팅 제한 시간 =========" + dto.getRemaining());
             chatParticipant.updateRemaining(dto.getRemaining());
+            chatParticipantRepository.save(chatParticipant);
         }
         redisTemplate.opsForStream().acknowledge(streamKey, consumerGroupName, recordId);
         messagingTemplate.convertAndSend("/topic/" + dto.getRoomId(), dto);
