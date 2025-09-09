@@ -36,7 +36,7 @@ spring:
       max-file-size: 1000MB
       max-request-size: 1000MB
   elasticsearch:
-    uris: http://elasticsearch-service:9200/ # @@@@@ 바꿨는데 확인 필요 @@@@@
+    uris: http://elasticsearch-service:9200 # @@@@@ 바꿨는데 확인 필요 @@@@@
     username: elastic
     password: 1234
     connection-timeout: 10s
