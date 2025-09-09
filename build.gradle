@@ -1,0 +1,77 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.4.7'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.beyond'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// 값 검증을 위한 의존성
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	//    jwt토큰 관련 라이브러리 추가
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+	// 로그인을 위한 security 의존성
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	//    파일처리를 위한 aws 의존성 추가
+	implementation 'software.amazon.awssdk:s3:2.17.58'
+
+	implementation 'org.json:json:20240303'
+
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+	//redis 의존성
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+	//rabbitmq 의존성
+	implementation 'org.springframework.boot:spring-boot-starter-amqp'
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+	//JsonParser
+	implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+
+	//websocket 의존성
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+	//redis LocalDate 저장 의존성
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+	//ElasticSearch 의존성
+	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+	implementation 'org.elasticsearch:elasticsearch:8.16.2'  // 버전은 Spring Boot와 호환되는 버전
+
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
