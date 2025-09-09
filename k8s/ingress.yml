@@ -13,10 +13,10 @@ metadata:
     # nginx.ingress.kubernetes.io/rewrite-target: /$1 #첫번쨰 prefix제거
     
 spec:
-  # tls:
-  # - hosts:
-  #   - "server.eunduk.shop"
-  #   secretName: server-eunduk-shop-tls # Certificate의 secretName
+  tls:
+  - hosts:
+    - "server.hansoom.shop"
+    secretName: server-hansoom-shop-tls # Certificate의 secretName
   rules:
   - host: server.hansoom.shop  # 설정하려는 도메인 이름.
     http:
