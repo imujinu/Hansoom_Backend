@@ -5,7 +5,7 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 src/main/resources/application-local.yml
-src/main/resources/application-prod.yml
+src/main/resources/application-prod-legacy.yml
 
 ### STS ###
 .apt_generated
