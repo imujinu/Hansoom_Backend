@@ -36,7 +36,7 @@
   <img src="https://img.shields.io/badge/intellijidea-000000?style=for-the-badge&logo=intellijidea&logoColor=white" />
   <img src="https://img.shields.io/badge/luascript-2C2D72?style=for-the-badge&logo=lua&logoColor=white" />
   <img src="https://img.shields.io/badge/STOMP/WebSocket-FF6B6B?style=for-the-badge&logo=socket.io&logoColor=white"/>
-  <img src="https://img.shields.io/badge/STOMP/elasticsearch-005571?style=for-the-badge&logo=elasticsearch&logoColor=white"/>
+  <img src="https://img.shields.io/badge/elasticsearch-005571?style=for-the-badge&logo=elasticsearch&logoColor=white"/>
 </p>
 
 ### 🛠️ FRONTEND
@@ -382,7 +382,8 @@ https://github.com/user-attachments/assets/5ad777ce-03c8-41c1-b6fa-d07bd8107dc1
   <summary>호텔 등록</summary>
   <div align="center">
 
-https://github.com/user-attachments/assets/3f0e2484-803b-44ba-af2e-64849e545cda
+![호텔 등록](https://github.com/user-attachments/assets/b8f4fe54-b0a1-42a1-852c-354911cb826b)
+
 
   </div>
 </details>
@@ -390,7 +391,8 @@ https://github.com/user-attachments/assets/3f0e2484-803b-44ba-af2e-64849e545cda
   <summary>호텔 수정</summary>
   <div align="center">
 
-https://github.com/user-attachments/assets/3b5c26c2-4f58-47d1-b29e-884fc1d94e79
+![호텔 수정](https://github.com/user-attachments/assets/767c20af-3150-41f0-986f-5c66195ee7f0)
+
 
   </div>
 </details>
@@ -424,7 +426,7 @@ https://github.com/user-attachments/assets/3b5c26c2-4f58-47d1-b29e-884fc1d94e79
   <div align="center">
 
 
-https://github.com/user-attachments/assets/e3b34a71-39eb-49b1-9160-b2c809419b05
+![호텔 승인](https://github.com/user-attachments/assets/b6346ad3-167b-4620-9d7d-87d0b71012d2)
 
 
   </div>
@@ -437,7 +439,8 @@ https://github.com/user-attachments/assets/e3b34a71-39eb-49b1-9160-b2c809419b05
   <summary>지역명 조회</summary>
   <div align="center">
     
-https://github.com/user-attachments/assets/1c60441e-731f-4a45-a82c-627df4c58bc4
+![지역명 검색](https://github.com/user-attachments/assets/4da13680-e6d7-4034-b94d-fb494e00a907)
+
 
   </div>
 </details>
@@ -446,7 +449,8 @@ https://github.com/user-attachments/assets/1c60441e-731f-4a45-a82c-627df4c58bc4
   <summary>호텔명 조회</summary>
   <div align="center">
     
-https://github.com/user-attachments/assets/7d848b57-d613-47cb-bfef-e2af1f0656a8
+![호텔명 검색](https://github.com/user-attachments/assets/d4bb8898-4f92-4549-8b1e-628532c27737)
+
 
   </div>
 </details>
