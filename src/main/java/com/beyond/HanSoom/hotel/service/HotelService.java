@@ -146,7 +146,7 @@ public class HotelService {
                     .hotelName(hotel.getHotelName())
                     .addressCity(addressDto.getAddressCity())
                     .addressDetail(addressDto.getAddressDetail())
-                    .address(hotel.getAddress())
+                    .address(addressDto.getAddressCity()+addressDto.getAddressDetail())
                     // suggest 필드에는 동일한 값을 저장 (Search As You Type이 자동으로 n-gram 처리)
                     .hotelNameSuggest(hotel.getHotelName())
                     .addressCitySuggest(addressDto.getAddressCity())
