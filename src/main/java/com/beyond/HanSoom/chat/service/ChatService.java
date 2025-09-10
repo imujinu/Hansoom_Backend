@@ -12,6 +12,7 @@ import com.beyond.HanSoom.hotel.repository.HotelRepository;
 import com.beyond.HanSoom.reservation.domain.Reservation;
 import com.beyond.HanSoom.reservation.repository.ReservationRepository;
 import com.beyond.HanSoom.user.domain.User;
+import com.beyond.HanSoom.user.domain.UserRole;
 import com.beyond.HanSoom.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -341,6 +342,9 @@ public class ChatService {
 
     public void createHostGroupChat() {
         User user = getUser();
+        if(!user.getUserRole().equals(UserRole.HOST)){
+            return;
+        }
         Hotel hotel = hotelRepository.findByUser(user);
         ChatRoom groupChat = chatRoomRepository.findByHotelAndIsGroupChat(hotel,"Y");
 

@@ -97,4 +97,4 @@ logging:
 chat:
   stream-key: chat:messages          # 단일 스트림 사용 (roomId는 페이로드로 구분)
   group: chat-consumers              # 컨슈머 그룹 이름
-  consumer-name: ${CONSUMER_NAME}     # 이 인스턴스의 컨슈머 이름
+  consumer-name: ${CONSUMER_NAME:default-consumer}    # 이 인스턴스의 컨슈머 이름
