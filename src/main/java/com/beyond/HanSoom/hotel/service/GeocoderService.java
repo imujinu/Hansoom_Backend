@@ -110,10 +110,21 @@ public class GeocoderService {
 
         String remaining = fullAddress;
 
-        // addressCity를 fullAddress에서 제거
         if (addressCity != null && !addressCity.isEmpty()) {
-            remaining = remaining.replace(addressCity, "").trim();
-            log.debug("addressCity '{}' 제거 후: {}", addressCity, remaining);
+            // addressCity의 마지막 부분 추출
+            String[] cityParts = addressCity.split("\\s+");
+            String lastCityPart = cityParts[cityParts.length - 1]; // "강릉시"
+
+            log.debug("마지막 도시 부분: {}", lastCityPart);
+
+            // fullAddress에서 마지막 도시 부분의 인덱스를 찾음
+            int lastIndex = remaining.lastIndexOf(lastCityPart);
+
+            if (lastIndex != -1) {
+                // 해당 부분 이후의 문자열 추출
+                remaining = remaining.substring(lastIndex + lastCityPart.length()).trim();
+                log.debug("'{}' 이후 부분 추출: {}", lastCityPart, remaining);
+            }
         }
 
         // 연속된 공백 정리
