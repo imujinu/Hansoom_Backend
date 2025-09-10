@@ -79,8 +79,9 @@ public class HotelSearchQueryBuilder {
     }
 
     // 정확한 지역명 검색 쿼리 (address 통합 컬럼 사용)
-    private Query buildExactAddressQuery(HotelListSearchDto dto, String address) {
-        log.info("와일드카드 주소 검색: '{}'", address);
+    private Query buildExactAddressQuery(HotelListSearchDto dto, String add) {
+        log.info("와일드카드 주소 검색: '{}'", add);
+        String address = extractSimpleKeyword(add);
 
         return NativeQuery.builder()
                 .withQuery(q -> q
@@ -156,101 +157,131 @@ public class HotelSearchQueryBuilder {
                 .build();
     }
 
-    // 간단한 주소 검색 쿼리
+    // 개선된 주소 검색 쿼리 - 구체적인 검색어 우선
     public Query buildFlexibleAddressQuery(HotelListSearchDto dto) {
         String address = dto.getAddress().trim();
         log.info("지역명 검색: '{}'", address);
 
+        // 주소를 공백으로 분리하여 각 부분 추출
+        List<String> addressParts = Arrays.stream(address.split("\\s+"))
+                .filter(part -> !part.isEmpty())
+                .collect(Collectors.toList());
+
         // 핵심 키워드만 추출 (예: "강원특별자치도" -> "강원")
         String keyword = extractSimpleKeyword(address);
         boolean isShortAddress = address.length() <= 2;
+        boolean hasMultipleParts = addressParts.size() > 1;
 
         return NativeQuery.builder()
                 .withQuery(q -> q
                         .bool(b -> b
-                                .must(m -> m
-                                        .bool(innerB -> {
-                                            // 1. 정확한 매치 (최고 점수)
-                                            innerB.should(s -> s.match(match -> match
+                                .must(m -> {
+                                    // 여러 부분이 있는 경우 (예: "강원특별자치도 강릉시")
+                                    if (hasMultipleParts) {
+                                        // 가장 구체적인 부분(마지막 부분)을 필수 조건으로
+                                        String mostSpecific = addressParts.get(addressParts.size() - 1);
+                                        return m.bool(mustBool -> {
+                                            // 마지막 부분(가장 구체적인 지역)은 반드시 포함되어야 함
+                                            mustBool.must(specificMust -> specificMust
+                                                    .bool(specificBool -> specificBool
+                                                            .should(s -> s.wildcard(wildcard -> wildcard
+                                                                    .field("address")
+                                                                    .value("*" + mostSpecific + "*")
+                                                            ))
+                                                            .should(s -> s.match(match -> match
+                                                                    .field("address")
+                                                                    .query(mostSpecific)
+                                                                    .fuzziness("1")
+                                                            ))
+                                                            .minimumShouldMatch("1")
+                                                    )
+                                            );
+
+                                            // 점수 계산용 should 조건들
+                                            mustBool.should(s -> s.bool(scoringBool -> {
+                                                // 1. 전체 주소 정확한 매치 (최고 점수)
+                                                scoringBool.should(ss -> ss.match(match -> match
+                                                        .field("address")
+                                                        .query(address)
+                                                        .boost(20.0f)
+                                                ));
+
+                                                // 2. 전체 주소 부분 매치
+                                                scoringBool.should(ss -> ss.wildcard(wildcard -> wildcard
+                                                        .field("address")
+                                                        .value("*" + address + "*")
+                                                        .boost(18.0f)
+                                                ));
+
+                                                // 3. 모든 부분이 포함된 경우 (매우 높은 점수)
+                                                scoringBool.should(ss -> ss.bool(allPartsBool -> {
+                                                    for (String part : addressParts) {
+                                                        allPartsBool.must(partMust -> partMust.wildcard(wildcard -> wildcard
+                                                                .field("address")
+                                                                .value("*" + part + "*")
+                                                        ));
+                                                    }
+                                                    return allPartsBool.boost(15.0f);
+                                                }));
+
+                                                // 4. 각 부분별 개별 점수
+                                                for (int i = 0; i < addressParts.size(); i++) {
+                                                    String part = addressParts.get(i);
+                                                    float boost = 10.0f + (addressParts.size() - i); // 뒤쪽(구체적) 부분이 더 높은 점수
+
+                                                    scoringBool.should(ss -> ss.wildcard(wildcard -> wildcard
+                                                            .field("address")
+                                                            .value("*" + part + "*")
+                                                            .boost(boost)
+                                                    ));
+                                                }
+
+                                                return scoringBool;
+                                            }));
+
+                                            return mustBool;
+                                        });
+                                    } else {
+                                        // 단일 부분인 경우 기존 로직 사용
+                                        return m.bool(singleBool -> {
+                                            // 정확한 매치
+                                            singleBool.should(s -> s.match(match -> match
                                                     .field("address")
                                                     .query(address)
                                                     .boost(15.0f)
                                             ));
 
-                                            // 2. 원본 주소로 부분 매치
-                                            innerB.should(s -> s.wildcard(wildcard -> wildcard
+                                            // 부분 매치
+                                            singleBool.should(s -> s.wildcard(wildcard -> wildcard
                                                     .field("address")
                                                     .value("*" + address + "*")
                                                     .boost(12.0f)
                                             ));
 
-                                            // 3. 핵심 키워드로 부분 매치
+                                            // 핵심 키워드 매치
                                             if (!keyword.equals(address)) {
-                                                innerB.should(s -> s.wildcard(wildcard -> wildcard
+                                                singleBool.should(s -> s.wildcard(wildcard -> wildcard
                                                         .field("address")
                                                         .value("*" + keyword + "*")
                                                         .boost(10.0f)
                                                 ));
                                             }
 
-                                            // === 오타 검증 로직 시작 ===
+                                            // 오타 허용
                                             if (!isShortAddress) {
-                                                // 4. 1글자 오타 허용 (첫 글자 일치 필수)
-                                                innerB.should(s -> s.fuzzy(fuzzy -> fuzzy
+                                                singleBool.should(s -> s.fuzzy(fuzzy -> fuzzy
                                                         .field("address")
                                                         .value(address)
                                                         .fuzziness("1")
-                                                        .prefixLength(1)  // 첫 글자는 반드시 일치
-                                                        .maxExpansions(10)
+                                                        .prefixLength(1)
                                                         .boost(8.0f)
                                                 ));
-
-                                                // 5. AUTO 오타 허용 (길이에 따라 자동 조정)
-                                                innerB.should(s -> s.fuzzy(fuzzy -> fuzzy
-                                                        .field("address")
-                                                        .value(address)
-                                                        .fuzziness("AUTO")
-                                                        .prefixLength(1)
-                                                        .boost(7.0f)
-                                                ));
-
-                                                // 6. 키워드에 대한 오타 허용
-                                                if (!keyword.equals(address) && keyword.length() > 2) {
-                                                    innerB.should(s -> s.fuzzy(fuzzy -> fuzzy
-                                                            .field("address")
-                                                            .value(keyword)
-                                                            .fuzziness("1")
-                                                            .prefixLength(1)
-                                                            .boost(6.0f)
-                                                    ));
-                                                }
-
-                                                // 7. 더 관대한 오타 허용 (5글자 이상일 때)
-                                                if (address.length() >= 5) {
-                                                    innerB.should(s -> s.fuzzy(fuzzy -> fuzzy
-                                                            .field("address")
-                                                            .value(address)
-                                                            .fuzziness("2")
-                                                            .prefixLength(2)  // 첫 2글자는 일치
-                                                            .maxExpansions(5)
-                                                            .boost(5.0f)
-                                                    ));
-                                                }
-
-                                                // 8. Match query with fuzziness (단어 단위 오타)
-                                                innerB.should(s -> s.match(match -> match
-                                                        .field("address")
-                                                        .query(address)
-                                                        .fuzziness("1")
-                                                        .operator(co.elastic.clients.elasticsearch._types.query_dsl.Operator.And)
-                                                        .boost(4.0f)
-                                                ));
                                             }
-                                            // === 오타 검증 로직 끝 ===
 
-                                            return innerB.minimumShouldMatch("1");
-                                        })
-                                )
+                                            return singleBool.minimumShouldMatch("1");
+                                        });
+                                    }
+                                })
                                 .must(m -> m.term(t -> t.field("state.keyword").value("APPLY")))
                                 .filter(f -> {
                                     if (dto.getType() != null && !dto.getType().isEmpty()) {
@@ -267,10 +298,36 @@ public class HotelSearchQueryBuilder {
                 .build();
     }
 
-    // 간단한 키워드 추출 메서드
+    // 개선된 키워드 추출 함수
     private String extractSimpleKeyword(String address) {
-        // "강원특별자치도" -> "강원", "서울특별시" -> "서울" 등
-        return address.replaceAll("(특별자치도|특별자치시|특별시|광역시|도|시|군|구).*", "").trim();
+        if (address == null || address.trim().isEmpty()) {
+            return "";
+        }
+
+        String trimmed = address.trim();
+
+        // 여러 주소 부분이 있는 경우 첫 번째 부분만 사용
+        String firstPart = trimmed.split("\\s+")[0];
+
+        // 도/시/구 단위 키워드 추출 규칙
+        if (firstPart.endsWith("특별자치도")) {
+            return firstPart.replace("특별자치도", "");
+        } else if (firstPart.endsWith("특별시")) {
+            return firstPart.replace("특별시", "");
+        } else if (firstPart.endsWith("광역시")) {
+            return firstPart.replace("광역시", "");
+        } else if (firstPart.endsWith("도")) {
+            return firstPart.replace("도", "");
+        } else if (firstPart.endsWith("시")) {
+            return firstPart.replace("시", "");
+        } else if (firstPart.endsWith("구")) {
+            return firstPart.replace("구", "");
+        } else if (firstPart.endsWith("군")) {
+            return firstPart.replace("군", "");
+        }
+
+        // 특별한 규칙이 없으면 원본 반환
+        return firstPart;
     }
 
     // 타입 필터 추가
