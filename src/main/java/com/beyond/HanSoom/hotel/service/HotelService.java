@@ -611,27 +611,27 @@ public class HotelService {
     // 개선된 고객 조회 메서드
     public Page<HotelListResponseDto> findByElasticsearch(Pageable pageable, HotelListSearchDto searchDto) {
         log.info("=== ElasticSearch 검색 시작 ===");
-        log.info("[HANSOOM][INFO] searchDto: {}", searchDto); // toString() 메서드 확인
+        log.info("[HANSOOM][INFO] searchDto: {}", searchDto);
 
-        final int fetchSize = pageable.getPageSize() * 3;
-        Pageable elasticPageable = PageRequest.of(pageable.getPageNumber(), fetchSize);
+        // 1. Elasticsearch에서 전체 검색 (큰 사이즈로 한 번에 가져오기)
+        final int maxSize = 10000; // 충분히 큰 크기
+        Pageable largePageable = PageRequest.of(0, maxSize);
 
         Query searchQuery = hotelSearchQueryBuilder.buildImprovedFuzzySearchQuery(searchDto);
-        searchQuery.setPageable(elasticPageable);
-        SearchHits<HotelDocument> searchHits  = elasticsearchOperations.search(searchQuery, HotelDocument.class);
+        searchQuery.setPageable(largePageable);
+        SearchHits<HotelDocument> searchHits = elasticsearchOperations.search(searchQuery, HotelDocument.class);
         log.info("[HANSOOM][INFO] 1단계 정확한 검색 결과: {}", searchHits.getTotalHits());
 
+        // 오타 대응 검색
         if (searchHits.getTotalHits() == 0) {
             log.info("[HANSOOM][INFO] 2단계 오타 대응 검색 시작");
             if (searchDto.getHotelName() != null) {
                 searchQuery = hotelSearchQueryBuilder.buildFlexibleHotelNameQuery(searchDto);
-                searchQuery.setPageable(elasticPageable);
-                searchHits = elasticsearchOperations.search(searchQuery, HotelDocument.class);
             } else {
                 searchQuery = hotelSearchQueryBuilder.buildFlexibleAddressQuery(searchDto);
-                searchQuery.setPageable(elasticPageable);
-                searchHits = elasticsearchOperations.search(searchQuery, HotelDocument.class);
             }
+            searchQuery.setPageable(largePageable);
+            searchHits = elasticsearchOperations.search(searchQuery, HotelDocument.class);
             log.info("[HANSOOM][INFO] 2단계 오타 대응 검색 결과: {}", searchHits.getTotalHits());
         }
 
@@ -644,58 +644,65 @@ public class HotelService {
                     doc.getId(), doc.getHotelName(), doc.getAddressCity(), doc.getAddressDetail());
         });
 
-        List<Long> hotelIds = searchHits.getSearchHits().stream()
+        // 2. 조건에 맞는 전체 호텔 ID 필터링
+        List<Long> filteredHotelIds = searchHits.getSearchHits().stream()
                 .map(SearchHit::getContent)
                 .filter(hotelDoc -> hotelDoc.getRooms().stream()
-                        .anyMatch(room ->
-                                "APPLY".equals(room.getState()) &&
-                                        room.getMaximumPeople() >= searchDto.getPeople()
-                        ))
+                        .anyMatch(room -> "APPLY".equals(room.getState()) &&
+                                room.getMaximumPeople() >= searchDto.getPeople()))
                 .map(HotelDocument::getId)
                 .toList();
 
-        log.info("[HANSOOM][INFO] 추출된 호텔 ID 목록: {}", hotelIds);
+        log.info("[HANSOOM][INFO] 추출된 호텔 ID 목록: {}", filteredHotelIds);
+        log.info("[HANSOOM][INFO] 필터링된 전체 호텔 개수: {}", filteredHotelIds.size());
         log.info("=== ElasticSearch 검색 완료 ===");
 
-        // hotelIds가 비어있으면 빈 페이지 반환
-        if (hotelIds.isEmpty()) {
+        // 빈 결과 처리
+        if (filteredHotelIds.isEmpty()) {
             return new PageImpl<>(Collections.emptyList(), pageable, 0);
         }
 
-        // 2. ID 목록으로 JPA에서 호텔 정보 조회 (페치 조인으로 N+1 문제 해결)
-        List<Hotel> hotels = hotelRepository.findByIdInWithRoomsAndReviewSummary(hotelIds);
+        // 3. 전체 호텔 정보를 JPA로 조회 (페치 조인으로 N+1 문제 해결)
+        List<Hotel> allHotels = hotelRepository.findByIdInWithRoomsAndReviewSummary(filteredHotelIds);
 
-        // 3. JPA 조회 결과에 대한 2차 필터링 및 DTO 변환
-        List<HotelListResponseDto> filteredDtoList = hotels.stream()
+        // 4. 전체 DTO 변환 및 2차 필터링
+        List<HotelListResponseDto> allDtoList = allHotels.stream()
                 .filter(hotel -> hasAvailableRooms(hotel, searchDto))
                 .map(hotel -> createHotelDto(hotel, searchDto))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .collect(Collectors.toList());
 
-        // ElasticSearch 정렬 순서 유지
-        Map<Long, HotelListResponseDto> dtoMap = filteredDtoList.stream()
+        // 5. ElasticSearch 정렬 순서 유지
+        Map<Long, HotelListResponseDto> dtoMap = allDtoList.stream()
                 .collect(Collectors.toMap(HotelListResponseDto::getId, Function.identity()));
 
-        List<HotelListResponseDto> sortedDtoList = hotelIds.stream()
+        List<HotelListResponseDto> orderedAllResult = filteredHotelIds.stream()
                 .map(dtoMap::get)
                 .filter(Objects::nonNull)
                 .toList();
 
-        List<HotelListResponseDto> finalSortedList = applySorting(sortedDtoList, searchDto.getSortOption());
+        // 6. 전체 리스트에 정렬 적용
+        List<HotelListResponseDto> sortedAllResult = applySorting(orderedAllResult, searchDto.getSortOption());
 
-        // 페이징 처리
+        int totalCount = sortedAllResult.size();
+        log.info("[HANSOOM][INFO] 최종 정렬된 전체 호텔 개수: {}", totalCount);
+
+        // 7. 정렬된 결과에서 페이징 처리
         int startIndex = (int) pageable.getOffset();
-        int endIndex = Math.min(startIndex + pageable.getPageSize(), sortedDtoList.size());
+        int endIndex = Math.min(startIndex + pageable.getPageSize(), totalCount);
 
         // 인덱스 범위 검증
-        if (startIndex >= sortedDtoList.size()) {
-            return new PageImpl<>(Collections.emptyList(), pageable, searchHits.getTotalHits());
+        if (startIndex >= totalCount) {
+            return new PageImpl<>(Collections.emptyList(), pageable, totalCount);
         }
 
-        List<HotelListResponseDto> pagedResult = finalSortedList.subList(startIndex, endIndex);
+        List<HotelListResponseDto> pagedResult = sortedAllResult.subList(startIndex, endIndex);
 
-        return new PageImpl<>(pagedResult, pageable, searchHits.getTotalHits());
+        log.info("[HANSOOM][INFO] 페이지 {}, 총 {}개 중 {}개 반환",
+                pageable.getPageNumber(), totalCount, pagedResult.size());
+
+        return new PageImpl<>(pagedResult, pageable, totalCount);
     }
 
     private List<HotelListResponseDto> applySorting(List<HotelListResponseDto> hotels, String sortOption) {
