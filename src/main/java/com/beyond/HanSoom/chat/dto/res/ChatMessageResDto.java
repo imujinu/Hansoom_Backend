@@ -21,8 +21,6 @@ public class ChatMessageResDto {
     private Long remaining;
     private boolean isWaring;
 
-
-
     public void updateUser(User user) {
         this.senderName = user.getName();
         this.profileImage = user.getProfileImage();
