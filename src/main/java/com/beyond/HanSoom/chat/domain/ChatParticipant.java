@@ -50,8 +50,8 @@ public class ChatParticipant extends BaseTimeEntity {
     }
 
     public void setKey(String aesKey, String iv){
-        this.aesKey = aesKey;
-        this.iv = iv;
+        this.aesKey = aesKey.trim();
+        this.iv = iv.trim();
     }
 
 

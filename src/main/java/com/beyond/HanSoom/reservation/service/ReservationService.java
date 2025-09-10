@@ -142,15 +142,14 @@ public class ReservationService {
     private static String getStatus(Reservation r, LocalDate now) {
         String status = "";
 
-        if(now.isBefore(r.getCheckInDate())){
+        if (now.isBefore(r.getCheckInDate())) {
             status = "upcoming";
-        }else if ((now.isEqual(r.getCheckInDate()) || now.isAfter(r.getCheckInDate()))
-                && !now.isAfter(r.getCheckOutDate())) {
+        } else if (!now.isAfter(r.getCheckOutDate())) {
             status = "ongoing";
-        }else if (now.isAfter(r.getCheckOutDate())) {
+        } else {
             status = "completed";
         }
-        if(r.getState() == State.CANCELLED){
+        if (r.getState() == State.CANCELLED) {
             status = "canceled";
         }
         return status;
