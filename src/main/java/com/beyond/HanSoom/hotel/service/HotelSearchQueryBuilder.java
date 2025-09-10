@@ -89,7 +89,7 @@ public class HotelSearchQueryBuilder {
         return NativeQuery.builder()
                 .withQuery(q -> q
                         .bool(b -> b
-                                .must(m -> m.match(mp -> mp.field("address").query(address)))
+                                .must(m -> m.matchPhrase(mp -> mp.field("address").query(address)))
                                 .must(m -> m.term(t -> t.field("state.keyword").value("APPLY")))
                                 .filter(f -> {
                                     if (dto.getType() != null && !dto.getType().isEmpty()) {
