@@ -30,7 +30,7 @@ public class ChatMessage extends BaseTimeEntity {
     @JoinColumn(name = "user_id", nullable = false )
     private User user;
 
-    @Column(nullable = false, length = 500)
+    @Column(nullable = true, length = 500)
     private String content;
 
     @OneToMany(mappedBy = "chatMessage", cascade = CascadeType.REMOVE, orphanRemoval = true)

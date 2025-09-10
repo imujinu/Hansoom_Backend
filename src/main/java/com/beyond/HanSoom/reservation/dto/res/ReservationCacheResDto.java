@@ -16,7 +16,6 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 
 @Data
@@ -41,8 +40,8 @@ public class ReservationCacheResDto {
     public static class ReservationDto{
         private String id;
         private String reservationId;
-        private LocalDateTime checkIn;
-        private LocalDateTime checkOut;
+        private LocalDate checkIn;
+        private LocalDate checkOut;
         private Long guests;
         private Long price;
         private String request;
@@ -50,8 +49,8 @@ public class ReservationCacheResDto {
             return ReservationDto.builder()
                     .id(reservation.getUuid())
                     .reservationId(reservation.getUuid())
-                    .checkIn(LocalDateTime.of(reservation.getCheckInDate(), reservation.getRoom().getCheckIn()))
-                    .checkOut(LocalDateTime.of(reservation.getCheckOutDate(), reservation.getRoom().getCheckOut()))
+                    .checkIn(reservation.getCheckInDate())
+                    .checkOut(reservation.getCheckOutDate())
                     .guests(reservation.getPeople())
                     .price(reservation.getPrice())
                     .request(reservation.getRequest())

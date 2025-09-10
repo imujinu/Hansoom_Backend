@@ -7,6 +7,7 @@ import com.beyond.HanSoom.reservation.dto.req.ReservationCompleteReqDto;
 import com.beyond.HanSoom.reservation.dto.req.ReservationFindReqDto;
 import com.beyond.HanSoom.reservation.dto.req.ReservationReqDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationCacheResDto;
+import com.beyond.HanSoom.reservation.dto.res.ReservationCompleteResDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResDto;
 import com.beyond.HanSoom.reservation.dto.res.ReservationResponse;
 import com.beyond.HanSoom.reservation.service.QueueService;
@@ -54,8 +55,8 @@ public class ReservationController {
     //예약 확정
     @PostMapping("/complete")
     public ResponseEntity<?> complete(@RequestBody ReservationCompleteReqDto dto){
-        Long reservationId = reservationPaymentService.complete(dto);
-        return new ResponseEntity<>(new CommonSuccessDto(reservationId, HttpStatus.ACCEPTED.value(), "예약에 성공하였습니다."), HttpStatus.ACCEPTED);
+        ReservationCompleteResDto dtos = reservationPaymentService.complete(dto);
+        return new ResponseEntity<>(new CommonSuccessDto(dtos, HttpStatus.ACCEPTED.value(), "예약에 성공하였습니다."), HttpStatus.ACCEPTED);
     }
     //예약 전체 조회
     @GetMapping("/findAll")

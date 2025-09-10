@@ -30,12 +30,17 @@ public class ChatParticipant extends BaseTimeEntity {
     private String isOnline = "N";
 
     private boolean exitYn;
-    private Long remaining;
+    @Builder.Default
+    private Long remaining = 0L;
     @Builder.Default
     private boolean participationYn = true;
 
     @Builder.Default
     private boolean isFirstEntry = true;
+    @Column(columnDefinition = "TEXT")
+    private String aesKey;
+    @Column(columnDefinition = "TEXT")
+    private String iv;
     public void updateOnlineState(String state){
         this.isOnline = state;
     }
@@ -43,4 +48,11 @@ public class ChatParticipant extends BaseTimeEntity {
     public void updateRemaining(Long remaining){
         this.remaining = remaining;
     }
+
+    public void setKey(String aesKey, String iv){
+        this.aesKey = aesKey;
+        this.iv = iv;
+    }
+
+
 }

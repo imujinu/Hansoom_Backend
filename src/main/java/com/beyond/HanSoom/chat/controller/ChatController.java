@@ -2,6 +2,7 @@ package com.beyond.HanSoom.chat.controller;
 
 import com.beyond.HanSoom.chat.dto.req.ChatActivateReqDto;
 import com.beyond.HanSoom.chat.dto.req.ChatAnnouncementReqDto;
+import com.beyond.HanSoom.chat.dto.req.ChatCreateReqDto;
 import com.beyond.HanSoom.chat.dto.res.ChatAnnouncementResDto;
 import com.beyond.HanSoom.chat.dto.res.*;
 import com.beyond.HanSoom.chat.service.ChatPublishService;
@@ -24,9 +25,10 @@ public class ChatController {
     private final SimpMessageSendingOperations messageTemplate;
 
     // 예약완료 후 1:1 채팅방 생성
-    @PostMapping("/room/create/{reservationId}")
-    public ResponseEntity<?> createChatRoom(@PathVariable Long reservationId){
-        Long chatRoomId = chatService.createChatRoom(reservationId);
+    @PostMapping("/room/create")
+    public ResponseEntity<?> createChatRoom(@RequestBody ChatCreateReqDto dto){
+        System.out.println("로직이 동작합니다!");
+        Long chatRoomId = chatService.createChatRoom(dto);
         return new ResponseEntity<>(new CommonSuccessDto(chatRoomId, HttpStatus.CREATED.value(), "채팅방 생성 완료"), HttpStatus.CREATED);
     }
     //단체 채팅방 가입
@@ -132,6 +134,11 @@ public class ChatController {
         List<ChatAnnouncementResDto> dtos = chatService.getChatRoomAnnouncements(roomId);
         return new ResponseEntity<>(new CommonSuccessDto(dtos, HttpStatus.OK.value(), "공지사항 조회 완료"), HttpStatus.OK);
     }
+    @DeleteMapping("/announcements/delete")
+    public ResponseEntity<?> deleteChatAnnouncements(@RequestBody List<Long> announcements){
+        chatService.deleteChatAnnouncements(announcements);
+        return new ResponseEntity<>(new CommonSuccessDto("dtos", HttpStatus.OK.value(), "공지사항 삭제 완료"), HttpStatus.OK);
+    }
 
     //사용자가 가입된 모든 채팅방 번호 조회
     @GetMapping("/user/rooms")
@@ -147,5 +154,11 @@ public class ChatController {
         return new ResponseEntity<>(new CommonSuccessDto(remaining, HttpStatus.OK.value(), "채팅 금지 시간 조회 완료"), HttpStatus.OK);
     }
 
+    //키 조회
+    @GetMapping("/room/{roomId}/keys")
+    public ResponseEntity<?> getKeys(@PathVariable Long roomId){
+        ChatKeyResDto dto = chatService.getKeys(roomId);
+        return new ResponseEntity<>(new CommonSuccessDto(dto, HttpStatus.OK.value(), "채팅 키 조회 완료"), HttpStatus.OK);
+    }
 
 }
