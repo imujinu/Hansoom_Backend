@@ -75,7 +75,7 @@ public class GeocoderService {
                 // 서울, 부산 등: 시 + 구
                 addressCity = region1 + " " + region2;
                 addressDetail = extractDetailAddress(fullAddress, addressCity, region2);
-            } else if (!region3.isEmpty() && region2.endsWith("시")) {
+            } else if (!region3.isEmpty() && region2.endsWith("시") && region3.endsWith("구")) {
                 // 수원시 영통구, 성남시 분당구 등: 도 + 시 + 구
                 addressCity = region1 + " " + region2 + " " + region3;
                 addressDetail = extractDetailAddress(fullAddress, addressCity, region3);
