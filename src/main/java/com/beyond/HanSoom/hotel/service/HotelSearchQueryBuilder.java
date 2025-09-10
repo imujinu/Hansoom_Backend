@@ -168,7 +168,8 @@ public class HotelSearchQueryBuilder {
                 .replace("경상남도", "경남")
                 .replace("전라남도", "전남")
                 .replace("충청북도", "충북")
-                .replace("충청남도", "충남");
+                .replace("충청남도", "충남")
+                .replace("제주도", "제주");
     }
 
     // 개선된 주소 검색 쿼리 - 행정구역 정규화 적용
@@ -176,84 +177,32 @@ public class HotelSearchQueryBuilder {
         String address = dto.getAddress().trim();
         String normalizedAddress = normalizeRegionName(address);
 
-        // 주소를 공백으로 분리하여 각 부분 추출
-        List<String> addressParts = Arrays.stream(address.split("\\s+"))
-                .filter(part -> !part.isEmpty())
-                .collect(Collectors.toList());
-
-        boolean hasMultipleParts = addressParts.size() > 1;
-
         return NativeQuery.builder()
                 .withQuery(q -> q
                         .bool(b -> b
-                                .must(m -> {
-                                    if (hasMultipleParts) {
-                                        // 여러 부분이 있는 경우 (예: "경상북도 경주시")
-                                        // 가장 구체적인 부분(마지막 부분)을 필수 조건으로
-                                        String mostSpecific = addressParts.get(addressParts.size() - 1);
-                                        return m.bool(mustBool -> {
-                                            mustBool.must(specificMust -> specificMust
-                                                    .wildcard(wildcard -> wildcard
-                                                            .field("address")
-                                                            .value("*" + mostSpecific + "*")
-                                                    )
-                                            );
-                                            // 점수 계산용 should 조건들
-                                            mustBool.should(s -> s.bool(scoringBool -> {
-                                                // 1. 정규화된 주소에 대한 정확한 매치 (최고 점수)
-                                                scoringBool.should(ss -> ss.match(match -> match
-                                                        .field("address")
-                                                        .query(normalizedAddress)
-                                                        .boost(20.0f)
-                                                ));
-                                                // 2. 각 부분별 개별 점수
-                                                for (int i = 0; i < addressParts.size(); i++) {
-                                                    String part = addressParts.get(i);
-                                                    float boost = 10.0f + (addressParts.size() - i);
-                                                    scoringBool.should(ss -> ss.wildcard(wildcard -> wildcard
-                                                            .field("address")
-                                                            .value("*" + part + "*")
-                                                            .boost(boost)
-                                                    ));
-                                                }
-                                                return scoringBool;
-                                            }));
-                                            return mustBool;
-                                        });
-                                    } else {
-                                        // 단일 부분인 경우
-                                        return m.bool(singleBool -> {
-                                            // 1. 정규화된 주소에 대한 정확한 매치
-                                            singleBool.should(s -> s.match(match -> match
-                                                    .field("address")
-                                                    .query(normalizedAddress)
-                                                    .boost(15.0f)
-                                            ));
-                                            // 2. 와일드카드 매치
-                                            singleBool.should(s -> s.wildcard(wildcard -> wildcard
-                                                    .field("address")
-                                                    .value("*" + normalizedAddress + "*")
-                                                    .boost(12.0f)
-                                            ));
-                                            // 3. 퍼지 매치
-                                            singleBool.should(s -> s.fuzzy(fuzzy -> fuzzy
-                                                    .field("address")
-                                                    .value(normalizedAddress)
-                                                    .fuzziness("1")
-                                                    .prefixLength(1)
-                                                    .boost(8.0f)
-                                            ));
-                                            return singleBool.minimumShouldMatch("1");
-                                        });
-                                    }
-                                })
+                                // 필수 조건: 최소한 원본 주소 또는 정규화된 주소 중 하나와 매칭되어야 함
+                                .must(m -> m.bool(shouldBool -> shouldBool
+                                        // 1. 원본 주소로 검색 (와일드카드 및 퍼지)
+                                        .should(s -> s.wildcard(w -> w.field("address").value("*" + address + "*").boost(10.0f)))
+                                        .should(s -> s.fuzzy(f -> f.field("address").value(address).fuzziness("1").boost(5.0f)))
+
+                                        // 2. 정규화된 주소로 검색 (와일드카드 및 퍼지)
+                                        .should(s -> s.wildcard(w -> w.field("address").value("*" + normalizedAddress + "*").boost(15.0f)))
+                                        .should(s -> s.fuzzy(f -> f.field("address").value(normalizedAddress).fuzziness("1").boost(8.0f)))
+
+                                        // 3. 정확한 매칭에 높은 점수 부여
+                                        .should(s -> s.match(m_match -> m_match.field("address").query(address).boost(20.0f)))
+                                        .should(s -> s.match(m_match -> m_match.field("address").query(normalizedAddress).boost(25.0f)))
+                                        .minimumShouldMatch("1") // 최소 한 개의 should 쿼리가 매칭되어야 함
+                                ))
+                                // ... 기존 필터링 및 기타 로직 유지
                                 .must(m -> m.term(t -> t.field("state.keyword").value("APPLY")))
                                 .filter(f -> {
                                     if (dto.getType() != null && !dto.getType().isEmpty()) {
                                         return f.terms(terms -> terms
                                                 .field("type.keyword")
                                                 .terms(t -> t.value(dto.getType().stream()
-                                                        .map(FieldValue::of)
+                                                        .map(co.elastic.clients.elasticsearch._types.FieldValue::of)
                                                         .collect(Collectors.toList()))));
                                     }
                                     return f.matchAll(ma -> ma);
