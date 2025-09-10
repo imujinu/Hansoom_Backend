@@ -80,7 +80,8 @@ public class HotelSearchQueryBuilder {
     }
 
     // 정확한 지역명 검색 쿼리 (address 통합 컬럼 사용)
-    private Query buildExactAddressQuery(HotelListSearchDto dto, String address) {
+    private Query buildExactAddressQuery(HotelListSearchDto dto, String add) {
+        String address = normalizeRegionName(add);
         log.info("와일드카드 주소 검색: '{}'", address);
 
         return NativeQuery.builder()
@@ -162,7 +163,7 @@ public class HotelSearchQueryBuilder {
         // 사용자 입력을 카카오 API 표준 형식으로 변환
         return address
                 .replace("강원도", "강원특별자치도")
-                .replace("전라북도", "전북특별자치도")
+                .replace("전라북도", "전북")
                 .replace("전북", "전북특별자치도")
                 .replace("경상북도", "경북")
                 .replace("경상남도", "경남")
