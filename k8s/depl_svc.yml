@@ -79,7 +79,10 @@ spec:
             secretKeyRef:
               name: hansoom-secrets
               key: KAKAO_CLIENT_ID
-
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
         # 컨테이너 상태 확인을 통해 롤링업데이트 최적화 
         readinessProbe:
           httpGet:
