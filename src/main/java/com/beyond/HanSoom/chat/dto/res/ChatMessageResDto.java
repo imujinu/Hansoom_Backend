@@ -19,6 +19,7 @@ public class ChatMessageResDto {
     private String senderName;
     private String profileImage;
     private Long remaining;
+    private String isGroupChat;
     private boolean isWaring;
 
     public void updateUser(User user) {

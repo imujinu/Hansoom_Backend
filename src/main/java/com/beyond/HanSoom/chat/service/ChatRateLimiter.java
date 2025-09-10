@@ -44,6 +44,6 @@ public class ChatRateLimiter {
     public long getBlockedRemaining(String email) {
         long now = System.currentTimeMillis();
         long blockedUntil = userBlockedUntil.getOrDefault(email, 0L);
-        return Math.max(0, blockedUntil-now);
+        return Math.max(0, blockedUntil);
     }
 }
