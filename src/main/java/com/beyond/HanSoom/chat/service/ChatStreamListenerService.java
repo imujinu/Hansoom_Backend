@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.stream.*;
@@ -21,6 +22,7 @@ import org.springframework.data.redis.stream.StreamListener;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 import org.springframework.data.redis.stream.Subscription;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -32,7 +34,6 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
     private final RedisTemplate<String,String> redisTemplate;
     @Value("${chat.stream-key}")
     private String streamKey;
-    @Value("${chat.group}")
     private String consumerGroupName;
     @Value("${chat.consumer-name}")
     private String consumerName;
@@ -43,6 +44,8 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
     private final UserRepository userRepository;
     private final ChatParticipantRepository chatParticipantRepository;
     private final ChatRoomRepository chatRoomRepository;
+    @Value("${POD_NAME:local}")
+    private String podName;
     public ChatStreamListenerService(@Qualifier("redisStream") RedisTemplate<String, String> redisTemplate, SimpMessagingTemplate messagingTemplate, ChatService chatService, UserRepository userRepository, ChatParticipantRepository chatParticipantRepository, ChatRoomRepository chatRoomRepository) {
         this.redisTemplate = redisTemplate;
         this.messagingTemplate = messagingTemplate;
@@ -51,12 +54,9 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
         this.chatParticipantRepository = chatParticipantRepository;
         this.chatRoomRepository = chatRoomRepository;
     }
-//    @PostConstruct
-//    public void init() {
-//        this.consumerName = "chat-consumer-" + System.getenv("POD_NAME");
-//    }
     @Override
     public void afterPropertiesSet() throws Exception {
+        this.consumerGroupName = "chat-group-" + podName;
         createStreamConsumerGroup(streamKey, consumerGroupName);
 
         listenerContainer = StreamMessageListenerContainer.create(

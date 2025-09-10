@@ -53,13 +53,13 @@ public class StompEventListener {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
         String sessionId = accessor.getSessionId();
         SessionInfo sessionInfo = WebSocketSessionRegistry.get(sessionId);
-        String email = sessionInfo.getEmail();
-        String roomId = sessionInfo.getRoomId();
-
-        chatService.updateOnlineState(email,roomId,"N");
-
-        log.info("Session DisConnected : " + sessionId + "roomId : " + roomId);
-        WebSocketSessionRegistry.unregister(accessor.getSessionId());
+//        String email = sessionInfo.getEmail();
+//        String roomId = sessionInfo.getRoomId();
+//
+//        chatService.updateOnlineState(email,roomId,"N");
+//
+//        log.info("Session DisConnected : " + sessionId + "roomId : " + roomId);
+//        WebSocketSessionRegistry.unregister(accessor.getSessionId());
         sessions.remove(accessor.getSessionId());
     }
 }

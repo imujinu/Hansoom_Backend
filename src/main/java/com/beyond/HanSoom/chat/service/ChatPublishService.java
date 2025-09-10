@@ -9,8 +9,7 @@ import org.springframework.data.redis.connection.stream.*;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
+
 
 @Service
 public class ChatPublishService {
@@ -26,8 +25,6 @@ public class ChatPublishService {
 
     public RecordId publish(ChatMessageReqDto dto) {
         // payload를 JSON 문자열로 변환
-
-
         String json = null;
         try {
             json = new ObjectMapper().writeValueAsString(dto);
