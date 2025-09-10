@@ -79,14 +79,13 @@ public class HotelSearchQueryBuilder {
     }
 
     // 정확한 지역명 검색 쿼리 (address 통합 컬럼 사용)
-    private Query buildExactAddressQuery(HotelListSearchDto dto, String add) {
-        log.info("와일드카드 주소 검색: '{}'", add);
-        String address = extractSimpleKeyword(add);
+    private Query buildExactAddressQuery(HotelListSearchDto dto, String address) {
+        log.info("와일드카드 주소 검색: '{}'", address);
 
         return NativeQuery.builder()
                 .withQuery(q -> q
                         .bool(b -> b
-                                .must(m -> m.matchPhrase(mp -> mp.field("address").query(address)))
+                                .must(m -> m.match(mp -> mp.field("address").query(address)))
                                 .must(m -> m.term(t -> t.field("state.keyword").value("APPLY")))
                                 .filter(f -> {
                                     if (dto.getType() != null && !dto.getType().isEmpty()) {
