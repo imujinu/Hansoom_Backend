@@ -47,13 +47,13 @@ public class SecurityConfig {
                                 .accessDeniedHandler(jwtAuthorizationHandler) // 403의 경우
                 )
 
-                .authorizeHttpRequests(a -> a.requestMatchers("/user/create", "/user/login", "/user/auth/refresh", "/user/google/login", "/user/google/reLogin", "/user/kakao/login", "/payment/**","/reservation/**", "/hotel/detail/**", "/hotel/list", "/hotel/nearby", "/connect/**", "/review/hotel/**", "/review/images/**", "/reply/hotels/**", "/review/ratings/**", "/hotel/popular", "hotel/place", "/hotel/suggest").permitAll().anyRequest().authenticated())
+                .authorizeHttpRequests(a -> a.requestMatchers("/health", "/user/create", "/user/login", "/user/auth/refresh", "/user/google/login", "/user/google/reLogin", "/user/kakao/login", "/payment/**","/reservation/**", "/hotel/detail/**", "/hotel/list", "/hotel/nearby", "/connect/**", "/review/hotel/**", "/review/images/**", "/reply/hotels/**", "/review/ratings/**", "/hotel/popular", "hotel/place", "/hotel/suggest").permitAll().anyRequest().authenticated())
                 .build();
     }
     // Todo - 프론트 연결
     private CorsConfigurationSource corsConfiguration(){
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://www.hansoom.shop"));
         configuration.setAllowedMethods(Arrays.asList("*")); // 모든 HTTP(get, post 등) 메서드 허용
         configuration.setAllowedHeaders(Arrays.asList("*")); // 모든 헤더요소(Authorization 등) 허용
         configuration.setAllowCredentials(true); // 자격 증명 허용

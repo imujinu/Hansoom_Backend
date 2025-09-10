@@ -725,6 +725,11 @@ public class HotelService {
         }
     }
 
+    public Page<HotelListResponseDto> findAllWishList(Pageable pageable) {
+        Page<HotelListResponseDto> hotelListResponseDtoPage = hotelRepository.findAll(pageable).map(h -> HotelListResponseDto.fromEntity(h, 0));
+        return hotelListResponseDtoPage;
+    }
+
     // 헬퍼 메서드들로 가독성 향상
     private boolean hasAvailableRooms(Hotel hotel, HotelListSearchDto searchDto) {
         return hotel.getRooms().stream()
