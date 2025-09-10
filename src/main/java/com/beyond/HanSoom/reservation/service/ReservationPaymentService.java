@@ -151,7 +151,7 @@ public class ReservationPaymentService {
             notificationService.createNotiReviewRequest(user, reservation);
             sseAlarmService.publishReserved(reservation.getHotel().getUser().getEmail(), "reserved");
 
-            return new ReservationCompleteResDto().fromEntity(reservation.getId(), reservation.getHotel().getUser().getId(), user.getId());
+            return new ReservationCompleteResDto().fromEntity(reservation.getId());
         }else{
             for(int i=0; i<keys.size(); i++){
                 queueReservationService.removeMember(keys.get(i), String.valueOf(user.getId()));

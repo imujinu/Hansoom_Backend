@@ -28,7 +28,6 @@ public class ChatController {
     @PostMapping("/room/create")
     public ResponseEntity<?> createChatRoom(@RequestBody ChatCreateReqDto dto){
         System.out.println("로직이 동작합니다!");
-        System.out.println(dto);
         Long chatRoomId = chatService.createChatRoom(dto);
         return new ResponseEntity<>(new CommonSuccessDto(chatRoomId, HttpStatus.CREATED.value(), "채팅방 생성 완료"), HttpStatus.CREATED);
     }

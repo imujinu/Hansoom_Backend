@@ -89,8 +89,8 @@ public class ChatService {
         chatRoomRepository.save(newRoom);
         ChatParticipant hostParticipant = chatParticipantRepository.findByChatRoomAndUser(newRoom, host).orElseThrow(()-> new EntityNotFoundException("채팅 참여자가 존재하지 않습니다."));
         ChatParticipant chatParticipant = chatParticipantRepository.findByChatRoomAndUser(newRoom,guest).orElseThrow(()-> new EntityNotFoundException("채팅 참여자가 존재하지 않습니다."));
-        chatParticipant.setKey(dto.getGuestPublicKey(), dto.getGuestPrivateKey());
-        hostParticipant.setKey(dto.getHostPublicKey(), dto.getHostPrivateKey());
+        chatParticipant.setKey(dto.getAesKey(), dto.getIv());
+        hostParticipant.setKey(dto.getAesKey(), dto.getIv());
         return newRoom.getId();
     }
 
@@ -221,8 +221,7 @@ public class ChatService {
         ChatParticipant host = chatParticipantRepository.findByChatRoomAndUser(chatRoom,hostUser).orElseThrow(()->new EntityNotFoundException("채팅 유저가 존재하지 않습니다."));
         for(ChatMessage c : chatMessages){
             Map<String, String> keysMap = new HashMap<>();
-            keysMap.put("me", me.getPrivateKey());
-            keysMap.put("other", host.getPrivateKey());
+
 
             ChatMessageResDto chatMessageDto = ChatMessageResDto.builder()
                     .roomId(chatRoom.getId())
@@ -231,7 +230,6 @@ public class ChatService {
                     .senderEmail(c.getUser().getEmail())
                     .senderName(c.getUser().getName())
                     .profileImage(c.getUser().getProfileImage())
-                    .keys(keysMap)
                     .build();
             chatMessageDtos.add(chatMessageDto);
         }
@@ -454,10 +452,8 @@ public class ChatService {
          ChatRoom chatRoom = chatRoomRepository.findById(roomId).orElseThrow(()->new EntityNotFoundException("채팅방이 존재하지 않습니다."));
          List<ChatParticipant> list = chatRoom.getParticipantList();
          User user = getUser();
-         User hostUser = chatRoom.getHotel().getUser();
 
-         ChatParticipant host = chatParticipantRepository.findByChatRoomAndUser(chatRoom,hostUser).orElseThrow(()-> new EntityNotFoundException("채팅 참여자가 존재하지 않습니다."));
-         ChatParticipant me = chatParticipantRepository.findByChatRoomAndUser(chatRoom,user).orElseThrow(()-> new EntityNotFoundException("채팅 참여자가 존재하지 않습니다."));
-         return new ChatKeyResDto().fromEntity(me,host);
+         ChatParticipant chatParticipant = chatParticipantRepository.findByChatRoomAndUser(chatRoom,user).orElseThrow(()-> new EntityNotFoundException("채팅 참여자가 존재하지 않습니다."));
+         return new ChatKeyResDto().fromEntity(chatParticipant);
     }
 }

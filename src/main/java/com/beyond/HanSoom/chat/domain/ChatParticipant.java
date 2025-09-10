@@ -38,9 +38,9 @@ public class ChatParticipant extends BaseTimeEntity {
     @Builder.Default
     private boolean isFirstEntry = true;
     @Column(columnDefinition = "TEXT")
-    private String publicKey;
+    private String aesKey;
     @Column(columnDefinition = "TEXT")
-    private String privateKey;
+    private String iv;
     public void updateOnlineState(String state){
         this.isOnline = state;
     }
@@ -49,9 +49,9 @@ public class ChatParticipant extends BaseTimeEntity {
         this.remaining = remaining;
     }
 
-    public void setKey(String publicKey, String privateKey){
-        this.publicKey = publicKey;
-        this.privateKey = privateKey;
+    public void setKey(String aesKey, String iv){
+        this.aesKey = aesKey;
+        this.iv = iv;
     }
 
 

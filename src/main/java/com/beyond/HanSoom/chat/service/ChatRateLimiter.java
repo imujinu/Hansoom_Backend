@@ -12,7 +12,7 @@ public class ChatRateLimiter {
 
     private final Map<String, List<Long>> userMessageTimes = new ConcurrentHashMap<>();
     private final Map<String, Long> userBlockedUntil = new ConcurrentHashMap<>();
-    private static final int LIMIT = 5; // 1분에 60회
+    private static final int LIMIT = 20; // 1분에 60회
     private static final long WINDOW_MS = 60_000; // 1분
     private static final long BLOCK_MS = 1 * 60_000; // 5분 차단
 

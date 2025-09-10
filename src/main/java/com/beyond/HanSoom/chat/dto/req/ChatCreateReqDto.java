@@ -11,8 +11,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class ChatCreateReqDto {
     private Long reservationId;
-    private String guestPublicKey;
-    private String hostPublicKey;
-    private String guestPrivateKey;
-    private String hostPrivateKey;
+    private String aesKey;
+    private String iv;
 }

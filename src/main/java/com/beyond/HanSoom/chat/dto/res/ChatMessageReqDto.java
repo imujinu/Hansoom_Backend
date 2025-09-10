@@ -13,7 +13,6 @@ public class ChatMessageReqDto {
     private String roomId;
     private String senderEmail;
     private String content; // 암호화된 메시지
-    private Keys keys;      // 내 키, 상대방 키
     private String timestamp;
     private Long remaining;
     private boolean isWaring;
@@ -23,12 +22,6 @@ public class ChatMessageReqDto {
         this.remaining = remaining;
     }
 
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public class Keys {
-        private String me;
-        private String other;
-    }
+
 }
 

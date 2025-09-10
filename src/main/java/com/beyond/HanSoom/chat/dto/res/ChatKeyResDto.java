@@ -12,15 +12,13 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class ChatKeyResDto {
-    private String myPublicKey;
-    private String myPrivateKey;
-    private String hostPublicKey;
+    private String Aes;
+    private String iv;
 
-    public ChatKeyResDto fromEntity(ChatParticipant me, ChatParticipant host){
+    public ChatKeyResDto fromEntity(ChatParticipant chatParticipant){
         return ChatKeyResDto.builder()
-                .myPublicKey(me.getPublicKey())
-                .myPrivateKey(me.getPrivateKey())
-                .hostPublicKey(host.getPublicKey())
+                .Aes(chatParticipant.getAesKey())
+                .iv(chatParticipant.getIv())
                 .build();
     }
 }

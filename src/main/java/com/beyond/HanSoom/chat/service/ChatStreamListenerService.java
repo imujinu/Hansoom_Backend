@@ -132,9 +132,7 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
         ChatRoom chatRoom = chatRoomRepository.findById(dto.getRoomId()).orElseThrow(()-> new EntityNotFoundException("존재하지 않는 채팅방입니다."));
         ChatParticipant me = chatParticipantRepository.findByChatRoomAndUser(chatRoom,user).orElseThrow(()-> new EntityNotFoundException("존재하지 않는 채팅 유저 입니다."));
         User hostUser = chatRoom.getHotel().getUser();
-        ChatParticipant host = chatParticipantRepository.findByChatRoomAndUser(chatRoom,hostUser).orElseThrow(()->new EntityNotFoundException("존재하지 않는 채팅 유저 입니다."));
         dto.updateUser(user);
-        dto.updateKeySet(me, host);
         if(dto.isWaring()){
             ChatRoom chatroom = chatRoomRepository.findById(dto.getRoomId()).orElseThrow(()->new EntityNotFoundException("존재하지 않는 채팅방입니다."));
             ChatParticipant chatParticipant = chatParticipantRepository.findByChatRoomAndUser(chatroom,user).orElseThrow(()->new EntityNotFoundException("존재하지 않는 채팅 참여자 입니다."));

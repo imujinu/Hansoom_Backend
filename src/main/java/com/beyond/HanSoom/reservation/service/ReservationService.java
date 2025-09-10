@@ -150,7 +150,6 @@ public class ReservationService {
         }else if (now.isAfter(r.getCheckOutDate())) {
             status = "completed";
         }
-
         if(r.getState() == State.CANCELLED){
             status = "canceled";
         }

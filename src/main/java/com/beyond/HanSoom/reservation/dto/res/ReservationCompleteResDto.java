@@ -12,14 +12,11 @@ import lombok.NoArgsConstructor;
 @Builder
 public class ReservationCompleteResDto {
     private Long reservationId;
-    private Long hostId;
-    private Long guestId;
 
-    public ReservationCompleteResDto fromEntity(Long reservationId, Long hostId, Long guestId) {
+
+    public ReservationCompleteResDto fromEntity(Long reservationId) {
         return ReservationCompleteResDto.builder()
                 .reservationId(reservationId)
-                .hostId(hostId)
-                .guestId(guestId)
                 .build();
     }
 }
