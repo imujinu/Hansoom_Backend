@@ -10,6 +10,7 @@ import com.beyond.HanSoom.user.repository.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -50,7 +51,10 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
         this.chatParticipantRepository = chatParticipantRepository;
         this.chatRoomRepository = chatRoomRepository;
     }
-
+//    @PostConstruct
+//    public void init() {
+//        this.consumerName = "chat-consumer-" + System.getenv("POD_NAME");
+//    }
     @Override
     public void afterPropertiesSet() throws Exception {
         createStreamConsumerGroup(streamKey, consumerGroupName);
@@ -59,22 +63,34 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
                 redisTemplate.getConnectionFactory(),
                 StreamMessageListenerContainer.StreamMessageListenerContainerOptions.builder()
                         .targetType(String.class)
-                        .pollTimeout(Duration.ofMillis(200))
+                        .pollTimeout(Duration.ofMillis(100))
+                        .errorHandler(t -> {
+                            System.err.println("Stream listener 에러 발생: " + t.getMessage());
+                            // 재시작
+                            if (!listenerContainer.isRunning()) {
+                                listenerContainer.start();
+                            }
+                        })
                         .build()
         );
 
 
+
+        subscribeStream();
+
+        listenerContainer.start();
+
+    }
+    private void subscribeStream() {
+        if (subscription != null) {
+            subscription.cancel(); // 기존 구독 취소
+        }
         subscription = listenerContainer.receive(
                 Consumer.from(consumerGroupName, consumerName),
                 StreamOffset.create(streamKey, ReadOffset.lastConsumed()),
                 this
         );
-
-
-        listenerContainer.start();
-
     }
-
 
     public void createStreamConsumerGroup(String streamKey, String consumerGroupName) {
         try {
@@ -146,11 +162,5 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
         chatService.saveMessage(dto);
 
     }
-    private static ChatParticipant getChatParticipant(List<ChatParticipant> list, User user) {
-        ChatParticipant hostParticipant = list.stream()
-                .filter(cp -> !cp.getUser().equals(user))
-                .findFirst()
-                .orElse(null);
-        return hostParticipant;
-    }
+
 }

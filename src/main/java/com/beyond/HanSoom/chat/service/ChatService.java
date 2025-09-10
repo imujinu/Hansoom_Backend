@@ -351,14 +351,14 @@ public class ChatService {
         chatRoomRepository.save(chatRoom);
         addParticipantChatRoom(chatRoom,host);
 
-        ChatMessageResDto dto = ChatMessageResDto.builder()
-                .roomId(chatRoom.getId())
-                .timestamp(String.valueOf(LocalDateTime.now()))
-                .senderEmail(host.getEmail())
-                .senderName(host.getName())
-                .build();
-
-        saveMessage(dto);
+//        ChatMessageResDto dto = ChatMessageResDto.builder()
+//                .roomId(chatRoom.getId())
+//                .timestamp(String.valueOf(LocalDateTime.now()))
+//                .senderEmail(host.getEmail())
+//                .senderName(host.getName())
+//                .build();
+//
+//        saveMessage(dto);
         ChatMessage chatMessage = chatRoom.getChatMessageList().get(chatRoom.getChatMessageList().size()-1);
         return new ChatHostChatRoomResDto().fromEntity(chatRoom,chatMessage, 1, 0L);
 
