@@ -37,7 +37,7 @@ public class ReviewListResDto {
                 .id(review.getId())
                 .hotelId(review.getHotel().getId())
                 .hotelName(review.getHotel().getHotelName())
-                .userNickname(reservation.getUser().getNickName())
+                .userNickname(review.getUser().getNickName())
                 .roomType(reservation.getRoom().getType())
                 .rating(review.getRating())
                 .contents(review.getContents())
