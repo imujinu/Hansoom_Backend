@@ -86,10 +86,10 @@ public class ChatController {
     }
 
     //호스트 단체 채팅 생성
-    @PostMapping("/host/{hotelId}")
-    public ResponseEntity<?> createHostGroupChat(@PathVariable Long hotelId) {
-        ChatHostChatRoomResDto dto = chatService.createHostGroupChat(hotelId);
-        return new ResponseEntity<>(new CommonSuccessDto(dto, HttpStatus.OK.value(), "단체 채팅 생성 완료"), HttpStatus.OK);
+    @PostMapping("/host/create")
+    public ResponseEntity<?> createHostGroupChat() {
+         chatService.createHostGroupChat();
+        return new ResponseEntity<>(new CommonSuccessDto("", HttpStatus.OK.value(), "단체 채팅 생성 완료"), HttpStatus.OK);
     }
 
     //단체 채팅 멤버 조회

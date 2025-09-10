@@ -339,9 +339,14 @@ public class ChatService {
 //        return new ChatHostGroupChatRoomResDto().fromEntity(chatRoom, message, isOnline);
 //    }
 
-    public ChatHostChatRoomResDto createHostGroupChat(Long hotelId) {
-        Hotel hotel = hotelRepository.findById(hotelId).orElseThrow(()->new EntityNotFoundException("존재하지 않는 호텔 입니다."));
-        User host = hotel.getUser();
+    public void createHostGroupChat() {
+        User user = getUser();
+        Hotel hotel = hotelRepository.findByUser(user);
+        ChatRoom groupChat = chatRoomRepository.findByHotelAndIsGroupChat(hotel,"Y");
+
+        if(groupChat!=null){
+            return;
+        }
 
         ChatRoom chatRoom = ChatRoom.builder()
                 .isGroupChat("Y")
@@ -349,18 +354,9 @@ public class ChatService {
                 .build();
 
         chatRoomRepository.save(chatRoom);
-        addParticipantChatRoom(chatRoom,host);
+        addParticipantChatRoom(chatRoom,user);
 
-//        ChatMessageResDto dto = ChatMessageResDto.builder()
-//                .roomId(chatRoom.getId())
-//                .timestamp(String.valueOf(LocalDateTime.now()))
-//                .senderEmail(host.getEmail())
-//                .senderName(host.getName())
-//                .build();
-//
-//        saveMessage(dto);
-        ChatMessage chatMessage = chatRoom.getChatMessageList().get(chatRoom.getChatMessageList().size()-1);
-        return new ChatHostChatRoomResDto().fromEntity(chatRoom,chatMessage, 1, 0L);
+        return;
 
     }
 
