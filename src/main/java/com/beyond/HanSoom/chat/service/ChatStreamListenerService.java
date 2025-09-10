@@ -34,6 +34,7 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
     private final RedisTemplate<String,String> redisTemplate;
     @Value("${chat.stream-key}")
     private String streamKey;
+    @Value("${chat.group}")
     private String consumerGroupName;
     @Value("${chat.consumer-name}")
     private String consumerName;
@@ -44,8 +45,8 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
     private final UserRepository userRepository;
     private final ChatParticipantRepository chatParticipantRepository;
     private final ChatRoomRepository chatRoomRepository;
-    @Value("${POD_NAME:local}")
-    private String podName;
+//    @Value("${POD_NAME:local}")
+//    private String podName;
     public ChatStreamListenerService(@Qualifier("redisStream") RedisTemplate<String, String> redisTemplate, SimpMessagingTemplate messagingTemplate, ChatService chatService, UserRepository userRepository, ChatParticipantRepository chatParticipantRepository, ChatRoomRepository chatRoomRepository) {
         this.redisTemplate = redisTemplate;
         this.messagingTemplate = messagingTemplate;
@@ -56,7 +57,7 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
     }
     @Override
     public void afterPropertiesSet() throws Exception {
-        this.consumerGroupName = "chat-group-" + podName;
+//        this.consumerGroupName = "chat-group-" + podName;
         createStreamConsumerGroup(streamKey, consumerGroupName);
 
         listenerContainer = StreamMessageListenerContainer.create(
