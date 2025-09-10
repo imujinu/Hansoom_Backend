@@ -27,8 +27,9 @@ public class ChatController {
     // 예약완료 후 1:1 채팅방 생성
     @PostMapping("/room/create")
     public ResponseEntity<?> createChatRoom(@RequestBody ChatCreateReqDto dto){
-        Long chatRoomId = chatService.createChatRoom(dto.getReservationId());
-        chatService.createKey(dto);
+        System.out.println("로직이 동작합니다!");
+        System.out.println(dto);
+        Long chatRoomId = chatService.createChatRoom(dto);
         return new ResponseEntity<>(new CommonSuccessDto(chatRoomId, HttpStatus.CREATED.value(), "채팅방 생성 완료"), HttpStatus.CREATED);
     }
     //단체 채팅방 가입
@@ -158,7 +159,7 @@ public class ChatController {
     @GetMapping("/room/{roomId}/keys")
     public ResponseEntity<?> getKeys(@PathVariable Long roomId){
         ChatKeyResDto dto = chatService.getKeys(roomId);
-        return new ResponseEntity<>(new CommonSuccessDto(dto, HttpStatus.OK.value(), "채팅 금지 시간 조회 완료"), HttpStatus.OK);
+        return new ResponseEntity<>(new CommonSuccessDto(dto, HttpStatus.OK.value(), "채팅 키 조회 완료"), HttpStatus.OK);
     }
 
 }

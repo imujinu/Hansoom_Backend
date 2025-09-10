@@ -23,7 +23,6 @@ public class ChatMessageResDto {
 
     // 암호화 관련 필드 추가
     private Map<String, String> keys; // me, other
-    private String iv; // AES 초기화 벡터
 
     public void updateUser(User user) {
         this.senderName = user.getName();
@@ -34,7 +33,6 @@ public class ChatMessageResDto {
         Map<String, String> keysMap = new HashMap<>();
         keysMap.put("me", me.getPrivateKey());
         keysMap.put("other", host.getPrivateKey());
-        iv = me.getIv();
         this.keys = keysMap;
     }
 }

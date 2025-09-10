@@ -65,6 +65,8 @@ public class ReservationService {
                 .map(r -> {
                     Hotel hotel = r.getHotel();
                     String status = getStatus(r,now);
+                    System.out.println("=====status========");
+                    System.out.println(status);
                     List<ChatRoom> chatRooms = chatRoomRepository.findAllByHotelAndIsGroupChat(hotel,"N");
                     ChatRoom chatRoom = null;
                     for (ChatRoom cr : chatRooms) {
@@ -139,10 +141,11 @@ public class ReservationService {
 
     private static String getStatus(Reservation r, LocalDate now) {
         String status = "";
+
         if(now.isBefore(r.getCheckInDate())){
             status = "upcoming";
         }else if ((now.isEqual(r.getCheckInDate()) || now.isAfter(r.getCheckInDate()))
-                && now.isBefore(r.getCheckOutDate())) {
+                && !now.isAfter(r.getCheckOutDate())) {
             status = "ongoing";
         }else if (now.isAfter(r.getCheckOutDate())) {
             status = "completed";

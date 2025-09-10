@@ -13,6 +13,6 @@ public class ChatCreateReqDto {
     private Long reservationId;
     private String guestPublicKey;
     private String hostPublicKey;
-    private String guestPrivateKeyEncrypted;
-    private String hostPrivateKeyEncrypted;
+    private String guestPrivateKey;
+    private String hostPrivateKey;
 }

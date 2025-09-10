@@ -8,6 +8,7 @@ import com.beyond.HanSoom.chat.repository.ChatRoomRepository;
 import com.beyond.HanSoom.user.domain.User;
 import com.beyond.HanSoom.user.repository.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.InitializingBean;
@@ -118,6 +119,8 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
     public void onMessage(ObjectRecord<String, String> message) {
         String recordId = message.getId().getValue();
         ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        mapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
         ChatMessageResDto dto= null;
         try {
             dto = mapper.readValue(message.getValue(), ChatMessageResDto.class);
@@ -128,7 +131,8 @@ public class ChatStreamListenerService  implements InitializingBean, StreamListe
         User user = userRepository.findByEmail(dto.getSenderEmail()).orElseThrow(()->new EntityNotFoundException("존재하지 않는 유저입니다."));
         ChatRoom chatRoom = chatRoomRepository.findById(dto.getRoomId()).orElseThrow(()-> new EntityNotFoundException("존재하지 않는 채팅방입니다."));
         ChatParticipant me = chatParticipantRepository.findByChatRoomAndUser(chatRoom,user).orElseThrow(()-> new EntityNotFoundException("존재하지 않는 채팅 유저 입니다."));
-        ChatParticipant host = getChatParticipant(chatRoom.getParticipantList(), user);
+        User hostUser = chatRoom.getHotel().getUser();
+        ChatParticipant host = chatParticipantRepository.findByChatRoomAndUser(chatRoom,hostUser).orElseThrow(()->new EntityNotFoundException("존재하지 않는 채팅 유저 입니다."));
         dto.updateUser(user);
         dto.updateKeySet(me, host);
         if(dto.isWaring()){

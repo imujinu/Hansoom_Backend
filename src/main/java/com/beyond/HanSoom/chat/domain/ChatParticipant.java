@@ -37,10 +37,10 @@ public class ChatParticipant extends BaseTimeEntity {
 
     @Builder.Default
     private boolean isFirstEntry = true;
-
+    @Column(columnDefinition = "TEXT")
     private String publicKey;
+    @Column(columnDefinition = "TEXT")
     private String privateKey;
-    private String iv;
     public void updateOnlineState(String state){
         this.isOnline = state;
     }
