@@ -7,6 +7,10 @@
 
 server:
   port: 8080
+  server:
+    tomcat:
+      max-swallow-size: -1
+      max-http-form-post-size: -1
 
 spring:
   config:
@@ -15,13 +19,6 @@ spring:
   redis:
     host: localhost
     port: 6379
-  rabbitmq:
-    port: 5672
-    host: localhost
-    username: guest
-    password: guest
-    virtual-host: /
-
   # 아래는 jdbc의 기본 db 관련 설정인데, jdbc 뿐만 아니라 mybatis / jpa 등 spring의 대부분의 DB 기술에 동일하게 사용
   datasource:
     driver-class-name: org.mariadb.jdbc.Driver
@@ -39,16 +36,30 @@ spring:
       # create : 매번 table을 drop후 재 생성
       # update : entity 변경사항만 alter를 적용하고 기존 데이터 유지
       # validate : 실제 DB와의 차이점을 check만 하고 ddl 문 실행 x, 콘솔로만 변경사항 출력.
-      ddl-auto: create
+      ddl-auto: update
     # 콘솔창에 ddl, dml 등의 쿼리를 출력하여 보여주는 옵션
     show_sql: true
+  servlet:
+    multipart:
+      # spring의 디폴트 사이즈 10MB
+      enabled: true
+      max-file-size: 1000MB
+      max-request-size: 1000MB
+  elasticsearch:
+    uris: http://localhost:9200/
+    username: elastic
+    password: 1234
+    connection-timeout: 10s
+    socket-timeout: 30s
+
+
 
 # aws s3 접근하기 위한 계정 세팅
 cloud:
   aws:
     credentials:
-      access-key: AKIAYAF66XOOKWFXSPKI
-      secret-key: 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
+      access-key: AKIAYAF66XOONDRORC5O
+      secret-key: 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
     region:
       static: ap-northeast-2
     s3:
@@ -57,14 +68,46 @@ cloud:
     rest-api-key: ac91670aa83923e0a1e1abe6f8a4020d
 
 jwt:
-  # Todo - 만료시간 조정
-  expirationAt: 1000 # 1000분
+  accessTokenExpiryMinutes: 30 # 30분
   secretKeyAt: YmV5b25kYWNjZXNzdG9rZW5zZWNyZXRrZXliZXlvbmRhY2Nlc3N0b2tlbnNlY3JldGtleWJleW9uZGFjY2Vzc3Rva2Vuc2VjcmV0a2V5
-  expirationRt: 10000 # 10000분
+  #  refreshTokenExpiryDays: 180 # 180일
+  refreshTokenExpiryDaysPersistent: 180 # 180일 (자동 로그인 O)
+  refreshTokenExpiryDaysNonPersistent: 1 # 1일 (자동 로그인 X)
   secretKeyRt: YmV5b25kYWNjZXNzdG9rZW5zZWNyZXRrZXliZXlvbmRhY2Nlc3N0b2tlbnNlY3JldGtleWJleW9uZGFjY2Vzc3Rva2Vuc2VjcmV0a2V5
+
+app:
+  auth:
+    cookie:
+      domain: localhost
+      path: /user/auth
+      same-site: None            # 분리된 도메인(서브도메인/다른 도메인)이라면 None
+      secure: true               # SameSite=None이면 반드시 true(HTTPS)
+      http-only: true
+
+security:
+  csrf:
+    allowed-origins:
+      - "http://localhost:3000"
+      - "https://app.example.com" # 나중에 도메인 등록
+    skip-paths:
+      - "/health"
+
+oauth:
+  google:
+    client-id: 184039275121-3v895hcqj0imbjne3pfs9ceg6h8gld30.apps.googleusercontent.com
+    client-secret: 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
+    redirect-uri: http://localhost:3000/oauth/google/redirect
+  kakao:
+    client-id: f04e0b2f9773e2e421e24a448dc478a0
+    redirect-uri: http://localhost:3000/oauth/kakao/redirect
 
 logging:
   level:
     # debug, info, error 로그 출력
     #    root: debug
     root: info # default
+
+chat:
+  stream-key: chat:messages          # 단일 스트림 사용 (roomId는 페이로드로 구분)
+  group: chat-consumers              # 컨슈머 그룹 이름
+  consumer-name: chat-consumer-1     # 이 인스턴스의 컨슈머 이름

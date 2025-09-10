@@ -1,7 +1,11 @@
 package com.beyond.HanSoom.chat.dto.res;
 
+import com.beyond.HanSoom.chat.domain.ChatParticipant;
 import com.beyond.HanSoom.user.domain.User;
 import lombok.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -17,10 +21,10 @@ public class ChatMessageResDto {
     private Long remaining;
     private boolean isWaring;
 
-
-
     public void updateUser(User user) {
-        this.senderName=user.getName();
-        this.profileImage=user.getProfileImage();
+        this.senderName = user.getName();
+        this.profileImage = user.getProfileImage();
     }
+
+
 }

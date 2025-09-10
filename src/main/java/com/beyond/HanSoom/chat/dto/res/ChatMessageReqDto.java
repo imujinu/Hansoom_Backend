@@ -10,15 +10,17 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class ChatMessageReqDto {
-    private String roomId;
+    private Long roomId;
     private String senderEmail;
-    private String content;
+    private String content; // 암호화된 메시지
     private String timestamp;
     private Long remaining;
     private boolean isWaring;
-
     public void addWaring(Long remaining){
         this.isWaring = true;
-        this.remaining=remaining;
+        this.remaining = remaining;
     }
+
+
 }
+
