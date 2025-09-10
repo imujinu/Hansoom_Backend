@@ -22,6 +22,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class HotelSearchQueryBuilder {
 
+    private static final int MIN_FUZZY_LENGTH = 3;
+
     public Query buildImprovedFuzzySearchQuery(HotelListSearchDto dto) {
         log.info("=== 유연한 호텔 검색 쿼리 생성 ===");
 
@@ -182,20 +184,25 @@ public class HotelSearchQueryBuilder {
                 .withQuery(q -> q
                         .bool(b -> b
                                 // 필수 조건: 최소한 원본 주소 또는 정규화된 주소 중 하나와 매칭되어야 함
-                                .must(m -> m.bool(shouldBool -> shouldBool
-                                        // 1. 원본 주소로 검색 (와일드카드 및 퍼지)
-                                        .should(s -> s.wildcard(w -> w.field("address").value("*" + address + "*").boost(10.0f)))
-                                        .should(s -> s.fuzzy(f -> f.field("address").value(address).fuzziness("1").boost(5.0f)))
+                                .must(m -> m.bool(shouldBool -> {
+                                    // 1. 원본 주소로 검색
+                                    shouldBool.should(s -> s.wildcard(w -> w.field("address").value("*" + address + "*").boost(10.0f)));
+                                    if (address.length() >= MIN_FUZZY_LENGTH) {
+                                        shouldBool.should(s -> s.fuzzy(f -> f.field("address").value(address).fuzziness("1").boost(5.0f)));
+                                    }
 
-                                        // 2. 정규화된 주소로 검색 (와일드카드 및 퍼지)
-                                        .should(s -> s.wildcard(w -> w.field("address").value("*" + normalizedAddress + "*").boost(15.0f)))
-                                        .should(s -> s.fuzzy(f -> f.field("address").value(normalizedAddress).fuzziness("1").boost(8.0f)))
+                                    // 2. 정규화된 주소로 검색
+                                    shouldBool.should(s -> s.wildcard(w -> w.field("address").value("*" + normalizedAddress + "*").boost(15.0f)));
+                                    if (normalizedAddress.length() >= MIN_FUZZY_LENGTH) {
+                                        shouldBool.should(s -> s.fuzzy(f -> f.field("address").value(normalizedAddress).fuzziness("1").boost(8.0f)));
+                                    }
 
-                                        // 3. 정확한 매칭에 높은 점수 부여
-                                        .should(s -> s.match(m_match -> m_match.field("address").query(address).boost(20.0f)))
-                                        .should(s -> s.match(m_match -> m_match.field("address").query(normalizedAddress).boost(25.0f)))
-                                        .minimumShouldMatch("1") // 최소 한 개의 should 쿼리가 매칭되어야 함
-                                ))
+                                    // 3. 정확한 매칭에 높은 점수 부여
+                                    shouldBool.should(s -> s.match(m_match -> m_match.field("address").query(address).boost(20.0f)));
+                                    shouldBool.should(s -> s.match(m_match -> m_match.field("address").query(normalizedAddress).boost(25.0f)));
+
+                                    return shouldBool.minimumShouldMatch("1");
+                                }))
                                 // ... 기존 필터링 및 기타 로직 유지
                                 .must(m -> m.term(t -> t.field("state.keyword").value("APPLY")))
                                 .filter(f -> {
@@ -203,7 +210,7 @@ public class HotelSearchQueryBuilder {
                                         return f.terms(terms -> terms
                                                 .field("type.keyword")
                                                 .terms(t -> t.value(dto.getType().stream()
-                                                        .map(co.elastic.clients.elasticsearch._types.FieldValue::of)
+                                                        .map(FieldValue::of)
                                                         .collect(Collectors.toList()))));
                                     }
                                     return f.matchAll(ma -> ma);
