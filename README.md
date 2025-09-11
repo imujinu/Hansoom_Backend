@@ -1,8 +1,8 @@
-![사용자 탈퇴](https://github.com/user-attachments/assets/3288b587-e053-4b40-b21b-6cb6cad96964)## 🛌 '한숨' 스테이: 숙박 예약 관리 시스템 프로젝트 개요
+## 🛌 '한숨' 스테이: 숙박 예약 관리 시스템 프로젝트 개요
 ### **슬로건: "한숨 쉬지 말고 한숨 쉬다가세요."**<br/>
 이 슬로건은 단순히 물리적 휴식을 넘어, 예약 과정에서의 복잡함과 스트레스까지 해소하겠다는 프로젝트의 핵심 가치를 담고 있습니다. 사용자에게는 '편리한 휴식 경험'을, 호스트에게는 '간편한 관리 경험'을 제공하는 것이 목표입니다.
 
-<img width="1887" height="845" alt="대표 화면" src="https://github.com/user-attachments/assets/e26d2960-6a80-4356-88b8-fd55afe0eff7" />
+![메인](https://github.com/user-attachments/assets/de14ab9c-a7e1-423a-a6ec-225f451c8be8)
 
 
 ### **프로젝트 소개**<br/>
