@@ -682,7 +682,9 @@ TomcatConfig라는 @Configuration 클래스를 만들고, TomcatServletWebServer
   <summary>예약성공 알림(호스트, 실시간o)</summary>
   <div align="center">
 
-https://github.com/user-attachments/assets/566c0bd8-14f4-40bd-8fc6-690b3f2d1339
+
+  ![호스트알림](https://github.com/user-attachments/assets/b66befaa-a9e2-4f0f-b2bc-82a5cd45cf5f)
+
 
   </div>
 </details>
@@ -690,8 +692,9 @@ https://github.com/user-attachments/assets/566c0bd8-14f4-40bd-8fc6-690b3f2d1339
 <details>
   <summary>호텔등록 알림(관리자, 실시간o)</summary>
   <div align="center">
-    
-https://github.com/user-attachments/assets/f6b3994a-baa6-4929-9e35-fa4f912d4fca
+
+  ![관리자알림](https://github.com/user-attachments/assets/067cafe3-ecef-4444-8410-cc3b3ed51808)
+  
 
   </div>
 </details>
