@@ -161,4 +161,11 @@ public class ChatController {
         return new ResponseEntity<>(new CommonSuccessDto(dto, HttpStatus.OK.value(), "채팅 키 조회 완료"), HttpStatus.OK);
     }
 
+    //채팅방 탈퇴
+    @PatchMapping("/exit/{roomId}")
+    public ResponseEntity<?> exitRoom(@PathVariable Long roomId){
+         chatService.exitRoom(roomId);
+        return new ResponseEntity<>(new CommonSuccessDto("dto", HttpStatus.OK.value(), "채팅방 탈퇴 완료"), HttpStatus.OK);
+    }
+
 }

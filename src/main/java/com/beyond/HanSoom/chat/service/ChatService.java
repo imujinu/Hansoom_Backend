@@ -456,4 +456,14 @@ public class ChatService {
          ChatParticipant chatParticipant = chatParticipantRepository.findByChatRoomAndUser(chatRoom,user).orElseThrow(()-> new EntityNotFoundException("채팅 참여자가 존재하지 않습니다."));
          return new ChatKeyResDto().fromEntity(chatParticipant);
     }
+
+    public void exitRoom(Long roomId) {
+         User user = getUser();
+         ChatRoom chatRoom = chatRoomRepository.findById(roomId).orElseThrow(()->new EntityNotFoundException("채팅방이 존재하지 않습니다."));
+         ChatParticipant chatParticipant = chatParticipantRepository.findByChatRoomAndUser(chatRoom,user).orElseThrow(()->new EntityNotFoundException("존재하지 않는 채팅 유저입니다."));
+         chatParticipantRepository.delete(chatParticipant);
+         if(chatRoom.getIsGroupChat()=="N"){
+             chatRoomRepository.delete(chatRoom);
+         }
+    }
 }
