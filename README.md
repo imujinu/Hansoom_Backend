@@ -593,7 +593,8 @@ TomcatConfig라는 @Configuration 클래스를 만들고, TomcatServletWebServer
   <summary>호텔 리뷰조회</summary>
   <div align="center">
 
-https://github.com/user-attachments/assets/552c6183-4314-47c6-a3e6-7621fa7feb7c
+![호텔리뷰조회](https://github.com/user-attachments/assets/e8ddbdb4-669a-442e-af04-20ea8b329622)
+
     
   </div>
 </details>
@@ -601,8 +602,11 @@ https://github.com/user-attachments/assets/552c6183-4314-47c6-a3e6-7621fa7feb7c
 <details>
   <summary>리뷰작성</summary>
   <div align="center">
+
+
+![리뷰작성](https://github.com/user-attachments/assets/d48db345-2a71-4eae-a7eb-3344a9696c18)
+
     
-https://github.com/user-attachments/assets/3bd7ffdc-3594-4d61-8ab2-99f933b5c996
 
   </div>
 </details>
@@ -610,17 +614,33 @@ https://github.com/user-attachments/assets/3bd7ffdc-3594-4d61-8ab2-99f933b5c996
 <details>
   <summary>내 리뷰 조회(마이페이지)</summary>
   <div align="center">
+
+
+![내리뷰조회](https://github.com/user-attachments/assets/2cb8e40f-8cb4-4fe0-9e73-42d56bd22c51)
+
     
-https://github.com/user-attachments/assets/0209dafa-0353-4e38-8e42-40e6501b1b8f
 
   </div>
 </details>
 
 <details>
-  <summary>내 리뷰 수정/삭제</summary>
+  <summary>내 리뷰 수정</summary>
   <div align="center">
 
-https://github.com/user-attachments/assets/a5b2b96b-df51-4259-82a8-cb02dfed30c2
+
+![내리뷰수정](https://github.com/user-attachments/assets/4eee199b-b108-4720-a984-acd5cdc0ebb7)
+
+
+
+  </div>
+</details>
+
+<details>
+  <summary>내 리뷰 삭제</summary>
+  <div align="center">
+
+![내리뷰삭제](https://github.com/user-attachments/assets/49aca08d-99b0-43b9-8d7a-37e38d580bd2)
+
 
   </div>
 </details>
@@ -629,7 +649,9 @@ https://github.com/user-attachments/assets/a5b2b96b-df51-4259-82a8-cb02dfed30c2
   <summary>리뷰 답글 작성</summary>
   <div align="center">
 
-https://github.com/user-attachments/assets/cf3caa7f-dda1-4b3b-86c8-fef3bd7a1382
+
+![호스트리뷰답글작성](https://github.com/user-attachments/assets/fa9a711d-d035-4cfd-9dc3-4de98407543c)
+
 
   </div>
 </details>
@@ -638,7 +660,8 @@ https://github.com/user-attachments/assets/cf3caa7f-dda1-4b3b-86c8-fef3bd7a1382
   <summary>리뷰 답글 수정/삭제</summary>
   <div align="center">
 
-https://github.com/user-attachments/assets/ceefd053-9e8a-4187-bc1c-6173c732bed6
+![호스트리뷰답글수정삭제](https://github.com/user-attachments/assets/da54ed75-762a-4355-8e06-5fc47c89ecc6)
+
 
   </div>
 </details>
