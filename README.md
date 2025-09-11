@@ -99,6 +99,10 @@
 | Elastic Search를 통한 조회성능 향상 | 관계형 데이터베이스의 부하를 줄이기 위해 복잡한 조건의 데이터 조회를 엘라스틱서치로 분산시켜 애플리케이션의 성능을 크게 개선했습니다. |
 | Elastic Search를 통한 자동완성 기능구현 | Search-as-you-type 필드 타입을 적용하여 실시간 자동 완성 기능을 제공함으로써 사용자가 원하는 정보를 더 빠르고 편리하게 찾을 수 있도록 사용자 경험(UX)을 향상시켰습니다. |
 
+## 🛠️ 시스템 아키텍쳐
+<img width="944" height="471" alt="drawio" src="https://github.com/user-attachments/assets/ae25777f-9bb5-4a4a-a8e4-8378cc5f050c" />
+
+
 ## <span id="11">🚦 트러블 슈팅</span>
 
 <details>
