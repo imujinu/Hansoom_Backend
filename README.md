@@ -106,15 +106,95 @@
 ## <span id="11">🚦 트러블 슈팅</span>
 
 <details>
-<summary> 조은성 트러블 슈팅(로그인, 리뷰)  </summary>
+<summary> 로그인  </summary>
 
 <div>
+<details>
+  <summary>
+    1. SNS 로그인 연동
+  </summary>
+<div>
+    
+1. **문제 상황**  
+    기존 회원이 SNS 로그인 시도 시, 로그인 실패 발생<br>
+    원인: 기존 회원 이메일과 SNS 계정 이메일이 동일 → 회원가입 로직에서 중복 Insert 시도 → DB 충돌 발생
+    
+2. **시도**  
+    SNS 로그인 시 기존 회원일 경우, 409 (CONFLICT) 응답을 반환하여 중복 회원가입 방지<br>
+    프론트는 409를 감지 후 연동 여부를 사용자에게 확인 후, 연동 동의 시, 프론트는 이전의 인가코드(code)로 서버에 재로그인 요청<br>
+    서버는 재로그인 과정에서 동일 인가 코드를 다시 사용해 구글 토큰 교환 요청→ 구글은 이미 사용된 코드라 판단, invalid_grand 오류 반환
 
-- 프로젝트 완료 후, ReadMe에 업데이트<br>
-https://vivid-swallow-267.notion.site/ReadMe-25ab1da1d9f9801c9a53f57faf4d5029?source=copy_link
+3. **해결**
+   SNS 로그인 시 이메일 충돌 발생 → 서버는 409와 함께 LinkTicket { email, socialId, provider } (임시토큰)을 발급하여 응답으로 반환<br>
+  서버는 Redis에 10분 TTL을 걸어 저장<br>
+  프론트는 409를 감지 후 연동 여부를 사용자에게 확인 후, 연동 동의 시, LinkTikcet을 가지고 로그인 재요청<br>
+  서버는 LinkTicket을 검증 후, 페이로드를 가지고 SNS 계정과 연동(Social ID/Type 업데이트)<br>
+  로그인 완료 및 정상 응답 반환
+
+  </div>
+</details>
+
+<details>
+  <summary>
+    2. Refresh Token 보안 강화
+  </summary>
+  <div>
+    
+1. **문제 상황**  
+   Local Storage에 저장된 데이터는, XSS 공격을 통해 탈취 될 수 있음.<br>
+   악성 스크립트 공격 - localStorage.getItem("refreshToken"), document.cookie 등
+
+2. **해결1**
+   Refresh Token을 HTTP Only Cookie로 관리<br>
+   HTTP Only Cookie → JS에서 접근할 수 있는 곳에 쿠키를 저장, 요청을 보낼 때 헤더에 담아서 전송→ XSS 공격 방어 가능
+       
+3. **문제 상황2**  
+   HTTP Only Cookie 사용 → CSRF 공격에 노출<br>
+   CSRF 공격 - 인증된 쿠키를 인증되지 않은 사이트에서도 헤더에 담아 요청 전송
+
+4. **해결2**
+   Origin/Referer가드를 적용<br>
+   Origin/Referer가드<br>
+   → 브라우저에서 요청을 보낼 때, 요청을 보낸 페이지의 URL을 담아서 서버로 전송<br>
+   → 서버는 화이트리스트와 비교하여 검증 후, 일치하지 않으면 403 반환<br>
+   추가로 HTTP Only Cookie 설정에서, 쿠키를 필요로 하는 요청만 쿠키를 담도록 허용 (token refresh / logout)
+    
+  </div>
+</details>
+
+
+
 
 </div>
 </details>
+
+
+<details>
+<summary> 리뷰  </summary>
+
+<div>
+<details>
+  <summary>
+    1. 리뷰 평점 계산을 위한 테이블 구조 개선
+  </summary>
+<div>
+    
+1. **문제 상황**  
+    호텔 평점을 계산하기 위해 모든 리뷰 데이터를 불러와 합산해야 함 → 성능 저하 우려<br>
+    예) 4.8 (100) → 이 데이터만을 위해 모든 데이터 조회 및 AVG / COUNT 계산 필요
+
+2. **해결**
+   호텔 ID를 외래키로 갖는 별도 테이블 생성 { hotel_id, sum, count }<br>
+   리뷰 작성/수정/삭제 시, 별점의 총합(sum)과 개수(count)를 업데이트<br>
+   특정 호텔의 평점과 리뷰 개수를 바로 조회할 수 있도록 최적화
+  </div>
+</details>
+
+
+
+</div>
+</details>
+
 
 <details>
 <summary> 예약  </summary>
