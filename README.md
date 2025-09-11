@@ -1,4 +1,4 @@
-## 🛌 '한숨' 스테이: 숙박 예약 관리 시스템 프로젝트 개요
+![사용자 탈퇴](https://github.com/user-attachments/assets/3288b587-e053-4b40-b21b-6cb6cad96964)## 🛌 '한숨' 스테이: 숙박 예약 관리 시스템 프로젝트 개요
 ### **슬로건: "한숨 쉬지 말고 한숨 쉬다가세요."**<br/>
 이 슬로건은 단순히 물리적 휴식을 넘어, 예약 과정에서의 복잡함과 스트레스까지 해소하겠다는 프로젝트의 핵심 가치를 담고 있습니다. 사용자에게는 '편리한 휴식 경험'을, 호스트에게는 '간편한 관리 경험'을 제공하는 것이 목표입니다.
 
@@ -311,24 +311,30 @@ TomcatConfig라는 @Configuration 클래스를 만들고, TomcatServletWebServer
 <details>
   <summary>회원가입</summary>
   <div align="center">
-    
-  https://github.com/user-attachments/assets/d95ef7fc-6a14-4c9c-8fb8-2f8c9ce89225
+
+![회원가입](https://github.com/user-attachments/assets/530a9258-93f0-4b6d-b2ec-5dd82cbabf86)
+  
   </div>
 </details>
 
 <details>
-  <summary>일반 로그인</summary>
+  <summary>이메일 로그인</summary>
   <div align="center">
     
-https://github.com/user-attachments/assets/6a1d76a8-97aa-4b83-9adc-b0c2834d966a
+
+![이메일 로그인](https://github.com/user-attachments/assets/330022ea-56d4-4cd0-9a6c-fc48f12b728e)
+
+
   </div>
 </details>
 
 <details>
   <summary>구글 회원가입 / 로그인</summary>
   <div align="center">
+
+
+![구글 회원가입 및 로그인](https://github.com/user-attachments/assets/25ffbac3-93ed-4f6c-ab3e-a2e00c05068f)
     
-  ![구글로그인](https://github.com/user-attachments/assets/29923e10-4d45-4461-b04c-d56d4b4c266e)
   
   </div>
 </details>
@@ -338,7 +344,8 @@ https://github.com/user-attachments/assets/6a1d76a8-97aa-4b83-9adc-b0c2834d966a
   <div align="center">
 
 
-https://github.com/user-attachments/assets/09a457de-615a-49f2-932a-85ea5107ab4b
+![카카오 회원가입 및 로그인](https://github.com/user-attachments/assets/7e99d052-78df-4ecc-a94a-4b0364436b3b)
+
 
 
   </div>
@@ -348,16 +355,30 @@ https://github.com/user-attachments/assets/09a457de-615a-49f2-932a-85ea5107ab4b
   <summary>내 정보 조회(마이페이지)</summary>
   <div align="center">
 
-https://github.com/user-attachments/assets/3808539e-7ce1-416a-9093-75b26770d642
+![내 정보 조회(마이페이지)](https://github.com/user-attachments/assets/57a21210-ccd2-46b2-8ac5-fa6232251530)
+
 
   </div>
 </details>
 
 <details>
-  <summary>내 정보 수정/탈퇴</summary>
+  <summary>내 정보 수정</summary>
   <div align="center">
 
-https://github.com/user-attachments/assets/5ad777ce-03c8-41c1-b6fa-d07bd8107dc1
+
+![내 정보 수정](https://github.com/user-attachments/assets/fa38196f-fdc0-439f-a8bd-11681de3b358)
+
+
+  </div>
+</details>
+
+<details>
+  <summary>사용자 탈퇴</summary>
+  <div align="center">
+
+
+![사용자 탈퇴](https://github.com/user-attachments/assets/72fdfae5-6e34-4db9-926d-0aec67d43206)
+
 
   </div>
 </details>
