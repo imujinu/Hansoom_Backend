@@ -90,19 +90,14 @@
 | Redis를 활용한 토큰 관리 | 로그인 시 발급되는 토큰을 Redis에 저장하고 관리함으로써, 빠르고 안정적인 사용자 인증 시스템을 구축했습니다. |
 | Redis를 통한 대기열 구성 | 특정 객실이 특가로 나왔을 경우를 시나리오로 설정해 예약 페이지 접속 시 대기열을 설정해 사용자 접속 수를 제한할 수 있습니다. |
 | Redis를 통한 동시성 제어 | 여러 사용자가 동시에 같은 객실에 접근할 경우, luascript를 활용해 Redis의 조회-예약 과정의 원자성을 보장할 수 있도록 했습니다. |
+| 채팅 대칭키 암호화 | 채팅방마다 대칭키를 생성해 메시지 전송 시 암호화, 수신시 복호화를 통해 실제 데이터베이스에는 암호화된 데이터가 들어가도록 했습니다. |
 | SSE를 활용한 실시간 알림 | SSE(Server-Sent Events)를 이용해 사용자에게 예약/취소 등 중요한 이벤트 알림을 실시간으로 전달하는 기능을 구현했습니다. |
 | 카카오지도 API 연동 | 카카오지도 API의 주소-좌표 변환(Geocoding) 기능을 이용해 호텔 주소를 좌표로 변환하고, 이를 바탕으로 지도를 구현하여 사용자가 호텔 위치를 쉽게 찾을 수 있도록 했습니다. |
 | 토스페이먼츠 API 결제 | 간편하고 안전한 결제 환경을 위해 토스페이먼츠 API를 연동하여 사용자가 편리하게 결제할 수 있도록 했습니다. |
 | Stomp를 활용한 실시간 채팅 기능 | Stomp를 통해 클라이언트간의 실시간 채팅이 가능하도록 했습니다. |
-| Redis Stream을 통한 메시지 저장 | 추후 확장성을 생각해 Redis Stream을 통해 메시지가 발행되도록 하였습니다. Pub/Sub에서 메시지가 소실되던 문제를 해결하였습니다. |
+| Redis Stream을 통한 메시지 저장 | 대규모 트래픽을 고려해 Redis Stream을 통해 메시지가 발행되도록 하였습니다. 웹소켓에서 메시지가 소실되던 문제를 해결하였습니다. |
 | Elastic Search를 통한 조회성능 향상 | 관계형 데이터베이스의 부하를 줄이기 위해 복잡한 조건의 데이터 조회를 엘라스틱서치로 분산시켜 애플리케이션의 성능을 크게 개선했습니다. |
 | Elastic Search를 통한 자동완성 기능구현 | Search-as-you-type 필드 타입을 적용하여 실시간 자동 완성 기능을 제공함으로써 사용자가 원하는 정보를 더 빠르고 편리하게 찾을 수 있도록 사용자 경험(UX)을 향상시켰습니다. |
-
-### 📄 핵심 기능 플로우
-<details>
-  <summary>핵심 기능 플로우</summary>
-    ![결제 다이어 그램]<img width="822" height="922" alt="결제 시퀀스 다이어그램 drawio (1)" src="https://github.com/user-attachments/assets/7d5760a4-8e72-4fb5-a195-3b8eb46b1c6d" />
-</details>
 
 ## <span id="11">🚦 트러블 슈팅</span>
 
@@ -158,6 +153,7 @@ https://vivid-swallow-267.notion.site/ReadMe-25ab1da1d9f9801c9a53f57faf4d5029?so
 2. **해결 방안**  
     특정 객실이 특가로 나왔다고 테스트 시나리오를 세운 뒤 예약 페이지에 진입하는 모든 사용자가 대기열 큐에 올라가도록 하였습니다.
    서버에서 설정한 대기열 순서보다 앞에 있는 사용자만 예약 페이지의 이용이 가능하도록 하였고 순번이 뒤인 사용자들은 자신들의 순번을 실시간으로 전달받으며 기다리도록 구현하였습니다.
+![채팅 대기열 gif](https://github.com/user-attachments/assets/c0f2f445-4435-487f-8e03-a96e1ff7b002)
 
   </div>
 </details>
@@ -178,8 +174,8 @@ https://vivid-swallow-267.notion.site/ReadMe-25ab1da1d9f9801c9a53f57faf4d5029?so
   <div>
     
 1. **문제 상황**  
-    기존 채팅 서비스는 웹소켓을 통해 사용자가 메시지를 전송하면 서버에서는 Redis pub/sub을 이용해 구독 중인 이용자들에게 메시지를 발행하는 구조였습니다.
-    추후 서버가 확장될 수 있음을 고려해 pub/sub을 이용했는데 문제는 이 경우 redis를 거치는 과정에서 메시지가 소실 될 우려가 있다는 부분이었습니다.
+    기존 채팅 서비스는 웹소켓을 통해 메시지를 전송하고 서버에서 다시 발행해주는 구조였습니다.
+    그런데 대규모 트래픽이 발생할 경우 중간 과정에 메시지가 소실 될 우려가 존재했습니다.
     
     
 2. **해결 방안**  
@@ -206,7 +202,11 @@ https://vivid-swallow-267.notion.site/ReadMe-25ab1da1d9f9801c9a53f57faf4d5029?so
    이 문제를 방지하기 위해서는 특정 시간 동안 사용자의 메시지 전송 횟수의 제한을 두는 편이 좋다고 생각했습니다.  
    이를 위해 rateLimiter를 사용하였으며 사용자의 이메일을 키값으로, 메시지 전송 시간을 담아두는 리스트를 value 값으로 두어  
    설정해둔 값을 넘어설 경우 일정 시간 동안 채팅 기능의 제한이 이루어지도록 하였습니다.  
-   테스트 케이스를 위해 1분에 10회의 채팅 제한을 두고, 채팅 제한 시간은 5분으로 설정하였습니다.  
+   테스트 케이스를 위해 1분에 10회의 채팅 제한을 두고, 채팅 제한 시간은 5분으로 설정하였습니다.
+
+![채팅 도배 테스트](https://github.com/user-attachments/assets/044ef4f7-f1c0-4704-b4c3-39ddf80e782b)
+
+   
   </div>
 </details>
 
@@ -503,7 +503,8 @@ TomcatConfig라는 @Configuration 클래스를 만들고, TomcatServletWebServer
   <summary>예약 성공</summary>
   <div align="center">
   
-![예약](https://github.com/user-attachments/assets/14efca05-10bc-476e-b982-2ec7cf16b9ca)
+
+![예약 성공](https://github.com/user-attachments/assets/a198e262-3d43-4d74-97ad-6050846649a7)
 
 
   </div>
@@ -515,18 +516,6 @@ TomcatConfig라는 @Configuration 클래스를 만들고, TomcatServletWebServer
   <div align="center">
     
 ![예약실패 최종](https://github.com/user-attachments/assets/3d462ddb-8119-4073-8e02-e953c924f973)
-
-
-  </div>
-</details>
-
-<details>
-  <summary>예약 대기열 생성</summary>
-  <div align="center">
-    
-
-![예약 대기열 (1)](https://github.com/user-attachments/assets/88cbbee9-2eb7-4185-9d29-bbb16f442242)
-
 
 
   </div>
