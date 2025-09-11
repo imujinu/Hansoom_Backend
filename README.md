@@ -322,7 +322,7 @@ TomcatConfig라는 @Configuration 클래스를 만들고, TomcatServletWebServer
   <div align="center">
     
 
-![이메일 로그인](https://github.com/user-attachments/assets/330022ea-56d4-4cd0-9a6c-fc48f12b728e)
+![이메일로그인](https://github.com/user-attachments/assets/809f003c-0651-44b5-8f7b-138be3e5915c)
 
 
   </div>
@@ -332,9 +332,8 @@ TomcatConfig라는 @Configuration 클래스를 만들고, TomcatServletWebServer
   <summary>구글 회원가입 / 로그인</summary>
   <div align="center">
 
+![구글회원가입및로그인](https://github.com/user-attachments/assets/ca1c6479-ad4e-4a82-aa0e-adf4c127bd9b)
 
-![구글 회원가입 및 로그인](https://github.com/user-attachments/assets/25ffbac3-93ed-4f6c-ab3e-a2e00c05068f)
-    
   
   </div>
 </details>
@@ -344,7 +343,7 @@ TomcatConfig라는 @Configuration 클래스를 만들고, TomcatServletWebServer
   <div align="center">
 
 
-![카카오 회원가입 및 로그인](https://github.com/user-attachments/assets/7e99d052-78df-4ecc-a94a-4b0364436b3b)
+![카카오회원가입및로그인](https://github.com/user-attachments/assets/1ee3ff99-1bbd-44c2-b0d1-ed888f0f1a41)
 
 
 
@@ -354,8 +353,10 @@ TomcatConfig라는 @Configuration 클래스를 만들고, TomcatServletWebServer
 <details>
   <summary>내 정보 조회(마이페이지)</summary>
   <div align="center">
+  
 
-![내 정보 조회(마이페이지)](https://github.com/user-attachments/assets/57a21210-ccd2-46b2-8ac5-fa6232251530)
+![내정보조회마이페이지](https://github.com/user-attachments/assets/7b90a8e7-c094-4c7b-bf85-8d5c4cd1ff53)
+
 
 
   </div>
@@ -365,8 +366,9 @@ TomcatConfig라는 @Configuration 클래스를 만들고, TomcatServletWebServer
   <summary>내 정보 수정</summary>
   <div align="center">
 
+![내정보수정](https://github.com/user-attachments/assets/a97c255f-b5ec-4385-ad4f-7e9c71853388)
 
-![내 정보 수정](https://github.com/user-attachments/assets/fa38196f-fdc0-439f-a8bd-11681de3b358)
+
 
 
   </div>
@@ -377,7 +379,8 @@ TomcatConfig라는 @Configuration 클래스를 만들고, TomcatServletWebServer
   <div align="center">
 
 
-![사용자 탈퇴](https://github.com/user-attachments/assets/72fdfae5-6e34-4db9-926d-0aec67d43206)
+![사용자탈퇴](https://github.com/user-attachments/assets/6b6902c9-b3ea-4b51-8dcb-b1d3783e1213)
+
 
 
   </div>
