@@ -215,7 +215,7 @@ https://vivid-swallow-267.notion.site/ReadMe-25ab1da1d9f9801c9a53f57faf4d5029?so
 </div>
 </details>
 <details>
-<summary> 호텔 트러블 슈팅 </summary>
+<summary> 호텔 </summary>
 
 <div>
 <details>
@@ -283,20 +283,6 @@ TomcatConfig라는 @Configuration 클래스를 만들고, TomcatServletWebServer
 [톰캣 FileCountLimitExceededException](https://velog.io/@kishinoa/%ED%86%B0%EC%BA%A3FileCountLimitExceededException-%EB%AC%B8%EC%A0%9C-%ED%95%B4%EA%B2%B0)
 </div>
 </details>
-
-</div>
-</details>
-
-<details>
-<summary> 1. 트러블 슈팅  </summary>
-
-<div>
-
-1. 문제 상황 <br />
-
-2. 시도 <br />
-
-3. 해결방안 <br />
 
 </div>
 </details>
@@ -459,7 +445,8 @@ https://github.com/user-attachments/assets/5ad777ce-03c8-41c1-b6fa-d07bd8107dc1
   <summary>호텔검색 필터기능</summary>
   <div align="center">
 
-https://github.com/user-attachments/assets/0fb87306-3ae8-4470-a341-05f306d8ebb9
+![필터 기능](https://github.com/user-attachments/assets/4b9c6274-1f0d-4744-9839-d8a01a25a3e0)
+
 
   </div>
 </details>
@@ -468,7 +455,8 @@ https://github.com/user-attachments/assets/0fb87306-3ae8-4470-a341-05f306d8ebb9
   <summary>호텔검색 정렬기능</summary>
   <div align="center">
 
-https://github.com/user-attachments/assets/2df76079-b447-49db-bc63-4b10a954a208
+![정렬 기능](https://github.com/user-attachments/assets/c9e5c363-5608-4260-89b1-be90b82337af)
+
 
   </div>
 </details>
@@ -477,7 +465,8 @@ https://github.com/user-attachments/assets/2df76079-b447-49db-bc63-4b10a954a208
   <summary>내 주변 호텔 조회</summary>
   <div align="center">
 
-https://github.com/user-attachments/assets/c0f0476c-1bf6-404b-b7a6-702d5695d98b
+![내 주변 호텔](https://github.com/user-attachments/assets/5acc8d59-9f36-4f56-a5f5-061ec643466d)
+
 
   </div>
 </details>
