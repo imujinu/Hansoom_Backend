@@ -801,4 +801,18 @@ TomcatConfig라는 @Configuration 클래스를 만들고, TomcatServletWebServer
 </details>
 </details>
 
+<details>
+<summary>♥️ 찜</summary>
+<details>
+  <summary>사용자 찜 기능</summary>
+  <div align="center">
+
+![찜기능](https://github.com/user-attachments/assets/adff0a8b-9aaa-4848-bc24-70f6849dbbd6)
+
+
+  </div>
+</details>
+
+</details>
+
 
