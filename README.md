@@ -149,7 +149,7 @@
 
 2. **해결1**
    Refresh Token을 HTTP Only Cookie로 관리<br>
-   HTTP Only Cookie → JS에서 접근할 수 있는 곳에 쿠키를 저장, 요청을 보낼 때 헤더에 담아서 전송→ XSS 공격 방어 가능
+   HTTP Only Cookie → JS에서 접근할 수 없는 곳에 쿠키를 저장, 요청을 보낼 때 헤더에 담아서 전송→ XSS 공격 방어 가능
        
 3. **문제 상황2**  
    HTTP Only Cookie 사용 → CSRF 공격에 노출<br>
