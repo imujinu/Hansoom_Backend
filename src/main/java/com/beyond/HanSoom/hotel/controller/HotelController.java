@@ -1,6 +1,7 @@
 package com.beyond.HanSoom.hotel.controller;
 
 import com.beyond.HanSoom.common.dto.CommonSuccessDto;
+import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.hotel.dto.*;
 import com.beyond.HanSoom.hotel.service.HotelService;
 import lombok.RequiredArgsConstructor;
@@ -254,5 +255,26 @@ public class HotelController {
                 HttpStatus.OK
         );
     }
+
+    @GetMapping("/test/hotels/nplus1")
+    public List<Hotel> getHotelsNPlusOne() {
+        return hotelService.getHotelsNPlusOne();
+    }
+
+    @GetMapping("/test/hotels/batch")
+    public List<Hotel> getHotelsBatch() {
+        return hotelService.getHotelsBatch();
+    }
+
+    @GetMapping("/test/hotels/joinfetch")
+    public List<Hotel> getHotelsJoinFetch() {
+        return hotelService.getHotelsJoinFetch();
+    }
+
+    @GetMapping("/test/hotels/dto")
+    public List<HotelRoomDto> getHotelsDto() {
+        return hotelService.getHotelsDto();
+    }
+
 
 }
