@@ -37,6 +37,7 @@ spring:
       # update : entity 변경사항만 alter를 적용하고 기존 데이터 유지
       # validate : 실제 DB와의 차이점을 check만 하고 ddl 문 실행 x, 콘솔로만 변경사항 출력.
       ddl-auto: update
+      default_batch_fetch_size: 100
     # 콘솔창에 ddl, dml 등의 쿼리를 출력하여 보여주는 옵션
     show_sql: true
   servlet:
@@ -111,3 +112,8 @@ chat:
   stream-key: chat:messages          # 단일 스트림 사용 (roomId는 페이로드로 구분)
   group: chat-consumers              # 컨슈머 그룹 이름
   consumer-name: chat-consumer-1     # 이 인스턴스의 컨슈머 이름
+
+decorator:
+  datasource:
+    p6spy:
+      enable-logging: true

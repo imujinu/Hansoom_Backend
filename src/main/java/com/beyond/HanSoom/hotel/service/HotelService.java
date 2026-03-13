@@ -975,4 +975,65 @@ public class HotelService {
                 return null;
         }
     }
+
+    public List<Hotel> getHotelsNPlusOne() {
+
+        long start = System.currentTimeMillis();
+
+        List<Hotel> hotels = hotelRepository.findAll();
+
+        for (Hotel hotel : hotels) {
+            hotel.getRooms().size();
+        }
+
+        long end = System.currentTimeMillis();
+
+        log.info("N+1 실행 시간 = {} ms", (end - start));
+
+        return hotels;
+    }
+
+    public List<Hotel> getHotelsBatch() {
+
+        long start = System.currentTimeMillis();
+
+        List<Hotel> hotels = hotelRepository.findAll();
+
+        for (Hotel hotel : hotels) {
+            hotel.getRooms().size();
+        }
+
+        long end = System.currentTimeMillis();
+
+        log.info("Batch Fetch 실행 시간 = {} ms", (end - start));
+
+        return hotels;
+    }
+
+    public List<Hotel> getHotelsJoinFetch() {
+
+        long start = System.currentTimeMillis();
+
+        List<Hotel> hotels = hotelRepository.findAllJoinFetch();
+
+        long end = System.currentTimeMillis();
+
+        log.info("Join Fetch 실행 시간 = {} ms", (end - start));
+
+        return hotels;
+    }
+
+    public List<HotelRoomDto> getHotelsDto() {
+
+        long start = System.currentTimeMillis();
+
+        List<HotelRoomDto> result = hotelRepository.findHotelsDto();
+
+        long end = System.currentTimeMillis();
+
+        log.info("DTO Projection 실행 시간 = {} ms", (end - start));
+
+        return result;
+    }
+
 }

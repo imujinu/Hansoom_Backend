@@ -2,6 +2,7 @@ package com.beyond.HanSoom.hotel.repository;
 
 import com.beyond.HanSoom.hotel.domain.Hotel;
 import com.beyond.HanSoom.hotel.domain.HotelState;
+import com.beyond.HanSoom.hotel.dto.HotelRoomDto;
 import com.beyond.HanSoom.user.domain.User;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.domain.Page;
@@ -71,4 +72,18 @@ public interface HotelRepository extends JpaRepository<Hotel, Long> {
     Hotel findByUser(User user);
 
     List<Hotel> findTop30ByStateOrderByReservationCountDesc(HotelState state);
-}
+
+    @Query("select h from Hotel h join fetch h.rooms")
+    List<Hotel> findAllJoinFetch();
+
+    @Query("""
+            select new com.beyond.HanSoom.hotel.dto.HotelRoomDto(
+                h.id,
+                h.hotelName,
+                r.id,
+                r.weekPrice
+            )
+            from Hotel h
+            join h.rooms r
+            """)
+    List<HotelRoomDto> findHotelsDto();}
