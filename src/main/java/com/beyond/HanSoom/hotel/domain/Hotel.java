@@ -2,6 +2,7 @@ package com.beyond.HanSoom.hotel.domain;
 
 import com.beyond.HanSoom.common.domain.BaseTimeEntity;
 import com.beyond.HanSoom.review.domain.HotelReviewSummary;
+import com.beyond.HanSoom.review.domain.Review;
 import com.beyond.HanSoom.room.domain.Room;
 import com.beyond.HanSoom.user.domain.User;
 import jakarta.persistence.*;
@@ -9,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -44,7 +46,11 @@ public class Hotel extends BaseTimeEntity {
 
     @Builder.Default
     @OneToMany(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @BatchSize(size = 50)
     private List<Room> rooms = new ArrayList<>();
+
+    @OneToMany(mappedBy = "hotel")
+    private List<Review> reviews;
 
     @OneToOne(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private HotelReviewSummary hotelReviewSummary;

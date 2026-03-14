@@ -73,17 +73,37 @@ public interface HotelRepository extends JpaRepository<Hotel, Long> {
 
     List<Hotel> findTop30ByStateOrderByReservationCountDesc(HotelState state);
 
-    @Query("select h from Hotel h join fetch h.rooms")
+    @Query("select h from Hotel h " +
+            "join fetch h.rooms " +
+            "join fetch h.hotelReviewSummary")
     List<Hotel> findAllJoinFetch();
 
     @Query("""
-            select new com.beyond.HanSoom.hotel.dto.HotelRoomDto(
-                h.id,
-                h.hotelName,
-                r.id,
-                r.weekPrice
-            )
-            from Hotel h
-            join h.rooms r
-            """)
-    List<HotelRoomDto> findHotelsDto();}
+    select new com.beyond.HanSoom.hotel.dto.HotelRoomDto(
+        h.id,
+        h.hotelName,
+        r.id,
+        r.weekPrice
+    )
+    from Hotel h
+    join h.rooms r
+    """)
+    List<HotelRoomDto> findHotelsDto();
+
+//    @Query("""
+//        select new com.beyond.HanSoom.hotel.dto.HotelRoomDto(
+//            h.id,
+//            h.hotelName,
+//            r.id,
+//            r.price
+//        )
+//        from Hotel h
+//        join h.rooms r
+//    """)
+//    List<HotelRoomDto> findHotelRooms();
+
+
+
+}
+
+
