@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface HotelRepository extends JpaRepository<Hotel, Long> {
+public interface HotelRepository extends JpaRepository<Hotel, Long>, HotelCustomRepository {
     Page<Hotel> findAll(Pageable pageable);
     Page<Hotel> findAll(Specification<Hotel> spec, Pageable pageable);
 

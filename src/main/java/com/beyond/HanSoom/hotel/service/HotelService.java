@@ -1041,6 +1041,36 @@ public class HotelService {
 
         return result;
     }
+
+    /**
+     * 커서 기반의 숙소 검색
+     */
+    @Transactional(readOnly = true)
+    public HotelCursorResponseDto<HotelListResponseDto> searchWithCursor(HotelCursorRequestDto requestDto) {
+        // 1. Querydsl을 통한 최적화된 조회 (DTO Projection + No-Offset)
+        List<HotelListResponseDto> content = hotelRepository.searchByCursor(requestDto);
+
+        // 2. 다음 페이지 존재 여부 확인
+        boolean hasNext = false;
+        if (content.size() > requestDto.getSize()) {
+            content.remove(requestDto.getSize());
+            hasNext = true;
+        }
+
+        // 3. 다음 페이지 조회를 위한 커서 값 추출
+        Long lastId = null;
+        Integer lastPrice = null;
+        java.math.BigDecimal lastRating = null;
+
+        if (!content.isEmpty()) {
+            HotelListResponseDto lastItem = content.get(content.size() - 1);
+            lastId = lastItem.getId();
+            lastPrice = lastItem.getPrice();
+            lastRating = lastItem.getRating();
+        }
+
+        return HotelCursorResponseDto.of(content, hasNext, lastId, lastPrice, lastRating);
+    }
     private final ReviewRepository reviewRepository;
 
 //    public List<HotelResponseDto> getHotels() {

@@ -40,6 +40,10 @@ public class Hotel extends BaseTimeEntity {
     private double longitude;
     private long reservationCount;
 
+    // 데스크 랜덤 I/O 방지 및 커버링 인덱스 활용을 위한 역정규화 컬럼
+    private int minPrice;
+    private java.math.BigDecimal averageRating;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
