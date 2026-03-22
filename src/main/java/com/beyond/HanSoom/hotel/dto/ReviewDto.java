@@ -5,11 +5,9 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class HotelRoomDto {
+public class ReviewDto {
 
     private Long hotelId;
-    private String hotelName;
-
-    private Long roomId;
-    private Integer price;
+    private Integer rating;
+    private String comment;
 }

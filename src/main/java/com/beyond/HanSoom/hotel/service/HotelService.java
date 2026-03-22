@@ -13,6 +13,7 @@ import com.beyond.HanSoom.notification.service.NotificationService;
 import com.beyond.HanSoom.notification.service.SseAlarmService;
 import com.beyond.HanSoom.review.domain.HotelReviewSummary;
 import com.beyond.HanSoom.review.repository.HotelReviewSummaryRepository;
+import com.beyond.HanSoom.review.repository.ReviewRepository;
 import com.beyond.HanSoom.room.domain.Room;
 import com.beyond.HanSoom.room.domain.RoomDocument;
 import com.beyond.HanSoom.room.dto.RoomDetailResponseDto;
@@ -980,6 +981,7 @@ public class HotelService {
 
         long start = System.currentTimeMillis();
 
+        Runtime runtime = Runtime.getRuntime();
         List<Hotel> hotels = hotelRepository.findAll();
 
         for (Hotel hotel : hotels) {
@@ -989,6 +991,7 @@ public class HotelService {
         long end = System.currentTimeMillis();
 
         log.info("N+1 실행 시간 = {} ms", (end - start));
+        log.info("Used Memory: " + (runtime.totalMemory() - runtime.freeMemory()) / 1024 / 1024 + " MB");
 
         return hotels;
     }
@@ -996,7 +999,7 @@ public class HotelService {
     public List<Hotel> getHotelsBatch() {
 
         long start = System.currentTimeMillis();
-
+        Runtime runtime = Runtime.getRuntime();
         List<Hotel> hotels = hotelRepository.findAll();
 
         for (Hotel hotel : hotels) {
@@ -1006,6 +1009,7 @@ public class HotelService {
         long end = System.currentTimeMillis();
 
         log.info("Batch Fetch 실행 시간 = {} ms", (end - start));
+        log.info("Used Memory: " + (runtime.totalMemory() - runtime.freeMemory()) / 1024 / 1024 + " MB");
 
         return hotels;
     }
@@ -1013,12 +1017,13 @@ public class HotelService {
     public List<Hotel> getHotelsJoinFetch() {
 
         long start = System.currentTimeMillis();
-
+        Runtime runtime = Runtime.getRuntime();
         List<Hotel> hotels = hotelRepository.findAllJoinFetch();
 
         long end = System.currentTimeMillis();
 
         log.info("Join Fetch 실행 시간 = {} ms", (end - start));
+        log.info("Used Memory: " + (runtime.totalMemory() - runtime.freeMemory()) / 1024 / 1024 + " MB");
 
         return hotels;
     }
@@ -1026,14 +1031,86 @@ public class HotelService {
     public List<HotelRoomDto> getHotelsDto() {
 
         long start = System.currentTimeMillis();
-
+        Runtime runtime = Runtime.getRuntime();
         List<HotelRoomDto> result = hotelRepository.findHotelsDto();
 
         long end = System.currentTimeMillis();
 
         log.info("DTO Projection 실행 시간 = {} ms", (end - start));
+        log.info("Used Memory: " + (runtime.totalMemory() - runtime.freeMemory()) / 1024 / 1024 + " MB");
 
         return result;
     }
+
+    /**
+     * 커서 기반의 숙소 검색
+     */
+    @Transactional(readOnly = true)
+    public HotelCursorResponseDto<HotelListResponseDto> searchWithCursor(HotelCursorRequestDto requestDto) {
+        // 1. Querydsl을 통한 최적화된 조회 (DTO Projection + No-Offset)
+        List<HotelListResponseDto> content = hotelRepository.searchByCursor(requestDto);
+
+        // 2. 다음 페이지 존재 여부 확인
+        boolean hasNext = false;
+        if (content.size() > requestDto.getSize()) {
+            content.remove(requestDto.getSize());
+            hasNext = true;
+        }
+
+        // 3. 다음 페이지 조회를 위한 커서 값 추출
+        Long lastId = null;
+        Integer lastPrice = null;
+        java.math.BigDecimal lastRating = null;
+
+        if (!content.isEmpty()) {
+            HotelListResponseDto lastItem = content.get(content.size() - 1);
+            lastId = lastItem.getId();
+            lastPrice = lastItem.getPrice();
+            lastRating = lastItem.getRating();
+        }
+
+        return HotelCursorResponseDto.of(content, hasNext, lastId, lastPrice, lastRating);
+    }
+    private final ReviewRepository reviewRepository;
+
+//    public List<HotelResponseDto> getHotels() {
+//        long start = System.currentTimeMillis();
+//
+//        List<HotelRoomDto> hotelRooms = hotelRepository.findHotelRooms();
+//
+//        List<Long> hotelIds = hotelRooms.stream()
+//                .map(HotelRoomDto::getHotelId)
+//                .distinct()
+//                .toList();
+//
+//        List<ReviewDto> reviews = reviewRepository.findReviewsByHotelIds(hotelIds);
+//
+//        Map<Long, List<ReviewDto>> reviewMap =
+//                reviews.stream()
+//                        .collect(Collectors.groupingBy(ReviewDto::getHotelId));
+//
+//        Map<Long, HotelResponseDto> hotelMap = new LinkedHashMap<>();
+//
+//        for (HotelRoomDto dto : hotelRooms) {
+//
+//            HotelResponseDto hotel = hotelMap.computeIfAbsent(
+//                    dto.getHotelId(),
+//                    id -> new HotelResponseDto(
+//                            dto.getHotelId(),
+//                            dto.getHotelName(),
+//                            new ArrayList<>(),
+//                            reviewMap.getOrDefault(id, List.of())
+//                    )
+//            );
+//
+//            hotel.getRooms().add(
+//                    new RoomDto(dto.getRoomId(), dto.getPrice())
+//            );
+//        }
+//        long end = System.currentTimeMillis();
+//
+//        log.info("DTO Projection 실행 시간 = {} ms", (end - start));
+//        return new ArrayList<>(hotelMap.values());
+//    }
 
 }

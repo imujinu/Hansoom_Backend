@@ -177,6 +177,22 @@ public class HotelController {
         );
     }
 
+    /**
+     * 커서 기반 숙소 검색 API
+     */
+    @GetMapping("/list/cursor")
+    public ResponseEntity<?> findAllByCursor(HotelCursorRequestDto requestDto) {
+        HotelCursorResponseDto<HotelListResponseDto> result = hotelService.searchWithCursor(requestDto);
+        return new ResponseEntity<>(
+                CommonSuccessDto.builder()
+                        .result(result)
+                        .status_code(HttpStatus.OK.value())
+                        .status_message("커서 기반 호텔 리스트 조회 완료")
+                        .build(),
+                HttpStatus.OK
+        );
+    }
+
     @GetMapping("/wishlist")
     public ResponseEntity<?> findAllWishList(@PageableDefault(size = 10) Pageable pageable) {
         Page<HotelListResponseDto> dto = hotelService.findAllWishList(pageable);
