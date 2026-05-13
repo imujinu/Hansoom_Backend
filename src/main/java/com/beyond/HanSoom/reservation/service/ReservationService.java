@@ -54,8 +54,6 @@ public class ReservationService {
 
     public Page<ReservationResDto> findAll(Pageable pageable) {
         String role = SecurityContextHolder.getContext().getAuthentication().getAuthorities().iterator().next().getAuthority().split("_")[1];
-
-
         User user = getUser();
         LocalDate now = LocalDate.now();
 

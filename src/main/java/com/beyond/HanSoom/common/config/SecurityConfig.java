@@ -19,6 +19,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
 import java.util.Arrays;
 
 @RequiredArgsConstructor
@@ -47,7 +49,9 @@ public class SecurityConfig {
                                 .accessDeniedHandler(jwtAuthorizationHandler) // 403의 경우
                 )
 
-                .authorizeHttpRequests(a -> a.requestMatchers("/health", "/user/create", "/user/login", "/user/auth/refresh", "/user/google/login", "/user/google/reLogin", "/user/kakao/login", "/payment/**","/reservation/**", "/hotel/detail/**", "/hotel/list", "/hotel/nearby", "/connect/**", "/review/hotel/**", "/review/images/**", "/reply/hotels/**", "/review/ratings/**", "/hotel/popular", "hotel/place", "/hotel/suggest", "hotel/**").permitAll().anyRequest().authenticated())
+                .authorizeHttpRequests(a -> a
+                        .requestMatchers("/api/**","/health", "/user/create", "/user/login", "/user/auth/refresh", "/user/google/login", "/user/google/reLogin", "/user/kakao/login", "/payment/**", "/reservation/**", "/hotel/detail/**", "/hotel/list", "/hotel/nearby", "/connect/**", "/review/hotel/**", "/review/images/**", "/reply/hotels/**", "/review/ratings/**", "/hotel/popular", "/hotel/place", "/hotel/suggest", "/hotel/**").permitAll()
+                        .anyRequest().authenticated())
                 .build();
     }
     // Todo - 프론트 연결
