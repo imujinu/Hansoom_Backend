@@ -25,6 +25,9 @@ spring:
     url: jdbc:mariadb://localhost:3306/hansoom
     username: root
     password: 1234
+    hikari:
+      maximum-pool-size: 50
+      connection-timeout: 10000
   jpa:
     database: mysql
     # innoDB를 쓰겠다 라는 설정
@@ -40,6 +43,11 @@ spring:
       default_batch_fetch_size: 100
     # 콘솔창에 ddl, dml 등의 쿼리를 출력하여 보여주는 옵션
     show_sql: true
+    properties:
+      jakarta:
+        persistence:
+          lock:
+            timeout: 2000   # 비관락 대기 최대 2초 — 초과 시 PessimisticLockingFailureException
   servlet:
     multipart:
       # spring의 디폴트 사이즈 10MB
